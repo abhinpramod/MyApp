@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { TextField, Button, Typography, Container, Paper, Box, Grid } from "@mui/material";
 import { Link } from "react-router-dom";
 import axiosInstance from "../lib/axios";
+import toast from "react-hot-toast";
+import { v4 as uuid } from "uuid";
+import {useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -10,7 +13,8 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
-  
+  let finalData = {};
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({});
 
   const validate = () => {
@@ -19,27 +23,48 @@ export default function Register() {
     tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
     tempErrors.password = formData.password.length >= 6 ? "" : "Password must be at least 6 characters";
     tempErrors.confirmPassword = formData.confirmPassword === formData.password ? "" : "Passwords must match";
+    const uniqueId = uuid().slice(2, 8);
+     finalData = { ...formData, uniqueId };
     
     setErrors(tempErrors);
     return Object.values(tempErrors).every((x) => x === "");
   };
-  const register = (data) => {
-    console.log("Registration Data:", data);
-    const res=axiosInstance.post("/user/register", data);
-    console.log("Registration Response:", res);
-    if (res.status === 200) {
-      console.log("Registration successful!");
-      toast.success("Registration successful!");
-    } else {
-      console.log("Registration failed!");
-      toast.error("Registration failed!");
+  // const register = (data) => {
+  //   console.log("Registration Data:", data);
+  //   const res=axiosInstance.post("/user/register", data);
+  //   console.log("Registration Response:", res);
+  //   if (res.status === 200) {
+  //     console.log("Registration successful!");
+  //     toast.success("Registration successful!");
+  //   } else {
+  //     console.log("Registration failed!");
+  //     toast.error("Registration failed!");
+  //   }
+  // };
+
+  const register = async (data) => {
+    try {
+      const res = await axiosInstance.post("/user/register", data);
+      console.log("Registration Response:", res);
+      if (res.status === 200) {
+        console.log("Registration successful!");
+        toast.success("Registration successful!");
+        navigate("/");
+      } 
+    } catch (error) {
+      console.error("Error during registration:", error);
+       toast.error(error.response?.data?.msg || "Failed to register");
+
     }
-  };
+  }
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      register(formData);
+      register(finalData);
+      console.log(finalData);
+      
     }
   };
 
@@ -53,7 +78,7 @@ export default function Register() {
         <Grid container spacing={2}>
           {/* Left Side Image (Only visible on large screens) */}
           <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
-            <img src="/abstract-lines.svg" alt="Abstract Art" style={{ maxWidth: "80%" }} />
+            <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
           </Grid>
           
           {/* Right Side Form */}
@@ -73,7 +98,7 @@ export default function Register() {
               </Box>
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
-                  Already have an account? <Link to="/login">Sign in</Link>
+                  Already have an account? <Link to="/loginuser">Sign in</Link>
                 </Typography>
               </Box>
             

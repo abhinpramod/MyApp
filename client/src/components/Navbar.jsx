@@ -33,8 +33,11 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden lg:flex space-x-6">
-            <Link to="/login" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
+            <Link to="/loginuser" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
               Sign In
+            </Link>
+            <Link to="/registercontractors1" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
+              registercontractors
             </Link>
           
           </div>
@@ -65,11 +68,11 @@ const Navbar = () => {
             <Link to="/about" className="text-gray-800 hover:text-red-600 text-lg">
               About
             </Link>
-            <Link to="/login" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
+            <Link to="/loginuser" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
               Sign In
             </Link>
-            <Link to="/register" className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
-              Sign Up
+            <Link to="/registercontractors1" className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white">
+              registercontractors
             </Link>
           </div>
         </div>

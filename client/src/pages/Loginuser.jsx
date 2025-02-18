@@ -35,7 +35,7 @@ export default function Login() {
         <Grid container spacing={2}>
           {/* Left Side Image (Only visible on large screens) */}
           <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
-            <img src="/abstract-lines.svg" alt="Abstract Art" style={{ maxWidth: "80%" }} />
+            <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
           </Grid>
           
           {/* Right Side Form */}
@@ -58,7 +58,7 @@ export default function Login() {
               </Box>
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
-                  Don't have an account? <Link href="/register">Sign up</Link>
+                  Don't have an account? <Link href="/registeruser">Sign up</Link>
                 </Typography>
               </Box>
             </form>
