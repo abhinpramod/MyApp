@@ -77,6 +77,9 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
 
+
+    
+
     const newcontractor = new Contractor({
       contractorName,
       email,
