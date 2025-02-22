@@ -130,7 +130,7 @@ const verifyOTP = async (req, res) => {
     // Retrieve OTP and temporary contractor data
     const otpRecord = await OTP.findOne({ email });
     const tempContractor = await TempContractor.findOne({ email });
-console.log(otpRecord, tempContractor);
+    console.log(otpRecord, tempContractor);
     if (!otpRecord || !tempContractor) {
       return res.status(400).json({ message: "OTP expired or not found" });
     }
@@ -141,11 +141,20 @@ console.log(otpRecord, tempContractor);
     }
 
     // Save the contractor data to the database
-    const newContractor = new Contractor(tempContractor);
+    const newContractor = new Contractor({
+      contractorName: tempContractor.contractorName,
+      email: tempContractor.email,
+      password: tempContractor.password,
+      companyName: tempContractor.companyName,
+      location: tempContractor.location,
+      phone: tempContractor.phone,
+      jobTypes: tempContractor.jobTypes,
+      numberOfEmployees: tempContractor.numberOfEmployees,
+    });
     await newContractor.save();
     console.log("New contractor saved:", newContractor);
 
-    // Clear temporary data
+    // // Clear temporary data
     await OTP.deleteOne({ email });
     await TempContractor.deleteOne({ email });
     console.log("Temporary data deleted for email:", email);
