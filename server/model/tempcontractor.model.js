@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
-const contractorSchema = new mongoose.Schema({
+const tempcontractorSchema = new mongoose.Schema({
   contractorName: { type: String, required: true },
   companyName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true,  },
   phone: { type: String, required: true },
   password: { type: String, required: true },
   approvalStatus: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
@@ -18,6 +18,7 @@ const contractorSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now, expires: "5m" }, // Auto-delete after 5 minutes
 
+
 }, { timestamps: true });
 
-module.exports = mongoose.model('Contractor', contractorSchema);
+module.exports = mongoose.model('TempContractor', tempcontractorSchema);

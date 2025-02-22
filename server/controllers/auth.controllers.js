@@ -62,13 +62,17 @@ const register = async (req, res) => {
 
     // Generate and save OTP
     const otp = generateOTP();
-   // In the register function
-await OTP.deleteOne({ email }); // Delete existing OTP
-const otpRecord = new OTP({ email, otp });
-await otpRecord.save();
+    // In the register function
+    await OTP.deleteOne({ email }); // Delete existing OTP
+    const otpRecord = new OTP({ email, otp });
+    await otpRecord.save();
 
     try {
-      await sendEmail(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
+      await sendEmail(
+        email,
+        "Your OTP for Verification",
+        `Your OTP is: ${otp}`
+      );
       res.status(200).json({ msg: "OTP sent to your email for verification" });
     } catch (error) {
       console.error("Error sending OTP email:", error.message);
@@ -77,7 +81,6 @@ await otpRecord.save();
 
     // Send OTP to email
     // sendEmail(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
-
 
     res.status(200).json({ msg: "OTP sented to your email for verification" });
   } catch (error) {
@@ -101,7 +104,9 @@ const verifyOTP = async (req, res) => {
     if (!otpRecord || !tempUser) {
       return res.status(400).json({ message: "OTP expired or not found" });
     }
-
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
     // Compare OTPs
     if (otpRecord.otp === otp) {
       // Save the user data to the database
