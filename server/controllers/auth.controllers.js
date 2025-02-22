@@ -67,20 +67,13 @@ const register = async (req, res) => {
     const otpRecord = new OTP({ email, otp });
     await otpRecord.save();
 
-    try {
-      await sendEmail(
-        email,
-        "Your OTP for Verification",
-        `Your OTP is: ${otp}`
-      );
-      res.status(200).json({ msg: "OTP sent to your email for verification" });
-    } catch (error) {
-      console.error("Error sending OTP email:", error.message);
-      res.status(500).json({ msg: "Failed to send OTP" });
-    }
+    
+    await sendEmail(email,"Your OTP for Verification",
+        `Your OTP is: ${otp}`)
 
-    // Send OTP to email
-    // sendEmail(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
+
+        console.log(email,otp);
+        
 
     res.status(200).json({ msg: "OTP sented to your email for verification" });
   } catch (error) {
@@ -110,12 +103,19 @@ const verifyOTP = async (req, res) => {
     // Compare OTPs
     if (otpRecord.otp === otp) {
       // Save the user data to the database
-      const newUser = new User(tempUser);
+      const newUser = new User({
+        name: tempUser.name,
+        email: tempUser.email,
+        password: tempUser.password,
+        uniqueId: tempUser.uniqueId,
+      });
       await newUser.save();
 
       // Clear temporary data
       await OTP.deleteOne({ email });
       await TempUser.deleteOne({ email });
+      console.log("otp deleted");
+      
 
       res.status(200).json({
         _id: newUser._id,
