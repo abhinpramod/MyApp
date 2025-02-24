@@ -168,7 +168,7 @@ const verifyOTP = async (req, res) => {
       phone: newContractor.phone,
       jobTypes: newContractor.jobTypes,
       numberOfEmployees: newContractor.numberOfEmployees,
-      message: "Contractor registered successfully",
+      message: " registered successfully wait for admin approval",
     });
   } catch (error) {
     console.error("Error verifying OTP:", error.message);
