@@ -114,7 +114,7 @@ const register = async (req, res) => {
     console.log(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
 
     await sendEmail(
-      "abhinabhi310@gmail.com",
+      email,
       "Your OTP for Verification",
       `Your OTP is: ${otp}`
     );
@@ -187,4 +187,6 @@ const verifyOTP = async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 };
+
+
 module.exports = { login, register, verifyOTP };
