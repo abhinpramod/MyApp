@@ -2,7 +2,6 @@ import React ,{ useState, useEffect } from "react";
 import { Card, CardContent, Typography, Switch, Button, Avatar, IconButton, Box, Grid } from "@mui/material";
 import { Camera, X } from "lucide-react";
 import axiosInstance from "../lib/axios";
-import axios from "axios";
 
 const ContractorProfile = () => {
   const [contractor, setContractor] = useState(null);
