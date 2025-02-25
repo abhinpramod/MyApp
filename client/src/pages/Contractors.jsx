@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar'
 
 const Contractors = () => {
   return (
-    <div>
+    <div className="mt-20">
       <Navbar />
       this contractors
 

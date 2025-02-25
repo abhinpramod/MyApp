@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar'
 
 const About = () => {
   return (
-    <div>
+    <div className="mt-20">
       <Navbar />
       thsi my about
     </div>
