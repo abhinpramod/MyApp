@@ -49,7 +49,8 @@ const register = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: "user already exists" });
-
+  
+    
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
     const tempUser = new TempUser({
@@ -83,11 +84,12 @@ const register = async (req, res) => {
 };
 const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
+console.log(email,otp);
 
   try {
     // Validate input
     if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required" });
+      return res.status(400).json({ msg: "Email and OTP are required" });
     }
 
     // Retrieve OTP and temporary user data
@@ -95,10 +97,10 @@ const verifyOTP = async (req, res) => {
     const tempUser = await TempUser.findOne({ email });
 
     if (!otpRecord || !tempUser) {
-      return res.status(400).json({ message: "OTP expired or not found" });
+      return res.status(400).json({ msg: "OTP expired or not found" });
     }
     if (otpRecord.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
+      return res.status(400).json({ msg: "Invalid OTP" });
     }
     // Compare OTPs
     if (otpRecord.otp === otp) {
@@ -125,7 +127,7 @@ const verifyOTP = async (req, res) => {
         message: "User registered successfully",
       });
     } else {
-      return res.status(400).json({ message: "Invalid OTP" });
+      return res.status(400).json({ msg: "Invalid OTP" });
     }
   } catch (error) {
     console.error("Error verifying OTP:", error.message);

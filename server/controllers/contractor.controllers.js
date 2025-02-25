@@ -48,10 +48,13 @@ const register = async (req, res) => {
     password,
     contractorName,
     companyName,
-    location,
+    country,
+    state,
+    city,
     phone,
     jobTypes,
     numberOfEmployees,
+
   } = req.body;
   console.log(req.body);
 
@@ -61,18 +64,20 @@ const register = async (req, res) => {
       !email ||
       !password ||
       !companyName ||
-      !location ||
+      !country||
+      !state||
+      !city||
       !phone ||
       !jobTypes ||
       !numberOfEmployees
     ) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ msg: "All fields are required" });
     }
 
     if (password.length < 6) {
       return res
         .status(400)
-        .json({ message: "Password must be at least 6 characters" });
+        .json({ msg: "Password must be at least 6 characters" });
     }
 
     const existingContractor = await Contractor.findOne({ email });
@@ -89,7 +94,10 @@ const register = async (req, res) => {
       email,
       password: hashPassword,
       companyName,
-      location,
+      country,
+      state,
+      city,
+    
       phone,
       jobTypes,
       numberOfEmployees,
@@ -146,7 +154,9 @@ const verifyOTP = async (req, res) => {
       email: tempContractor.email,
       password: tempContractor.password,
       companyName: tempContractor.companyName,
-      location: tempContractor.location,
+      country: tempContractor.country,
+      state: tempContractor.state,
+      city: tempContractor.city,
       phone: tempContractor.phone,
       jobTypes: tempContractor.jobTypes,
       numberOfEmployees: tempContractor.numberOfEmployees,
@@ -164,7 +174,9 @@ const verifyOTP = async (req, res) => {
       contractorName: newContractor.contractorName,
       email: newContractor.email,
       companyName: newContractor.companyName,
-      location: newContractor.location,
+      country: newContractor.country,
+      state: newContractor.state,
+      city: newContractor.city,
       phone: newContractor.phone,
       jobTypes: newContractor.jobTypes,
       numberOfEmployees: newContractor.numberOfEmployees,

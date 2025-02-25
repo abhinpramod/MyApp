@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { TextField, Button, Typography, Container, Paper, Box, Grid } from "@mui/material";
+import { TextField, Button, Typography, Container, Paper, Box, Grid, Modal, Backdrop, Fade } from "@mui/material";
 import { Link } from "react-router-dom";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 import { v4 as uuid } from "uuid";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -13,63 +13,89 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
-  let finalData = {};
-  const navigate = useNavigate();
+  const [otp, setOtp] = useState(new Array(6).fill("")); // OTP input state
+  const [showOtpModal, setShowOtpModal] = useState(false); // Controls OTP modal visibility
+  const [registrationData, setRegistrationData] = useState(null); // Stores registration data for OTP verification
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
+  // Validate form inputs
   const validate = () => {
     let tempErrors = {};
     tempErrors.name = formData.name ? "" : "Name is required";
     tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
     tempErrors.password = formData.password.length >= 6 ? "" : "Password must be at least 6 characters";
     tempErrors.confirmPassword = formData.confirmPassword === formData.password ? "" : "Passwords must match";
-    const uniqueId = uuid().slice(2, 8);
-     finalData = { ...formData, uniqueId };
-    
     setErrors(tempErrors);
     return Object.values(tempErrors).every((x) => x === "");
   };
-  // const register = (data) => {
-  //   console.log("Registration Data:", data);
-  //   const res=axiosInstance.post("/user/register", data);
-  //   console.log("Registration Response:", res);
-  //   if (res.status === 200) {
-  //     console.log("Registration successful!");
-  //     toast.success("Registration successful!");
-  //   } else {
-  //     console.log("Registration failed!");
-  //     toast.error("Registration failed!");
-  //   }
-  // };
 
+  // Handle registration
   const register = async (data) => {
     try {
       const res = await axiosInstance.post("/user/register", data);
-      console.log("Registration Response:", res);
       if (res.status === 200) {
-        console.log("Registration successful!");
-        toast.success("Registration successful!");
-        navigate("/");
-      } 
+        toast.success(res.data.msg || "OTP sent to your email");
+        setRegistrationData(data); // Save registration data for OTP verification
+        setShowOtpModal(true); // Show OTP modal
+      }
     } catch (error) {
       console.error("Error during registration:", error);
-       toast.error(error.response?.data?.msg || "Failed to register");
-
-    }
-  }
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) {
-      register(finalData);
-      console.log(finalData);
-      
+      toast.error(error.response?.data?.msg || "Failed to register");
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle OTP verification
+  const verifyOtp = async () => {
+    const otpValue = otp.join("");
+    try {
+      const res = await axiosInstance.post("/user/verify-otp", {
+        ...registrationData,
+        otp: otpValue,
+      });
+      if (res.status === 200) {
+        toast.success("Registration successful!");
+        navigate("/loginuser");
+      }
+    } catch (error) {
+      console.error("Error during OTP verification:", error);
+      toast.error(error.response?.data?.msg || "Invalid OTP");
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) {
+      const uniqueId = uuid().slice(2, 8);
+      const finalData = { ...formData, uniqueId };
+      register(finalData);
+    }
+  };
+
+  // Handle OTP input change
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus to the next input
+    if (value && index < otp.length - 1) {
+      document.getElementById(`otp-input-${index + 1}`).focus();
+    }
+
+    // Submit OTP if all fields are filled
+  //   if (newOtp.every((digit) => digit !== "")) {
+  //     // verifyOtp();
+  //   }
+  };
+
+  // Handle backspace in OTP input
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-input-${index - 1}`).focus();
+    }
   };
 
   return (
@@ -80,17 +106,17 @@ export default function Register() {
           <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
             <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
           </Grid>
-          
+
           {/* Right Side Form */}
           <Grid item xs={12} md={6}>
             <Typography variant="h4" align="center" gutterBottom>
               Create an Account
             </Typography>
             <form onSubmit={handleSubmit}>
-              <TextField fullWidth label="Name" name="name" value={formData.name} onChange={handleChange} error={!!errors.name} helperText={errors.name} margin="normal" />
-              <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
-              <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
-              <TextField fullWidth label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} error={!!errors.confirmPassword} helperText={errors.confirmPassword} margin="normal" />
+              <TextField fullWidth label="Name" name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })} error={!!errors.name} helperText={errors.name} margin="normal" />
+              <TextField fullWidth label="Email" name="email" value={formData.email} onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })} error={!!errors.email} helperText={errors.email} margin="normal" />
+              <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })} error={!!errors.password} helperText={errors.password} margin="normal" />
+              <TextField fullWidth label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })} error={!!errors.confirmPassword} helperText={errors.confirmPassword} margin="normal" />
               <Box textAlign="center" marginTop={2}>
                 <Button type="submit" variant="contained" color="primary" fullWidth>
                   Create an Account
@@ -101,11 +127,58 @@ export default function Register() {
                   Already have an account? <Link to="/loginuser">Sign in</Link>
                 </Typography>
               </Box>
-            
             </form>
           </Grid>
         </Grid>
       </Paper>
+
+      {/* OTP Verification Modal */}
+      <Modal
+        open={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{ timeout: 500 }}
+      >
+        <Fade in={showOtpModal}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" align="center" gutterBottom>
+              Enter OTP
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+              {otp.map((digit, index) => (
+                <TextField
+                  key={index}
+                  id={`otp-input-${index}`}
+                  type="text"
+                  inputProps={{ maxLength: 1 }}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  sx={{ width: "40px", textAlign: "center" }}
+                />
+              ))}
+            </Box>
+            <Box textAlign="center" marginTop={2}>
+              <Button variant="contained" color="primary" onClick={verifyOtp}>
+                Verify OTP
+              </Button>
+            </Box>
+          </Box>
+        </Fade>
+      </Modal>
     </Container>
   );
 }

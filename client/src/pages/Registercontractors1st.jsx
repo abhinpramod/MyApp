@@ -129,14 +129,14 @@ export default function RegisterContractorStep1() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", p: 2, bgcolor: "#f0f4f8", overflowY: "auto" }}>
-        <Paper elevation={8} sx={{ p: 4, borderRadius: 3, width: "100%", maxWidth: 800, display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
+        <Paper elevation={8} sx={{ p: 4, borderRadius: 3, width: "100%", maxWidth: 1000, display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
           {/* Wrap the entire form in a <form> tag */}
           <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flex: 1, gap: 4, flexDirection: { xs: "column", md: "row" } }}>
             {/* Left Side - Registration Form */}
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                <Typography variant="h4" fontWeight="bold" color="primary">Register Contractor</Typography>
-                <IconButton color="primary" onClick={() => navigate("/")}><Home size={24} /></IconButton>
+                <Typography variant="h4" fontWeight="bold" color="">Register Contractor</Typography>
+                <IconButton color="" onClick={() => navigate("/")}><Home size={24} /></IconButton>
               </Box>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {/* Custom Input Fields with Floating Labels */}
@@ -272,7 +272,7 @@ export default function RegisterContractorStep1() {
             </Box>
 
             {/* Right Side - Country, State, City Dropdowns, Text, and Submit Button */}
-            <Box sx={{ flex: 1, bgcolor: "#1e293b", p: 4, borderRadius: 3, color: "white" }}>
+            <Box sx={{ flex: 1, bgcolor: "#1e293b", p: 4, borderRadius: 0, color: "white" }}>
               <Typography variant="h5" fontWeight="bold" textAlign="center" mb={4}>Location Details</Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {/* Country Dropdown */}
@@ -428,13 +428,13 @@ export default function RegisterContractorStep1() {
                   sx={{
                     mt: 2,
                     borderRadius: 2,
-                    bgcolor: "primary.main",
-                    "&:hover": { bgcolor: "primary.dark" },
+                    bgcolor:" linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
+                    "&:hover": { bgcolor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
                     width: "100%",
                     py: 1.5,
                   }}
                 >
-                  Next
+                  submit
                 </Button>
               </Box>
             </Box>
