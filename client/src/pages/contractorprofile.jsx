@@ -1,121 +1,185 @@
-import React ,{ useState, useEffect } from "react";
-import { Card, CardContent, Typography, Switch, Button, Avatar, IconButton, Box, Grid } from "@mui/material";
-import { Camera, X } from "lucide-react";
-import axiosInstance from "../lib/axios";
+import { useState } from "react";
+import Card from "@/components/ui/card";
+import CardContent from "@/components/ui/card-content";
+import Button from "@/components/ui/button";
+import Avatar from "@/components/ui/avatar";
+import Switch from "@/components/ui/switch";
+import { Camera, Trash2, CirclePlus, X } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+
+const contractor = {
+  companyName: "John Doe",
+  contractorName: "John Doe",
+  email: "n8t5A@example.com",
+  phone: "123-456-7890",
+  location: "New York, USA",
+  availability: true,
+  profilePic: "https://example.com/profile-pic.jpg",
+  projects: [
+    { image: "https://example.com/project-1.jpg", description: "Project 1 description" },
+    { image: "https://example.com/project-2.jpg", description: "Project 2 description" },
+  ],
+  gstNumber: "1234567890",
+  country: "United States",
+  state: "New York",
+  city: "New York City",
+  address: "123 Main Street",
+  numberOfEmployees: 10,
+  description: "We are the most trusted company in this field",
+};
 
 const ContractorProfile = () => {
-  const [contractor, setContractor] = useState(null);
-  const [availability, setAvailability] = useState(false);
-  const [profilePic, setProfilePic] = useState("");
-  const [projects, setProjects] = useState([]);
+  const [availability, setAvailability] = useState(contractor.availability);
+  const [profilePic, setProfilePic] = useState(contractor.profilePic);
+  const [projects, setProjects] = useState(contractor.projects || []);
+  const [openProjectDialog, setOpenProjectDialog] = useState(false);
+  const [newProjectImage, setNewProjectImage] = useState(null);
+  const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [numberOfEmployees, setNumberOfEmployees] = useState(contractor.numberOfEmployees);
+  const [isEditingEmployees, setIsEditingEmployees] = useState(false);
 
-  useEffect(() => {
-    axios.get("/api/contractor/profile").then((res) => {
-      setContractor(res.data);
-      setAvailability(res.data.availability);
-      setProfilePic(res.data.profilePic);
-      setProjects(res.data.projects || []);
-    });
-  }, []);
-
-  useEffect(() => {
-    const res=axiosInstance.get(`/contractor/profile`)
-  }, []);
-
-  const handleAvailabilityChange = async () => {
-    setAvailability(!availability);
-    await axios.put("/api/contractor/profile", { availability: !availability });
+  const handleAvailabilityChange = (checked) => {
+    setAvailability(checked);
+    toast.success(`Availability set to ${checked ? "Available" : "Not Available"}`);
   };
 
-  const handleProfilePicChange = async (e) => {
+  const handleProfilePicUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("profilePic", file);
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error("File size must be less than 5MB");
+      return;
+    }
 
-    const res = await axios.put("/api/contractor/profile-pic", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    setProfilePic(res.data.profilePic);
+    const reader = new FileReader();
+    reader.onload = (event) => setProfilePic(event.target.result);
+    reader.readAsDataURL(file);
   };
 
-  const handleAddProject = async (e) => {
+  const handleProjectImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("projectImage", file);
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error("File size must be less than 5MB");
+      return;
+    }
 
-    const res = await axios.post("/api/contractor/add-project", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    setProjects([...projects, res.data.project]);
+    const reader = new FileReader();
+    reader.onload = (event) => setNewProjectImage(event.target.result);
+    reader.readAsDataURL(file);
   };
 
-  const handleRemoveProject = async (projectId) => {
-    await axios.delete(`/api/contractor/remove-project/${projectId}`);
-    setProjects(projects.filter((p) => p.id !== projectId));
+  const handleAddProject = () => {
+    if (newProjectImage && newProjectDescription) {
+      setProjects([...projects, { image: newProjectImage, description: newProjectDescription }]);
+      toast.success("Project added successfully!");
+      setOpenProjectDialog(false);
+      setNewProjectImage(null);
+      setNewProjectDescription("");
+    } else {
+      toast.error("Please provide both an image and a description");
+    }
   };
 
-  if (!contractor) return <Typography variant="h6" textAlign="center">Loading...</Typography>;
+  const handleSaveEmployees = () => {
+    setIsEditingEmployees(false);
+    toast.success("Number of employees updated successfully!");
+  };
 
   return (
-    <Card sx={{ maxWidth: 500, margin: "auto", mt: 5, p: 4, boxShadow: 10, borderRadius: 5, bgcolor: "#ffffff" }}>
-      <CardContent>
-        <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
-          Profile
-        </Typography>
-        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-          <Box position="relative">
-            <Avatar src={profilePic} sx={{ width: 140, height: 140, border: "4px solid #1976d2" }} />
-            <label htmlFor="upload-profile-pic">
-              <IconButton
-                sx={{ position: "absolute", bottom: 0, right: 0, bgcolor: "#1976d2", color: "white", boxShadow: 3 }}
-                component="span"
-              >
-                <Camera size={24} />
-              </IconButton>
+    <div className="p-6 h-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col items-center w-full md:w-1/3">
+          <div className="relative">
+            <Avatar className="w-24 h-24 rounded-full border-2 border-gray-200" src={profilePic} />
+            <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors">
+              <Camera className="w-5 h-5 text-white" />
+              <input type="file" id="avatar-upload" className="hidden" accept="image/*" onChange={handleProfilePicUpload} />
             </label>
-          </Box>
-          <input type="file" accept="image/*" onChange={handleProfilePicChange} style={{ display: "none" }} id="upload-profile-pic" />
-        </Box>
-        <Box mt={3} textAlign="center">
-          <Typography variant="h6">{contractor.contractorName}</Typography>
-          <Typography variant="subtitle1" color="text.secondary">{contractor.companyName}</Typography>
-          <Typography variant="body2" color="text.secondary">{contractor.email}</Typography>
-          <Typography variant="body2" color="text.secondary">GST: {contractor.gstNumber}</Typography>
-        </Box>
-        <Box display="flex" alignItems="center" justifyContent="center" mt={2}>
-          <Typography variant="h6" mr={2}>Availability</Typography>
-          <Switch checked={availability} onChange={handleAvailabilityChange} color="success" />
-        </Box>
-        <Typography variant="h5" fontWeight="bold" mt={3} gutterBottom>
-          Past Projects
-        </Typography>
-        <input type="file" accept="image/*" onChange={handleAddProject} style={{ display: "none" }} id="upload-project" />
-        <label htmlFor="upload-project">
-          <Button variant="contained" color="primary" component="span" sx={{ mt: 1, mb: 2 }}>
-            Add Project
-          </Button>
-        </label>
-        <Grid container spacing={2} justifyContent="center">
-          {projects.map((project) => (
-            <Grid item key={project.id} xs={6} sm={4} md={3} sx={{ position: "relative" }}>
-              <img src={project.imageUrl} alt="Project" width="100%" style={{ borderRadius: 8, boxShadow: 3 }} />
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => handleRemoveProject(project.id)}
-                sx={{ position: "absolute", top: 5, right: 5, bgcolor: "white", borderRadius: "50%" }}
-              >
-                <X size={18} />
-              </IconButton>
-            </Grid>
-          ))}
-        </Grid>
-      </CardContent>
-    </Card>
+          </div>
+          <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
+          <h4 className="font-semibold text-gray-600">{contractor.contractorName}</h4>
+          <p className="text-gray-500 text-center mt-2">{contractor.description}</p>
+        </div>
+
+        <div className="w-full md:w-2/3 space-y-4">
+          <p className="text-gray-600"><strong>Email:</strong> {contractor.email}</p>
+          <p className="text-gray-600"><strong>GST:</strong> {contractor.gstNumber}</p>
+          <p className="text-gray-600"><strong>Address:</strong> {contractor.address}, {contractor.city}, {contractor.state}, {contractor.country}</p>
+          <div className="flex items-center gap-2">
+            <strong>Number of Employees:</strong>
+            {isEditingEmployees ? (
+              <div className="flex items-center gap-2">
+                <TextField
+                  type="number"
+                  value={numberOfEmployees}
+                  onChange={(e) => setNumberOfEmployees(e.target.value)}
+                  className="w-20"
+                />
+                <Button onClick={handleSaveEmployees} className="bg-blue-500 hover:bg-blue-600 text-white">
+                  Save
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>{numberOfEmployees}</span>
+                <Button onClick={() => setIsEditingEmployees(true)} className="text-blue-500 hover:text-blue-600">
+                  Edit
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <Switch checked={availability} onCheckedChange={handleAvailabilityChange} />
+            <span className={availability ? "text-green-600" : "text-red-600"}>{availability ? "Available" : "Not Available"}</span>
+          </div>
+        </div>
+      </div>
+
+      <hr className="my-6 border-gray-200" />
+      <Button onClick={() => setOpenProjectDialog(true)} className="flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors">
+        <CirclePlus size={18} /> Add Project
+      </Button>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+        {projects.map((project, index) => (
+          <Card key={index} className="relative cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedProject(project)}>
+            <CardContent>
+              <img src={project.image} alt={`Project ${index + 1}`} className="w-full h-28 object-cover rounded-lg" />
+              <p className="text-center text-sm mt-2 text-gray-600">{project.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={openProjectDialog} onClose={() => setOpenProjectDialog(false)}>
+        <DialogTitle>Add New Project</DialogTitle>
+        <DialogContent>
+          {newProjectImage && <img src={newProjectImage} alt="Preview" className="w-full h-40 object-cover rounded-lg mb-4" />}
+          <input type="file" accept="image/*" onChange={handleProjectImageUpload} className="mb-4" />
+          <TextField label="Project Description" fullWidth multiline rows={2} value={newProjectDescription} onChange={(e) => setNewProjectDescription(e.target.value)} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
+          <Button onClick={handleAddProject} className="bg-blue-500 hover:bg-blue-600 text-white">Add</Button>
+        </DialogActions>
+      </Dialog>
+
+      {selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={() => setSelectedProject(null)}>
+          <div className="relative max-w-2xl w-full p-4 bg-white rounded-lg" onClick={(e) => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setSelectedProject(null)}>
+              <X size={24} />
+            </button>
+            <img src={selectedProject.image} alt="Selected Project" className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
+            <p className="text-center text-lg mt-4 text-gray-600">{selectedProject.description}</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
