@@ -8,11 +8,11 @@ const contractorSlice = createSlice({
   name: "contractor",
   initialState,
   reducers: {
-    loginuser: (state, action) => {
+    logincontractor: (state, action) => {
       console.log("user Data Received in Redux:", action.payload); 
       state.contractor = action.payload;
     },
-    logoutuser: (state) => {
+    logoutcontractor: (state) => {
       state.contractor = null;
     },
   },

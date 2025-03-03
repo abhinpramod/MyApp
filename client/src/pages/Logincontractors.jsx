@@ -1,144 +1,89 @@
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, Paper } from "@mui/material";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import axiosInstance from "../lib/axios";
-import { toast } from "react-hot-toast";
+import { TextField, Button, Typography, Container, Paper, Box, Grid, Link } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { logincontractor } from "../redux/contractorslice"; 
+import axiosInstance from "../lib/axios"; 
+import { toast } from "react-hot-toast"; 
+import { useNavigate } from "react-router-dom"; 
 
-export default function ContractorregisterStep2() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({
-    gstNumber: "",
-    gstDocument: null,
-    licenseDocument: null,
+export default function Logincontractors() {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
+
   const [errors, setErrors] = useState({});
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setForm({ ...form, [name]: files[0] });
-  };
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const validate = () => {
-    const tempErrors = {};
-    if (!form.gstNumber) tempErrors.gstNumber = "GST Number is required";
-    if (!form.gstDocument) tempErrors.gstDocument = "GST Document is required";
-    if (!form.licenseDocument)
-      tempErrors.licenseDocument = "License Document is required";
+    let tempErrors = {};
+    tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
+    tempErrors.password = formData.password ? "" : "Password is required";
+
     setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    return Object.values(tempErrors).every((x) => x === "");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      const formData = new FormData();
-      formData.append("gstNumber", form.gstNumber);
-      formData.append("gstDocument", form.gstDocument);
-      formData.append("licenseDocument", form.licenseDocument);
-
       try {
-        const res = await axiosInstance.post(
-          "/contractor/verify2ndstep",
-          formData
-        );
+        const res = await axiosInstance.post("/contractor/login", formData);
         if (res.status === 200) {
-          toast.success("Verification documents uploaded successfully!");
-          navigate("/");
+          toast.success("Login successful!");
+          dispatch(logincontractor(res.data)); // Dispatch the login action with the contractor data
+          res.data.verified ? navigate("/dashboard") : navigate("/contractorregisterstep2");
         } else {
-          toast.error("Verification failed!");
+          toast.error("Login failed!");
         }
       } catch (error) {
-        console.error("Error during verification:", error);
-        toast.error("An error occurred during verification.");
+        toast.error("Login failed!");
+        console.error("Login error:", error);
       }
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 2,
-          bgcolor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        }}
-      >
-        <Paper
-          elevation={8}
-          sx={{ p: 4, borderRadius: 6, width: "100%", maxWidth: 600 }}
-        >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            color="primary.main"
-            gutterBottom
-          >
-            Contractor Verification - Step 2
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <TextField
-              label="GST Number"
-              name="gstNumber"
-              value={form.gstNumber}
-              onChange={handleChange}
-              error={!!errors.gstNumber}
-              helperText={errors.gstNumber}
-              fullWidth
-            />
-            <Button variant="contained" component="label" fullWidth>
-              Upload GST Document
-              <input
-                type="file"
-                hidden
-                name="gstDocument"
-                onChange={handleFileChange}
-              />
-            </Button>
-            {errors.gstDocument && (
-              <Typography color="error">{errors.gstDocument}</Typography>
-            )}
+    <Container maxWidth="lg">
+      <Paper elevation={3} sx={{ padding: 10, marginTop: 15 }}>
+        <Grid container spacing={2}>
+          {/* Left Side Image (Only visible on large screens) */}
+          <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
+            <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
+          </Grid>
 
-            <Button variant="contained" component="label" fullWidth>
-              Upload License Document
-              <input
-                type="file"
-                hidden
-                name="licenseDocument"
-                onChange={handleFileChange}
-              />
-            </Button>
-            {errors.licenseDocument && (
-              <Typography color="error">{errors.licenseDocument}</Typography>
-            )}
-
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              sx={{ mt: 2, borderRadius: 3 }}
-            >
-              Submit
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </motion.div>
+          {/* Right Side Form */}
+          <Grid item xs={12} md={6}>
+            <Typography variant="h4" align="center" gutterBottom>
+              Login to Your Account
+            </Typography>
+            <form onSubmit={handleSubmit}>
+              <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
+              <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
+              <Box textAlign="right" marginTop={1}>
+                <Link href="#" variant="body2">
+                  Forgot password?
+                </Link>
+              </Box>
+              <Box textAlign="center" marginTop={2}>
+                <Button type="submit" variant="contained" color="primary" fullWidth>
+                  Login
+                </Button>
+              </Box>
+              <Box textAlign="center" marginTop={2}>
+                <Typography variant="body2">
+                  Don't have an account? <Link href="/registercontractors1">Sign up</Link>
+                </Typography>
+              </Box>
+            </form>
+          </Grid>
+        </Grid>
+      </Paper>
+    </Container>
   );
 }

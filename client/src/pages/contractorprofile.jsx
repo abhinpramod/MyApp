@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
 import Button from "@/components/ui/button";
 import Avatar from "@/components/ui/avatar";
 import Switch from "@/components/ui/switch";
-import { Camera, Trash2, CirclePlus, X } from "lucide-react";
+import { Camera, Trash2, CirclePlus, X, Pencil, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   TextField,
@@ -12,103 +12,165 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
 } from "@mui/material";
+import axios from "axios"; // Import axios for API calls
+import axiosInstance from "../lib/axios";
 
-const contractor = {
-  companyName: "John Doe",
-  contractorName: "John Doe",
-  email: "n8t5A@example.com",
-  phone: "123-456-7890",
-  location: "New York, USA",
-  availability: true,
-  profilePic: "https://example.com/profile-pic.jpg",
-  projects: [
-    {
-      image: "https://example.com/project-1.jpg",
-      description: "Project 1 description",
-    },
-    {
-      image: "https://example.com/project-2.jpg",
-      description: "Project 2 description",
-    },
-  ],
-  gstNumber: "1234567890",
-  country: "United States",
-  state: "New York",
-  city: "New York City",
-  address: "123 Main Street",
-  numberOfEmployees: 10,
-  description: "We are the most trusted company in this field",
-};
 
 const ContractorProfile = () => {
-  const [availability, setAvailability] = useState(contractor.availability);
-  const [profilePic, setProfilePic] = useState(contractor.profilePic);
-  const [projects, setProjects] = useState(contractor.projects || []);
+  const [contractor, setContractor] = useState({
+    companyName: "",
+    contractorName: "",
+    email: "",
+    phone: "",
+    location: "",
+    availability: false,
+    profilePic: "",
+    projects: [],
+    gstNumber: "",
+    country: "",
+    state: "",
+    city: "",
+    address: "",
+    numberOfEmployees: 0,
+    description: "",
+  });
+
+  const [availability, setAvailability] = useState(false);
+  const [profilePic, setProfilePic] = useState("");
+  const [projects, setProjects] = useState([]);
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const [newProjectImage, setNewProjectImage] = useState(null);
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
-  const [numberOfEmployees, setNumberOfEmployees] = useState(
-    contractor.numberOfEmployees
-  );
+  const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
 
-  const handleAvailabilityChange = (checked) => {
-    setAvailability(checked);
-    toast.success(
-      `Availability set to ${checked ? "Available" : "Not Available"}`
-    );
+  // Fetch contractor data on component mount
+  useEffect(() => {
+    const fetchContractorData = async () => {
+      try {
+        const response = await axiosInstance.get(`/contractor/profile${loginedId}`);
+        setContractor(response.data);
+        setAvailability(response.data.availability);
+        setProfilePic(response.data.profilePic);
+        setProjects(response.data.projects || []);
+        setNumberOfEmployees(response.data.numberOfEmployees);
+      } catch (error) {
+        toast.error("Failed to fetch contractor data");
+      }
+    };
+
+    fetchContractorData();
+  }, []);
+
+  // Update availability
+  const handleAvailabilityChange = async (checked) => {
+    try {
+      await axiosInstance.put(`/contractor/availability${loginedId}`, {
+        availability: checked,
+      });
+      setAvailability(checked);
+      toast.success(
+        `Availability set to ${checked ? "Available" : "Not Available"}`
+      );
+    } catch (error) {
+      toast.error("Failed to update availability");
+    }
   };
 
-  const handleProfilePicUpload = (e) => {
+  // Update profile picture
+  const handleProfilePicUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
       toast.error("File size must be less than 5MB");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => setProfilePic(event.target.result);
-    reader.readAsDataURL(file);
-  };
+    const formData = new FormData();
+    formData.append("profilePic", file);
 
+    try {
+      const response = await axiosInstance.put(
+        `/contractor/profilePic${loginedId}`,formData
+
+      
+      );
+      setProfilePic(response.data.profilePic);
+      toast.success("Profile picture updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update profile picture");
+    }
+  };
   const handleProjectImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+  
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
       toast.error("File size must be less than 5MB");
       return;
     }
-
+  
     const reader = new FileReader();
-    reader.onload = (event) => setNewProjectImage(event.target.result);
+    reader.onload = () => {
+      setNewProjectImage(reader.result);
+    };
     reader.readAsDataURL(file);
   };
-
-  const handleAddProject = () => {
+  
+  // Add project
+  const handleAddProject = async () => {
     if (newProjectImage && newProjectDescription) {
-      setProjects([
-        ...projects,
-        { image: newProjectImage, description: newProjectDescription },
-      ]);
-      toast.success("Project added successfully!");
-      setOpenProjectDialog(false);
-      setNewProjectImage(null);
-      setNewProjectDescription("");
+      const formData = new FormData();
+      formData.append("image", newProjectImage);
+      formData.append("description", newProjectDescription);
+
+      try {
+        const response = await axiosInstance.post(
+          `/contractor/projects${loginedId}`,
+          formData
+        
+          
+         
+        );
+        setProjects([...projects, response.data]);
+        toast.success("Project added successfully!");
+        setOpenProjectDialog(false);
+        setNewProjectImage(null);
+        setNewProjectDescription("");
+      } catch (error) {
+        toast.error("Failed to add project");
+      }
     } else {
       toast.error("Please provide both an image and a description");
     }
   };
 
-  const handleSaveEmployees = () => {
-    setIsEditingEmployees(false);
-    toast.success("Number of employees updated successfully!");
+  // Delete project
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await axiosInstance.delete(`/contractor/projects/${projectId}`);
+      setProjects(projects.filter((project) => project.id !== projectId));
+      toast.success("Project deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete project");
+    }
+  };
+
+  // Update number of employees
+  const handleSaveEmployees = async () => {
+    try {
+      await axiosInstance.put(`/contractor/employees${loginedId}`, {
+        numberOfEmployees,
+      });
+      setIsEditingEmployees(false);
+      toast.success("Number of employees updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update number of employees");
+    }
   };
 
   return (
@@ -164,22 +226,22 @@ const ContractorProfile = () => {
                   onChange={(e) => setNumberOfEmployees(e.target.value)}
                   className="w-20"
                 />
-                <Button
+                <IconButton
                   onClick={handleSaveEmployees}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  Save
-                </Button>
+                  <Save />
+                </IconButton>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <span>{numberOfEmployees}</span>
-                <Button
+                <IconButton
                   onClick={() => setIsEditingEmployees(true)}
                   className="text-blue-500 hover:text-blue-600"
                 >
-                  Edit
-                </Button>
+                  <Pencil />
+                </IconButton>
               </div>
             )}
           </div>
@@ -218,6 +280,15 @@ const ContractorProfile = () => {
               <p className="text-center text-sm mt-2 text-gray-600">
                 {project.description}
               </p>
+              <button
+                className="absolute top-2 right-2 text-red-500 hover:text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteProject(project.id);
+                }}
+              >
+                <Trash2 size={18} />
+              </button>
             </CardContent>
           </Card>
         ))}
