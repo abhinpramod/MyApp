@@ -12,7 +12,8 @@ const ContractorVerificationStep2 = () => {
   const [errors, setErrors] = useState({});
 
   // Regex for GST number validation (basic format: 15 digits)
-  const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  const gstRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/;
+
 
   const validate = () => {
     const tempErrors = {};
@@ -45,7 +46,7 @@ const ContractorVerificationStep2 = () => {
     formData.append('licenseDocument', form.licenseDocument);
 
     try {
-      const res = await axiosInstance.post("/contractor/verificationstep2", formData, {
+      const res = await axiosInstance.post("/contractor/register2ndstep", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (res.status === 200) {

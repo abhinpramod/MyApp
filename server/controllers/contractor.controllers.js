@@ -5,6 +5,64 @@ const bcrypt = require("bcrypt");
 const generateToken = require("../lib/utils.js");
 const generateOTP = require("../lib/otpgenarator");
 const sendEmail = require("../lib/nodemailer");
+const cloudinary = require("../lib/cloudinary"); // Cloudinary config
+const multer = require("multer");
+
+// Multer setup for Cloudinary
+const storage = require("multer-storage-cloudinary").CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "contractor_docs", // Cloudinary folder name
+    allowedFormats: ["jpg", "png", "pdf"],
+  },
+});
+
+const upload = multer({ storage });
+
+// Controller function for second-step registration
+const registerstep2 = async (req, res) => {
+  try {
+    const { contractorId, gstNumber } = req.body;
+    
+    // Check if the contractor exists
+    const contractor = await Contractor.findById(contractorId);
+    if (!contractor) {
+      return res.status(404).json({ message: "Contractor not found" });
+    }
+
+    // Upload files to Cloudinary
+    let gstDocUrl = "";
+    let licenseDocUrl = "";
+
+    if (req.files["gstDoc"]) {
+      const result = await cloudinary.uploader.upload(req.files["gstDoc"][0].path, {
+        folder: "contractor_docs",
+      });
+      gstDocUrl = result.secure_url;
+    }
+
+    if (req.files["licenseDoc"]) {
+      const result = await cloudinary.uploader.upload(req.files["licenseDoc"][0].path, {
+        folder: "contractor_docs",
+      });
+      licenseDocUrl = result.secure_url;
+    }
+
+    // Update contractor details in MongoDB
+    contractor.gstNumber = gstNumber;
+    contractor.gstDocument = gstDocUrl;
+    contractor.licenseDocument = licenseDocUrl;
+    contractor.verified = false; // Mark as pending verification
+
+    await contractor.save();
+
+    res.status(200).json({ message: "Step 2 registration completed", contractor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -42,7 +100,7 @@ const login = async (req, res) => {
   }
 };
 
-const register = async (req, res) => {
+const registerstep1 = async (req, res) => {
   const {
     email,
     password,
@@ -189,4 +247,4 @@ const verifyOTP = async (req, res) => {
 };
 
 
-module.exports = { login, register, verifyOTP };
+module.exports = { login, registerstep1, verifyOTP, registerstep2,upload}; 
