@@ -34,12 +34,12 @@ export default function Logincontractors() {
           toast.success("Login successful!");
           dispatch(logincontractor(res.data)); // Dispatch the login action with the contractor data
           res.data.verified ? navigate("/dashboard") : navigate("/contractorregisterstep2");
-        } else {
-          toast.error("Login failed!");
         }
       } catch (error) {
-        toast.error("Login failed!");
-        console.error("Login error:", error);
+        console.log(error);
+
+        toast.error(error.response.data.msg || "Login failed!");
+        
       }
     }
   };
