@@ -1,14 +1,26 @@
-const express= require('express')
+const express = require("express");
 const router = express.Router();
-const {registerstep1,login,verifyOTP,registerstep2,upload}= require("../controllers/contractor.controllers");
-// const { protectRoute } = require("../middleware/authmiddleware");
-
+const {
+  registerstep1,
+  login,
+  verifyOTP,
+  registerstep2,
+  upload,
+  checkAuth,
+} = require("../controllers/contractor.controllers");
+const { protectRouteuser } = require("../middleware/authmiddleware"); // Use correct import
 
 router.post("/register1ststep", registerstep1);
-router.post("/register2ndstep",upload.fields([{ name: "gstDoc", maxCount: 1 }, { name: "licenseDoc", maxCount: 1 }]), registerstep2);
+router.post(
+  "/register2ndstep:id",
+  upload.fields([
+    { name: "gstDocument", maxCount: 1 },
+    { name: "licenseDocument", maxCount: 1 },
+  ]),
+  registerstep2
+);
 router.post("/verify-otp", verifyOTP);
 router.post("/login", login);
+router.get("/check", protectRouteuser, checkAuth); // Use correct middleware
 
-// router.post("/ContractorProfile",ContractorProfile)
-
-module.exports = router;  
+module.exports = router;

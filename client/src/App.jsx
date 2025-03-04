@@ -11,6 +11,7 @@ import ContractorProfile from "./pages/contractorprofile";
 import { Toaster } from "react-hot-toast";
 import ContractorregisterStep2 from "./pages/Registercontractors2nd";
 import Logincontractors from "./pages/Logincontractors";
+import contractordashboard from "./pages/contractordashboard";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/contractorregisterstep2" element={<ContractorregisterStep2 />} />
         <Route path="/ContractorProfile" element={<ContractorProfile/>}/>
         <Route path="/Logincontractors" element={<Logincontractors/>}/>
+        <Route path="/contractordashboard" element={<contractordashboard/>}/>
         
       </Routes>
     </Router>

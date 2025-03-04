@@ -13,7 +13,7 @@ const storage = require("multer-storage-cloudinary").CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "contractor_docs", // Cloudinary folder name
-    allowedFormats: ["jpg", "png", "pdf"],
+    allowed_formats: ["jpg", "png", "pdf"],
   },
 });
 
@@ -21,11 +21,17 @@ const upload = multer({ storage });
 
 // Controller function for second-step registration
 const registerstep2 = async (req, res) => {
+  console.log("registerstep2");
+  console.log("Files received:", req.files);
+
   try {
-    const { contractorId, gstNumber } = req.body;
-    
+    console.log('params', req.params);
+    const { id } = req.params;
+    const { gstNumber } = req.body;
+    console.log('params id', id);
+
     // Check if the contractor exists
-    const contractor = await Contractor.findById(contractorId);
+    const contractor = await Contractor.findById(id);
     if (!contractor) {
       return res.status(404).json({ message: "Contractor not found" });
     }
@@ -34,17 +40,23 @@ const registerstep2 = async (req, res) => {
     let gstDocUrl = "";
     let licenseDocUrl = "";
 
-    if (req.files["gstDoc"]) {
-      const result = await cloudinary.uploader.upload(req.files["gstDoc"][0].path, {
-        folder: "contractor_docs",
-      });
+    if (req.files && req.files["gstDocument"] && req.files["gstDocument"][0]) {
+      const result = await cloudinary.uploader.upload(
+        `data:${req.files["gstDocument"][0].mimetype};base64,${req.files["gstDocument"][0].buffer.toString("base64")}`,
+        {
+          folder: "contractor_docs",
+        }
+      );
       gstDocUrl = result.secure_url;
     }
 
-    if (req.files["licenseDoc"]) {
-      const result = await cloudinary.uploader.upload(req.files["licenseDoc"][0].path, {
-        folder: "contractor_docs",
-      });
+    if (req.files && req.files["licenseDocument"] && req.files["licenseDocument"][0]) {
+      const result = await cloudinary.uploader.upload(
+        `data:${req.files["licenseDocument"][0].mimetype};base64,${req.files["licenseDocument"][0].buffer.toString("base64")}`,
+        {
+          folder: "contractor_docs",
+        }
+      );
       licenseDocUrl = result.secure_url;
     }
 
@@ -52,17 +64,18 @@ const registerstep2 = async (req, res) => {
     contractor.gstNumber = gstNumber;
     contractor.gstDocument = gstDocUrl;
     contractor.licenseDocument = licenseDocUrl;
+    contractor.registrationStep = 2;
+    contractor.verificationStatus = "pending";
     contractor.verified = false; // Mark as pending verification
 
     await contractor.save();
 
     res.status(200).json({ message: "Step 2 registration completed", contractor });
   } catch (error) {
-    console.error(error);
+    console.error("error from registerstep2", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -246,5 +259,29 @@ const verifyOTP = async (req, res) => {
   }
 };
 
+const checkAuth = (req, res) => {
+  try {
+    console.log("controll",req.contractor);
+    res.status(200).json({
 
-module.exports = { login, registerstep1, verifyOTP, registerstep2,upload}; 
+      _id: req.contractor._id,
+      contractorName: req.contractor.contractorName,
+      email: req.contractor.email,
+      companyName: req.contractor.companyName,
+      country: req.contractor.country,
+      state: req.contractor.state,
+      city: req.contractor.city,
+      phone: req.contractor.phone,
+      jobTypes: req.contractor.jobTypes,
+      numberOfEmployees: req.contractor.numberOfEmployees,
+      profilePicture: req.contractor.profilePicture,
+      gstNumber: req.contractor.gstNumber,
+    });
+  } catch (error) {
+    console.log("error from checkAuth", error.message);
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+
+module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth}; 

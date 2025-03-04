@@ -1,32 +1,35 @@
 const jwt = require("jsonwebtoken");
-
-const User = require("../model/user.model");
-
+const contractor = require("../model/contractors.model");
 
 const protectRouteuser = async (req, res, next) => {
-  console.log('protectRoute');
-  
-  try {
-    const token = req.cookies.jwt;
+  console.log("protectRoute middleware triggered");
 
+  try {
+    const token = req.cookies?.jwt; // Ensure token is read properly
     if (!token) {
-      return res.status(401).json({ msg: "Unauthorized" });
+      return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
+
+    console.log("Received token:", token);
 
     const decoded = jwt.verify(token, process.env.JwT_SECRET);
     if (!decoded) {
-      return res.status(401).json({ msg: "Unauthorized" });
+      return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ msg: "Unauthorized" });
+  console.log(decoded);
+console.log(decoded.Id);
+
+    const contractordata = await contractor.findById(decoded.Id);
+    if (!contractordata) {
+      return res.status(401).json({ msg: "Unauthorized: User not found" });
     }
-    req.user = user;
+
+    req.contractor = contractordata;
     next();
   } catch (error) {
-    console.log("error from protectRoute", error.message);
+    console.error("Error from protectRoute:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
 
-module.exports = { protectRouteuser };
+module.exports = { protectRouteuser }; 
