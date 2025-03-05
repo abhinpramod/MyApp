@@ -4,7 +4,7 @@ import CardContent from "@/components/ui/card-content";
 import Button from "@/components/ui/button";
 import Avatar from "@/components/ui/avatar";
 import Switch from "@/components/ui/switch";
-import { Camera, Trash2, CirclePlus, X, Pencil, Save } from "lucide-react";
+import { Camera, Trash2, CirclePlus, X, Pencil, Save,Loader } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   TextField,
@@ -13,9 +13,11 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+
 } from "@mui/material";
 import axios from "axios"; // Import axios for API calls
 import axiosInstance from "../../lib/axios";
+
 
 
 const ContractorProfile = () => {
@@ -46,18 +48,22 @@ const ContractorProfile = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch contractor data on component mount
   useEffect(() => {
     const fetchContractorData = async () => {
       try {
+        setIsLoading(true);
         const response = await axiosInstance.get("/contractor/profile");
         setContractor(response.data);
         setAvailability(response.data.availability);
         setProfilePic(response.data.profilePic);
         setProjects(response.data.projects || []);
         setNumberOfEmployees(response.data.numberOfEmployees);
+        setIsLoading(false);
       } catch (error) {
+        setIsLoading(false);
         toast.error("Failed to fetch contractor data");
       }
     };
@@ -67,15 +73,19 @@ const ContractorProfile = () => {
 
   // Update availability
   const handleAvailabilityChange = async (checked) => {
+    setIsLoading(true);
     try {
       await axiosInstance.put("/contractor/availability", {
         availability: checked,
       });
       setAvailability(checked);
+      setIsLoading(false);
       toast.success(
         `Availability set to ${checked ? "Available" : "Not Available"}`
       );
+
     } catch (error) {
+      setIsLoading(false);
       toast.error("Failed to update availability");
     }
   };
@@ -83,10 +93,12 @@ const ContractorProfile = () => {
   // Update profile picture
   const handleProfilePicUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) return toast.error("No file selected");
+    setIsLoading(true);
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
+      setIsLoading(false);
       return;
     }
 
@@ -95,17 +107,22 @@ const ContractorProfile = () => {
 
     try {
       const response = await axiosInstance.put(
-        "/contractor/profilePic",formData
-
-      
+        "/contractor/updateProfilePic",formData,{
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        }
       );
       setProfilePic(response.data.profilePic);
+      setIsLoading(false);
       toast.success("Profile picture updated successfully!");
     } catch (error) {
+      setIsLoading(false);
       toast.error("Failed to update profile picture");
     }
   };
   const handleProjectImageUpload = (e) => {
+
     const file = e.target.files[0];
     if (!file) return;
   
@@ -129,6 +146,7 @@ const ContractorProfile = () => {
       formData.append("description", newProjectDescription);
 
       try {
+        setIsLoading(true);
         const response = await axiosInstance.post(
           `/contractor/projects${loginedId}`,
           formData
@@ -141,7 +159,9 @@ const ContractorProfile = () => {
         setOpenProjectDialog(false);
         setNewProjectImage(null);
         setNewProjectDescription("");
+        setIsLoading(false);
       } catch (error) {
+        setIsLoading(false);
         toast.error("Failed to add project");
       }
     } else {
@@ -152,10 +172,13 @@ const ContractorProfile = () => {
   // Delete project
   const handleDeleteProject = async (projectId) => {
     try {
-      await axiosInstance.delete(`/contractor/projects/${projectId}`);
+      setIsLoading(true);
+      await axiosInstance.delete("/contractor/projects/");
       setProjects(projects.filter((project) => project.id !== projectId));
+      setIsLoading(false);
       toast.success("Project deleted successfully!");
     } catch (error) {
+      setIsLoading(false);
       toast.error("Failed to delete project");
     }
   };
@@ -163,15 +186,23 @@ const ContractorProfile = () => {
   // Update number of employees
   const handleSaveEmployees = async () => {
     try {
-      await axiosInstance.put(`/contractor/employees${loginedId}`, {
+      setIsLoading(true);
+      await axiosInstance.put("/contractor/employeesnumber", {
         numberOfEmployees,
       });
       setIsEditingEmployees(false);
+      setIsLoading(false);
       toast.success("Number of employees updated successfully!");
     } catch (error) {
+      setIsLoading(false);
       toast.error("Failed to update number of employees");
     }
   };
+
+  if (isLoading) {
+  return  <center><Loader className="size-10 mt-60 animate-spin" />;</center>
+    
+  }
 
   return (
     <div className="p-6 h-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
@@ -180,7 +211,7 @@ const ContractorProfile = () => {
           <div className="relative">
             <Avatar
               className="w-24 h-24 rounded-full border-2 border-gray-200"
-              src={profilePic}
+              src={ contractor.profilePicture}
             />
             <label
               htmlFor="avatar-upload"
@@ -190,6 +221,7 @@ const ContractorProfile = () => {
               <input
                 type="file"
                 id="avatar-upload"
+                name="profilePic"
                 className="hidden"
                 accept="image/*"
                 onChange={handleProfilePicUpload}

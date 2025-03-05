@@ -316,6 +316,52 @@ console.log(contractor);
     res.status(500).json({ message: 'Failed to update availability', error });
   }
 };
+const updateemployeesnumber = async (req, res) => {
+  try {
+    const { numberOfEmployees } = req.body;
+    console.log(numberOfEmployees);
+    const contractor = await Contractor.findByIdAndUpdate(
+      req.contractor._id, // Assuming you're using authentication middleware
+      { numberOfEmployees },
+      { new: true }
+    );
 
+    res.status(200).json({ message: 'Number of employees updated successfully', contractor });
+  } catch (error) {
+    console.error('Error updating number of employees:', error);
+    res.status(500).json({ message: 'Failed to update number of employees', error });
+  }
+};
 
-module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth,contractorprofile,updateAvailability }; 
+const uploadProfilePic = async (req, res) => {
+  try {
+    const contractorId = req.contractor._id; // Ensure authentication middleware sets req.contractor
+
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload to Cloudinary using the file buffer
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+      {
+        folder: "profile_pictures", // Cloudinary folder name
+        resource_type: "image", // Ensure the file is treated as an image
+      }
+    );
+
+    // Update contractor's profile picture in the database
+    const contractor = await Contractor.findByIdAndUpdate(
+      contractorId,
+      { profilePicture: result.secure_url }, // Save the Cloudinary URL
+      { new: true } // Return the updated document
+    );
+
+    res.status(200).json({ profilePic: contractor.profilePic });
+  } catch (error) {
+    console.error("Profile picture upload error:", error);
+    res.status(500).json({ message: "Failed to upload profile picture", error });
+  }
+};
+module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth,contractorprofile,updateAvailability,updateemployeesnumber,uploadProfilePic};

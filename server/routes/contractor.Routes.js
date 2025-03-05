@@ -8,7 +8,9 @@ const {
   upload,
   checkAuth,
   contractorprofile,
-  updateAvailability
+  updateAvailability,
+  updateemployeesnumber,
+  uploadProfilePic
 } = require("../controllers/contractor.controllers");
 const { protectRoutecontractor } = require("../middleware/authmiddleware"); // Use correct import
 
@@ -26,6 +28,8 @@ router.post("/login", login);
 router.get("/check", protectRoutecontractor, checkAuth); 
 router.get("/profile", protectRoutecontractor, contractorprofile);  
 router.put("/availability", protectRoutecontractor, updateAvailability); 
+router.put("/employeesnumber", protectRoutecontractor, updateemployeesnumber); 
+router.put("/updateProfilePic",upload.single("profilePic"), protectRoutecontractor, uploadProfilePic);
 
 
 module.exports = router;
