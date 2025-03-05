@@ -4,21 +4,30 @@ import CardContent from "@/components/ui/card-content";
 import Button from "@/components/ui/button";
 import Avatar from "@/components/ui/avatar";
 import Switch from "@/components/ui/switch";
-import { Camera, Trash2, CirclePlus, X, Pencil, Save,Loader } from "lucide-react";
+import { Camera, Trash2, CirclePlus, X, Pencil, Save, Loader } from "lucide-react";
 import { toast } from "react-hot-toast";
-import {
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-
-} from "@mui/material";
-import axios from "axios"; // Import axios for API calls
+import { TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from "@mui/material";
 import axiosInstance from "../../lib/axios";
 
-
+// Confirmation Dialog Component
+const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <p>{message}</p>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="error">
+          Delete
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const ContractorProfile = () => {
   const [contractor, setContractor] = useState({
@@ -49,6 +58,8 @@ const ContractorProfile = () => {
   const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
 
   // Fetch contractor data on component mount
   useEffect(() => {
@@ -80,10 +91,7 @@ const ContractorProfile = () => {
       });
       setAvailability(checked);
       setIsLoading(false);
-      toast.success(
-        `Availability set to ${checked ? "Available" : "Not Available"}`
-      );
-
+      toast.success(`Availability set to ${checked ? "Available" : "Not Available"}`);
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to update availability");
@@ -106,13 +114,11 @@ const ContractorProfile = () => {
     formData.append("profilePic", file);
 
     try {
-      const response = await axiosInstance.put(
-        "/contractor/updateProfilePic",formData,{
+      const response = await axiosInstance.put("/contractor/updateProfilePic", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        }
-      );
+      });
       setProfilePic(response.data.profilePic);
       setIsLoading(false);
       toast.success("Profile picture updated successfully!");
@@ -121,23 +127,23 @@ const ContractorProfile = () => {
       toast.error("Failed to update profile picture");
     }
   };
-  const handleProjectImageUpload = (e) => {
 
+  const handleProjectImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
       return;
     }
-  
+
     const reader = new FileReader();
     reader.onload = () => {
       setNewProjectImage(reader.result);
     };
     reader.readAsDataURL(file);
   };
-  
+
   // Add project
   const handleAddProject = async () => {
     if (newProjectImage && newProjectDescription) {
@@ -147,14 +153,12 @@ const ContractorProfile = () => {
 
       try {
         setIsLoading(true);
-        const response = await axiosInstance.post(
-          `/contractor/projects${loginedId}`,
-          formData
-        
-          
-         
-        );
-        setProjects([...projects, response.data]);
+        const response = await axiosInstance.post("/contractor/addprojects", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        setProjects([...projects, response.data.project]);
         toast.success("Project added successfully!");
         setOpenProjectDialog(false);
         setNewProjectImage(null);
@@ -173,14 +177,29 @@ const ContractorProfile = () => {
   const handleDeleteProject = async (projectId) => {
     try {
       setIsLoading(true);
-      await axiosInstance.delete("/contractor/projects/");
-      setProjects(projects.filter((project) => project.id !== projectId));
+      await axiosInstance.delete("/contractor/deleteproject", { data: { projectId } });
+      setProjects((prevProjects) => prevProjects.filter((project) => project._id !== projectId));
       setIsLoading(false);
       toast.success("Project deleted successfully!");
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to delete project");
     }
+  };
+
+  // Open delete confirmation dialog
+  const openDeleteConfirmation = (projectId) => {
+    setProjectToDelete(projectId);
+    setDeleteConfirmationOpen(true);
+  };
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      handleDeleteProject(projectToDelete);
+      setSelectedProject(null); // Close the zoomed view after deletion
+    }
+    setDeleteConfirmationOpen(false);
   };
 
   // Update number of employees
@@ -199,9 +218,20 @@ const ContractorProfile = () => {
     }
   };
 
+  // if (!contractor) {
+  //   return (
+  //     <center>
+  //       <Loader className="size-10 mt-60 animate-spin" />
+  //     </center>
+  //   );
+  // }
+
   if (isLoading) {
-  return  <center><Loader className="size-10 mt-60 animate-spin" />;</center>
-    
+    return (
+      <center>
+        <Loader className="size-10 mt-60 animate-spin" />
+      </center>
+    );
   }
 
   return (
@@ -211,7 +241,7 @@ const ContractorProfile = () => {
           <div className="relative">
             <Avatar
               className="w-24 h-24 rounded-full border-2 border-gray-200"
-              src={ contractor.profilePicture}
+              src={contractor.profilePicture}
             />
             <label
               htmlFor="avatar-upload"
@@ -229,12 +259,8 @@ const ContractorProfile = () => {
             </label>
           </div>
           <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
-          <h4 className="font-semibold text-gray-600">
-            {contractor.contractorName}
-          </h4>
-          <p className="text-gray-500 text-center mt-2">
-            {contractor.description}
-          </p>
+          <h4 className="font-semibold text-gray-600">{contractor.contractorName}</h4>
+          <p className="text-gray-500 text-center mt-2">{contractor.description}</p>
         </div>
 
         <div className="w-full md:w-2/3 space-y-4">
@@ -245,8 +271,7 @@ const ContractorProfile = () => {
             <strong>GST:</strong> {contractor.gstNumber}
           </p>
           <p className="text-gray-600">
-            <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}
-            {contractor.state}, {contractor.country}
+            <strong>Address:</strong> {contractor.address}, {contractor.city}, {contractor.state}, {contractor.country}
           </p>
           <div className="flex items-center gap-2">
             <strong>Number of Employees:</strong>
@@ -278,10 +303,7 @@ const ContractorProfile = () => {
             )}
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <Switch
-              checked={availability}
-              onCheckedChange={handleAvailabilityChange}
-            />
+            <Switch checked={availability} onCheckedChange={handleAvailabilityChange} />
             <span className={availability ? "text-green-600" : "text-red-600"}>
               {availability ? "Available" : "Not Available"}
             </span>
@@ -297,39 +319,29 @@ const ContractorProfile = () => {
         <CirclePlus size={18} /> Add Project
       </Button>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-        {projects.map((project, index) => (
-          <Card
-            key={index}
-            className="relative cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => setSelectedProject(project)}
-          >
-            <CardContent>
-              <img
-                src={project.image}
-                alt={`Project ${index + 1}`}
-                className="w-full h-28 object-cover rounded-lg"
-              />
-              <p className="text-center text-sm mt-2 text-gray-600">
-                {project.description}
-              </p>
-              <button
-                className="absolute top-2 right-2 text-red-500 hover:text-red-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteProject(project.id);
-                }}
-              >
-                <Trash2 size={18} />
-              </button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+  {projects.map((project, index) => (
+    <Card
+      key={index}
+      className="relative cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => {setSelectedProject(project)
+        console.log('working');
+      }} // Pass the onClick handler
+    >
+      <CardContent>
+        <img
+          src={project.image}
+          alt={`Project ${index + 1}`}
+          className="w-full h-28 object-cover rounded-lg"
+        />
+        <p className="text-center text-sm mt-2 text-gray-600">
+          {project.description}
+        </p>
+      </CardContent>
+    </Card>
+  ))}
+</div>
 
-      <Dialog
-        open={openProjectDialog}
-        onClose={() => setOpenProjectDialog(false)}
-      >
+      <Dialog open={openProjectDialog} onClose={() => setOpenProjectDialog(false)}>
         <DialogTitle>Add New Project</DialogTitle>
         <DialogContent>
           {newProjectImage && (
@@ -356,22 +368,20 @@ const ContractorProfile = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleAddProject}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
+          <Button onClick={handleAddProject} className="bg-blue-500 hover:bg-blue-600 text-white">
             Add
           </Button>
         </DialogActions>
       </Dialog>
 
       {selectedProject && (
+        
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={() => setSelectedProject(null)}
         >
           <div
-            className="relative max-w-2xl w-full p-4 bg-white rounded-lg"
+            className="relative max-w-2xl w-full p-6 bg-white rounded-lg mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -383,16 +393,37 @@ const ContractorProfile = () => {
             <img
               src={selectedProject.image}
               alt="Selected Project"
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
             />
             <p className="text-center text-lg mt-4 text-gray-600">
               {selectedProject.description}
             </p>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              Added on: {new Date(selectedProject.createdAt).toLocaleString()}
+            </p>
+            <button
+              className="absolute bottom-2 right-2 text-red-500 hover:text-red-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDeleteConfirmation(selectedProject._id);
+              }}
+            >
+              <Trash2 size={24} />
+            </button>
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Project"
+        message="Are you sure you want to delete this project?"
+      />
     </div>
   );
 };
 
-export default ContractorProfile;
+export default ContractorProfile

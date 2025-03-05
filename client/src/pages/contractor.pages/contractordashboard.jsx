@@ -2,10 +2,13 @@ import { Outlet, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Menu, X, Bell, User, Home, Briefcase, Settings, LogOut } from "lucide-react";
 import Button from "@/components/ui/button";
+import useAuthCheck from "../../hooks/usecheakAuth";
 
 const ContractorDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to manage sidebar visibility
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // State to track mobile view
+
+  const { loading } = useAuthCheck();
 
   // Function to toggle sidebar
   const toggleSidebar = () => {

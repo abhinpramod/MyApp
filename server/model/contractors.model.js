@@ -20,6 +20,15 @@ const contractorSchema = new mongoose.Schema({
   licenseDocument: { type: String },
   registrationStep: { type: Number, enum: [1, 2], default: 1 },
   verified: { type: Boolean, default: false },
+  projects: [
+    {
+      _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+      image: { type: String, required: true }, // Cloudinary URL
+      description: { type: String, required: true }, // Project description
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Contractor', contractorSchema);

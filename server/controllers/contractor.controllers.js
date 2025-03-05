@@ -8,7 +8,7 @@ const sendEmail = require("../lib/nodemailer");
 const cloudinary = require("../lib/cloudinary"); // Cloudinary config
 const multer = require("multer");
 
-// Multer setup for Cloudinary
+// Multer setup for Cloudinary (used by other controllers)
 const storage = require("multer-storage-cloudinary").CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -17,7 +17,19 @@ const storage = require("multer-storage-cloudinary").CloudinaryStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage }); // Existing Multer instance for other controllers
+
+// Separate Multer setup for addProject (in-memory file handling)
+const memoryStorage = multer.memoryStorage(); // Store files in memory as buffers
+
+// Configure Multer with limits for addProject
+const uploadForProjects = multer({
+  storage: memoryStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB file size limit
+    fieldSize: 10 * 1024 * 1024, // 10 MB field size limit (for description)
+  },
+});
 
 // Controller function for second-step registration
 const registerstep2 = async (req, res) => {
@@ -77,6 +89,61 @@ const registerstep2 = async (req, res) => {
   }
 };
 
+// Add project controller
+const addProject = async (req, res) => {
+  try {
+    const contractorId = req.contractor._id; // Ensure authentication middleware sets req.contractor
+
+    // Check if files and description are provided
+    if (!req.body.image || !req.body.description) {
+      return res.status(400).json({ message: "Image and description are required" });
+    }
+
+    // Validate description length
+    if (req.body.description.length > 10000) {
+      return res.status(400).json({ message: "Description is too long" });
+    }
+
+    // If the image is sent as a base64 string
+    const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, ""); // Remove the data URL prefix
+    const buffer = Buffer.from(base64Data, "base64"); // Convert base64 to buffer
+
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(
+      `data:image/png;base64,${buffer.toString("base64")}`, // Use the buffer
+      {
+        folder: "contractor_projects", // Cloudinary folder name
+        resource_type: "image", // Ensure the file is treated as an image
+      }
+    );
+
+    // Update contractor's projects array
+    const contractor = await Contractor.findByIdAndUpdate(
+      contractorId,
+      {
+        $push: {
+          projects: {
+            image: result.secure_url, // Save the Cloudinary URL
+            description: req.body.description, // Save the project description
+          },
+        },
+      },
+      { new: true } // Return the updated document
+    );
+
+    res.status(200).json({
+      message: "Project added successfully",
+      project: {
+        image: result.secure_url,
+        description: req.body.description,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding project:", error);
+    res.status(500).json({ message: "Failed to add project", error });
+  }
+};
+// Other controllers remain unchanged
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -112,6 +179,20 @@ const login = async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 };
+ 
+const handleDeleteProject = async (req, res) => {
+  const projectId = req.body.projectId;
+  try {
+    await Contractor.findOneAndUpdate(
+      { _id: req.contractor._id },
+      { $pull: { projects: { _id: projectId } } }
+    );
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    res.status(500).json({ message: "Failed to delete project" });
+  }
+};
 
 const registerstep1 = async (req, res) => {
   const {
@@ -125,7 +206,6 @@ const registerstep1 = async (req, res) => {
     phone,
     jobTypes,
     numberOfEmployees,
-
   } = req.body;
   console.log(req.body);
 
@@ -135,9 +215,9 @@ const registerstep1 = async (req, res) => {
       !email ||
       !password ||
       !companyName ||
-      !country||
-      !state||
-      !city||
+      !country ||
+      !state ||
+      !city ||
       !phone ||
       !jobTypes ||
       !numberOfEmployees
@@ -168,7 +248,6 @@ const registerstep1 = async (req, res) => {
       country,
       state,
       city,
-  
       phone,
       jobTypes,
       numberOfEmployees,
@@ -235,7 +314,7 @@ const verifyOTP = async (req, res) => {
     await newContractor.save();
     console.log("New contractor saved:", newContractor);
 
-    // // Clear temporary data
+    // Clear temporary data
     await OTP.deleteOne({ email });
     await TempContractor.deleteOne({ email });
     console.log("Temporary data deleted for email:", email);
@@ -274,9 +353,8 @@ const contractorprofile = async (req, res) => {
 
 const checkAuth = (req, res) => {
   try {
-    console.log("controll",req.contractor);
+    console.log("controll", req.contractor);
     res.status(200).json({
-
       _id: req.contractor._id,
       contractorName: req.contractor.contractorName,
       email: req.contractor.email,
@@ -295,12 +373,12 @@ const checkAuth = (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
 const updateAvailability = async (req, res) => {
   console.log('updateAvailability');
-  
+
   try {
     const { availability } = req.body;
-  
 
     // Update contractor's availability
     const contractor = await Contractor.findByIdAndUpdate(
@@ -308,7 +386,7 @@ const updateAvailability = async (req, res) => {
       { availability },
       { new: true }
     );
-console.log(contractor);
+    console.log(contractor);
 
     res.status(200).json({ message: 'Availability updated successfully', contractor });
   } catch (error) {
@@ -316,6 +394,7 @@ console.log(contractor);
     res.status(500).json({ message: 'Failed to update availability', error });
   }
 };
+
 const updateemployeesnumber = async (req, res) => {
   try {
     const { numberOfEmployees } = req.body;
@@ -364,4 +443,19 @@ const uploadProfilePic = async (req, res) => {
     res.status(500).json({ message: "Failed to upload profile picture", error });
   }
 };
-module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth,contractorprofile,updateAvailability,updateemployeesnumber,uploadProfilePic};
+
+module.exports = {
+  login,
+  registerstep1,
+  verifyOTP,
+  registerstep2,
+  upload,
+  checkAuth,
+  contractorprofile,
+  updateAvailability,
+  updateemployeesnumber,
+  uploadProfilePic,
+  addProject,
+  uploadForProjects,
+  handleDeleteProject // Export the new Multer instance for addProject
+};
