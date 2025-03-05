@@ -65,7 +65,7 @@ const registerstep2 = async (req, res) => {
     contractor.gstDocument = gstDocUrl;
     contractor.licenseDocument = licenseDocUrl;
     contractor.registrationStep = 2;
-    contractor.verificationStatus = "pending";
+    contractor.approvalStatus = "pending";
     contractor.verified = false; // Mark as pending verification
 
     await contractor.save();
@@ -168,7 +168,7 @@ const registerstep1 = async (req, res) => {
       country,
       state,
       city,
-    
+  
       phone,
       jobTypes,
       numberOfEmployees,
@@ -259,6 +259,19 @@ const verifyOTP = async (req, res) => {
   }
 };
 
+const contractorprofile = async (req, res) => {
+  try {
+    const contractor = await Contractor.findById(req.contractor._id);
+    if (!contractor) {
+      return res.status(404).json({ msg: "Contractor not found" });
+    }
+    res.status(200).json(contractor);
+  } catch (error) {
+    console.log("Error from contractorprofile:", error.message);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
 const checkAuth = (req, res) => {
   try {
     console.log("controll",req.contractor);
@@ -282,6 +295,27 @@ const checkAuth = (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+const updateAvailability = async (req, res) => {
+  console.log('updateAvailability');
+  
+  try {
+    const { availability } = req.body;
+  
+
+    // Update contractor's availability
+    const contractor = await Contractor.findByIdAndUpdate(
+      req.contractor._id, // Assuming you're using authentication middleware
+      { availability },
+      { new: true }
+    );
+console.log(contractor);
+
+    res.status(200).json({ message: 'Availability updated successfully', contractor });
+  } catch (error) {
+    console.error('Error updating availability:', error);
+    res.status(500).json({ message: 'Failed to update availability', error });
+  }
+};
 
 
-module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth}; 
+module.exports = { login, registerstep1, verifyOTP, registerstep2,upload,checkAuth,contractorprofile,updateAvailability }; 

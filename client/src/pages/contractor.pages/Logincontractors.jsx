@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Container, Paper, Box, Grid, Link } from "@mui/material";
 import { useDispatch } from "react-redux";
-import { logincontractor } from "../redux/contractorslice"; 
-import axiosInstance from "../lib/axios"; 
+import { logincontractor } from "../../redux/contractorslice"; 
+import axiosInstance from "../../lib/axios"; 
 import { toast } from "react-hot-toast"; 
 import { useNavigate } from "react-router-dom"; 
 
@@ -32,8 +32,10 @@ export default function Logincontractors() {
         const res = await axiosInstance.post("/contractor/login", formData);
         if (res.status === 200) {
           toast.success("Login successful!");
-          dispatch(logincontractor(res.data)); // Dispatch the login action with the contractor data
-          res.data.verified ? navigate("/dashboard") : navigate("/contractorregisterstep2");
+          dispatch(logincontractor(res.data));
+        console.log(res.data);
+          // Dispatch the login action with the contractor data
+          res.data.verified ? navigate("/contector/contractordashboard") : navigate("/contractor/contractorregisterstep2");
         }
       } catch (error) {
         console.log(error);
@@ -60,16 +62,16 @@ export default function Logincontractors() {
           {/* Right Side Form */}
           <Grid item xs={12} md={6}>
             <Typography variant="h4" align="center" gutterBottom>
-              Login to Your Account
+              Login contractor
             </Typography>
             <form onSubmit={handleSubmit}>
               <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
               <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
-              <Box textAlign="right" marginTop={1}>
+              {/* <Box textAlign="right" marginTop={1}>
                 <Link href="#" variant="body2">
                   Forgot password?
                 </Link>
-              </Box>
+              </Box> */}
               <Box textAlign="center" marginTop={2}>
                 <Button type="submit" variant="contained" color="primary" fullWidth>
                   Login
@@ -77,7 +79,7 @@ export default function Logincontractors() {
               </Box>
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
-                  Don't have an account? <Link href="/registercontractors1">Sign up</Link>
+                  Don't have an account? <Link href="/contractor/registercontractorstep1">Sign up</Link>
                 </Typography>
               </Box>
             </form>

@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const contractor = require("../model/contractors.model");
 
-const protectRouteuser = async (req, res, next) => {
+const protectRoutecontractor = async (req, res, next) => {
   console.log("protectRoute middleware triggered");
 
   try {
@@ -32,4 +32,4 @@ console.log(decoded.Id);
   }
 };
 
-module.exports = { protectRouteuser }; 
+module.exports = { protectRoutecontractor }; 

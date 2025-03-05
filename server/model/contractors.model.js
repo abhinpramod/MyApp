@@ -13,6 +13,7 @@ const contractorSchema = new mongoose.Schema({
   profilePicture: { type: String },
   gstNumber: { type: String },
   country: { type: String },
+  availability: { type: Boolean, default: false },
   state: { type: String },
   city: { type: String },
   gstDocument: { type: String },

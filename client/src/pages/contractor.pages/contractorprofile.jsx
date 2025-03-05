@@ -15,7 +15,7 @@ import {
   IconButton,
 } from "@mui/material";
 import axios from "axios"; // Import axios for API calls
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 
 
 const ContractorProfile = () => {
@@ -51,7 +51,7 @@ const ContractorProfile = () => {
   useEffect(() => {
     const fetchContractorData = async () => {
       try {
-        const response = await axiosInstance.get(`/contractor/profile${loginedId}`);
+        const response = await axiosInstance.get("/contractor/profile");
         setContractor(response.data);
         setAvailability(response.data.availability);
         setProfilePic(response.data.profilePic);
@@ -68,7 +68,7 @@ const ContractorProfile = () => {
   // Update availability
   const handleAvailabilityChange = async (checked) => {
     try {
-      await axiosInstance.put(`/contractor/availability${loginedId}`, {
+      await axiosInstance.put("/contractor/availability", {
         availability: checked,
       });
       setAvailability(checked);
@@ -95,7 +95,7 @@ const ContractorProfile = () => {
 
     try {
       const response = await axiosInstance.put(
-        `/contractor/profilePic${loginedId}`,formData
+        "/contractor/profilePic",formData
 
       
       );

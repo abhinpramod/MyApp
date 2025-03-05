@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Paper, Typography, Avatar } from "@mui/material";
 import { toast } from "react-hot-toast";
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 import { useSelector } from "react-redux";
-import useAuthCheck from "../hooks/usecheakAuth";
+import useAuthCheck from "../../hooks/usecheakAuth";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
 const ContractorVerificationStep2 = () => {

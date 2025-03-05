@@ -22,7 +22,7 @@ const Navbar = () => {
           <div className="hidden lg:flex space-x-8">
             {[
               { name: "Home", path: "/" },
-              { name: "Contractors", path: "/contractors" },
+              { name: "Contractors", path: "/contractors/contractors" },
               { name: "Stores", path: "/stores" },
               { name: "About", path: "/about" },
             ].map((item) => (
@@ -47,7 +47,7 @@ const Navbar = () => {
             </Link>
 
             <Link
-              to="/registercontractors1"
+              to="/contractor/registercontractorstep1"
               className=" py-3 text-lg font-semibold  transition-all duration-300  hover:scale-105 flex items-center gap-2"
             >
               <Briefcase size={20} />
@@ -97,7 +97,7 @@ const Navbar = () => {
             </Link>
 
             <Link
-              to="/registercontractors1"
+              to="/contractor/registercontractorstep1"
               className="px-6  text-lg font-semibold  transition-all duration-300  hover:scale-105 flex items-center gap-2"
             >
               <Briefcase size={20} />

@@ -7,8 +7,10 @@ const {
   registerstep2,
   upload,
   checkAuth,
+  contractorprofile,
+  updateAvailability
 } = require("../controllers/contractor.controllers");
-const { protectRouteuser } = require("../middleware/authmiddleware"); // Use correct import
+const { protectRoutecontractor } = require("../middleware/authmiddleware"); // Use correct import
 
 router.post("/register1ststep", registerstep1);
 router.post(
@@ -21,6 +23,9 @@ router.post(
 );
 router.post("/verify-otp", verifyOTP);
 router.post("/login", login);
-router.get("/check", protectRouteuser, checkAuth); // Use correct middleware
+router.get("/check", protectRoutecontractor, checkAuth); 
+router.get("/profile", protectRoutecontractor, contractorprofile);  
+router.put("/availability", protectRoutecontractor, updateAvailability); 
+
 
 module.exports = router;

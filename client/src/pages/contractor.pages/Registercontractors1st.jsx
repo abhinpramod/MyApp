@@ -17,7 +17,7 @@ import {
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 import { toast } from "react-hot-toast";
 import { v4 as uuid } from "uuid";
 import { Country, State, City } from "country-state-city";
