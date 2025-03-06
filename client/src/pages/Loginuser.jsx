@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { TextField, Button, Typography, Container, Paper, Box, Grid, Link, IconButton } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Grid,
+  Link,
+  IconButton,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
@@ -8,7 +18,6 @@ import { Loader } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { loginuser } from "../redux/userslice";
 
-
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -16,19 +25,21 @@ export default function Login() {
     email: "",
     password: "",
   });
-  
+
   const [errors, setErrors] = useState({});
 
   const validate = () => {
     let tempErrors = {};
-    tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
+    tempErrors.email = /.+@.+\..+/.test(formData.email)
+      ? ""
+      : "Invalid email format";
     tempErrors.password = formData.password ? "" : "Password is required";
-    
+
     setErrors(tempErrors);
     return Object.values(tempErrors).every((x) => x === "");
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
       console.log("Login Data:", formData);
@@ -38,16 +49,14 @@ export default function Login() {
           toast.success("Login successful!");
           navigate("/home");
           dispatch(loginuser(res.data));
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error.response.data.msg || "Login failed!");
       }
-      
-    }catch (error) {
-      console.log(error);
-      toast.error(error.response.data.msg || "Login failed!");
     }
-  }
   };
-  
-  
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -120,7 +129,8 @@ export default function Login() {
                 Welcome Back!
               </Typography>
               <Typography variant="body1">
-                Login to access your contractor account and manage your projects.
+                Login to access your contractor account and manage your
+                projects.
               </Typography>
             </Box>
           </Grid>
@@ -165,9 +175,7 @@ export default function Login() {
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
                   Don't have an account?{" "}
-                  <Link href="/registeruser">
-                    Sign up
-                  </Link>
+                  <Link href="/registeruser">Sign up</Link>
                 </Typography>
               </Box>
             </form>

@@ -15,9 +15,9 @@ import { logincontractor } from "../../redux/contractorslice";
 import axiosInstance from "../../lib/axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { HomeIcon } from "lucide-react"; 
+import { HomeIcon } from "lucide-react";
 
-const  Logincontractors=()=> {
+const Logincontractors = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,14 +29,13 @@ const  Logincontractors=()=> {
 
   const validate = () => {
     let tempErrors = {};
-   if (!formData.email ) {
-     tempErrors.email = "Email is required";
-     
-   }else{
-    tempErrors.email = /.+@.+\..+/.test(formData.email)
-    ? ""
-    : "Invalid email format";
-   }
+    if (!formData.email) {
+      tempErrors.email = "Email is required";
+    } else {
+      tempErrors.email = /.+@.+\..+/.test(formData.email)
+        ? ""
+        : "Invalid email format";
+    }
     tempErrors.password = formData.password ? "" : "Password is required";
 
     setErrors(tempErrors);
@@ -137,7 +136,8 @@ const  Logincontractors=()=> {
                 Welcome Back!
               </Typography>
               <Typography variant="body1">
-                Login to access your contractor account and manage your projects.
+                Login to access your contractor account and manage your
+                projects.
               </Typography>
             </Box>
           </Grid>
@@ -193,6 +193,6 @@ const  Logincontractors=()=> {
       </Paper>
     </Container>
   );
-}
+};
 
 export default Logincontractors;
