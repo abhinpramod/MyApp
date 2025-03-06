@@ -4,9 +4,13 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 import { HomeIcon } from "lucide-react";
+import { Loader } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { loginuser } from "../redux/userslice";
 
 
 export default function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -28,8 +32,19 @@ export default function Login() {
     e.preventDefault();
     if (validate()) {
       console.log("Login Data:", formData);
+      try {
+        const res = await axiosInstance.post("/user/login", formData);
+        if (res.status === 200) {
+          toast.success("Login successful!");
+          navigate("/home");
+          dispatch(loginuser(res.data));
+      }
       
+    }catch (error) {
+      console.log(error);
+      toast.error(error.response.data.msg || "Login failed!");
     }
+  }
   };
   
   
