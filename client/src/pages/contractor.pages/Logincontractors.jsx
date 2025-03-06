@@ -35,7 +35,7 @@ export default function Logincontractors() {
           dispatch(logincontractor(res.data));
         console.log(res.data);
           // Dispatch the login action with the contractor data
-          res.data.verified ? navigate("/contector/contractordashboard") : navigate("/contractor/contractorregisterstep2");
+          res.data.verified ? navigate("/contractor/contractorhome") : navigate("/contractor/contractorregisterstep2");
         }
       } catch (error) {
         console.log(error);

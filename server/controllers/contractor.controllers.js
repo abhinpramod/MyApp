@@ -354,25 +354,22 @@ const contractorprofile = async (req, res) => {
 const checkAuth = (req, res) => {
   try {
     console.log("controll", req.contractor);
-    res.status(200).json({
-      _id: req.contractor._id,
-      contractorName: req.contractor.contractorName,
-      email: req.contractor.email,
-      companyName: req.contractor.companyName,
-      country: req.contractor.country,
-      state: req.contractor.state,
-      city: req.contractor.city,
-      phone: req.contractor.phone,
-      jobTypes: req.contractor.jobTypes,
-      numberOfEmployees: req.contractor.numberOfEmployees,
-      profilePicture: req.contractor.profilePicture,
-      gstNumber: req.contractor.gstNumber,
-    });
+    res.status(200).json(req.contractor);
   } catch (error) {
     console.log("error from checkAuth", error.message);
     res.status(500).json({ msg: error.message });
   }
 };
+
+const logoutcontractor = (req, res) => {
+  try {
+    res.clearCookie("jwt");
+    res.status(200).json({ msg: "Logout successful" });
+  } catch (error) {
+    console.log("Error from logoutcontractor:", error.message);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+}
 
 const updateAvailability = async (req, res) => {
   console.log('updateAvailability');
@@ -436,8 +433,12 @@ const uploadProfilePic = async (req, res) => {
       { profilePicture: result.secure_url }, // Save the Cloudinary URL
       { new: true } // Return the updated document
     );
+    console.log(
+contractor
+    );
 
-    res.status(200).json({ profilePic: contractor.profilePic });
+
+    res.status(200).json(contractor);
   } catch (error) {
     console.error("Profile picture upload error:", error);
     res.status(500).json({ message: "Failed to upload profile picture", error });
@@ -457,5 +458,6 @@ module.exports = {
   uploadProfilePic,
   addProject,
   uploadForProjects,
+  logoutcontractor,
   handleDeleteProject // Export the new Multer instance for addProject
 };

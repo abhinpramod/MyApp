@@ -13,7 +13,8 @@ const {
   uploadProfilePic,
   addProject,
   uploadForProjects,
-  handleDeleteProject // Import the new Multer instance
+  handleDeleteProject,
+  logoutcontractor // Import the new Multer instance
 } = require("../controllers/contractor.controllers");
 const { protectRoutecontractor } = require("../middleware/authmiddleware");
 
@@ -48,5 +49,6 @@ router.post(
   addProject
 );
 router.delete("/deleteproject", protectRoutecontractor, handleDeleteProject);
+router.post("/logout", protectRoutecontractor,logoutcontractor);
 
 module.exports = router;

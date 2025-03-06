@@ -119,7 +119,7 @@ const ContractorProfile = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      setProfilePic(response.data.profilePic);
+      setProfilePic(response.data.profilePicture);
       setIsLoading(false);
       toast.success("Profile picture updated successfully!");
     } catch (error) {
@@ -218,14 +218,6 @@ const ContractorProfile = () => {
     }
   };
 
-  // if (!contractor) {
-  //   return (
-  //     <center>
-  //       <Loader className="size-10 mt-60 animate-spin" />
-  //     </center>
-  //   );
-  // }
-
   if (isLoading) {
     return (
       <center>
@@ -235,13 +227,13 @@ const ContractorProfile = () => {
   }
 
   return (
-    <div className="p-6 h-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
+    < div className="p-6 mt-5 max-h-fit max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">
             <Avatar
               className="w-24 h-24 rounded-full border-2 border-gray-200"
-              src={contractor.profilePicture}
+              src={profilePic || contractor.profilePicture}
             />
             <label
               htmlFor="avatar-upload"
@@ -318,28 +310,26 @@ const ContractorProfile = () => {
       >
         <CirclePlus size={18} /> Add Project
       </Button>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-  {projects.map((project, index) => (
-    <Card
-      key={index}
-      className="relative cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => {setSelectedProject(project)
-        console.log('working');
-      }} // Pass the onClick handler
-    >
-      <CardContent>
-        <img
-          src={project.image}
-          alt={`Project ${index + 1}`}
-          className="w-full h-28 object-cover rounded-lg"
-        />
-        <p className="text-center text-sm mt-2 text-gray-600">
-          {project.description}
-        </p>
-      </CardContent>
-    </Card>
-  ))}
-</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+        {projects.map((project, index) => (
+          <Card
+            key={index}
+            className="relative cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setSelectedProject(project)}
+          >
+            <CardContent>
+              <img
+                src={project.image}
+                alt={`Project ${index + 1}`}
+                className="w-full h-40 object-cover rounded-lg"
+              />
+              <p className="text-center text-sm mt-2 text-gray-600">
+                {project.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <Dialog open={openProjectDialog} onClose={() => setOpenProjectDialog(false)}>
         <DialogTitle>Add New Project</DialogTitle>
@@ -375,7 +365,6 @@ const ContractorProfile = () => {
       </Dialog>
 
       {selectedProject && (
-        
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={() => setSelectedProject(null)}
@@ -426,4 +415,4 @@ const ContractorProfile = () => {
   );
 };
 
-export default ContractorProfile
+export default ContractorProfile;
