@@ -1,7 +1,13 @@
 import React, { useState } from "react";
-import { TextField, Button, Typography, Container, Paper, Box, Grid, Link } from "@mui/material";
+import { TextField, Button, Typography, Container, Paper, Box, Grid, Link, IconButton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../lib/axios";
+import toast from "react-hot-toast";
+import { HomeIcon } from "lucide-react";
+
 
 export default function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,47 +24,135 @@ export default function Login() {
     return Object.values(tempErrors).every((x) => x === "");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     if (validate()) {
       console.log("Login Data:", formData);
+      
     }
   };
-
+  
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleHomeClick = () => {
+    navigate("/"); // Navigate to the home page
+  };
+
   return (
     <Container maxWidth="lg">
-      <Paper elevation={3} sx={{ padding: 10, marginTop: 15 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          padding: 10,
+          marginTop: 10,
+          position: "relative", // Add relative positioning to the Paper
+        }}
+      >
+        {/* Home Icon Button inside Paper */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 16, // Adjust top position
+            right: 16, // Adjust right position
+          }}
+        >
+          <IconButton onClick={handleHomeClick} color="">
+            <HomeIcon fontSize="large" />
+          </IconButton>
+        </Box>
+
         <Grid container spacing={2}>
-          {/* Left Side Image (Only visible on large screens) */}
-          <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
-            <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
+          {/* Left Side Image with Text Overlay */}
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{
+              position: "relative",
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              height: "500px", // Adjust height as needed
+            }}
+          >
+            <img
+              src="../../../public/cover.jpeg"
+              alt="image"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                color: "white",
+                backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+                padding: "20px",
+                borderRadius: "10px",
+              }}
+            >
+              <Typography variant="h4" gutterBottom>
+                Welcome Back!
+              </Typography>
+              <Typography variant="body1">
+                Login to access your contractor account and manage your projects.
+              </Typography>
+            </Box>
           </Grid>
-          
+
           {/* Right Side Form */}
           <Grid item xs={12} md={6}>
             <Typography variant="h4" align="center" gutterBottom>
               Login to Your Account
             </Typography>
             <form onSubmit={handleSubmit}>
-              <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
-              <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
-              <Box textAlign="right" marginTop={1}>
-                <Link href="#" variant="body2">
-                  Forgot password?
-                </Link>
-              </Box>
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={!!errors.password}
+                helperText={errors.password}
+                margin="normal"
+              />
               <Box textAlign="center" marginTop={2}>
-                <Button type="submit" variant="contained" color="primary" fullWidth>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                >
                   Login
                 </Button>
               </Box>
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
-                  Don't have an account? <Link href="/registeruser">Sign up</Link>
+                  Don't have an account?{" "}
+                  <Link href="/registeruser">
+                    Sign up
+                  </Link>
                 </Typography>
               </Box>
             </form>

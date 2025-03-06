@@ -158,22 +158,7 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
     generateToken(contractor._id, res);
-    res.status(200).json({
-      _id: contractor._id,
-      contractorName: contractor.contractorName,
-      email: contractor.email,
-      companyName: contractor.companyName,
-      location: contractor.location,
-      phone: contractor.phone,
-      jobTypes: contractor.jobTypes,
-      numberOfEmployees: contractor.numberOfEmployees,
-      profilePicture: contractor.profilePicture,
-      gstNumber: contractor.gstNumber,
-      gstDocument: contractor.gstDocument,
-      licenseDocument: contractor.licenseDocument,
-      registrationStep: contractor.registrationStep,
-      verified: contractor.verified,
-    });
+    res.status(200).json(contractor);
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ msg: "Internal server error" });

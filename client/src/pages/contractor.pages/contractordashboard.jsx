@@ -1,6 +1,16 @@
 import { Outlet, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X, Bell, User, Home, Briefcase, Settings, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  Bell,
+  User,
+  Home,
+  Briefcase,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import Button from "@/components/ui/button";
 import useAuthCheck from "../../hooks/usecheakAuth";
 import { useSelector, useDispatch } from "react-redux";
@@ -8,7 +18,13 @@ import { logoutcontractor } from "../../redux/contractorslice";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  DialogContentText,
+} from "@mui/material";
 
 const ContractorDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to manage sidebar visibility
@@ -79,7 +95,11 @@ const ContractorDashboard = () => {
             onClick={toggleSidebar}
             className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 focus:outline-none self-end"
           >
-            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isSidebarOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
 
           {/* Navigation Links */}
@@ -90,8 +110,10 @@ const ContractorDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <Home className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Home</span>
+              <LayoutDashboard />{" "}
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Dashboard
+              </span>
             </Link>
             <Link
               to="/contractor/ContractorProfile"
@@ -100,7 +122,9 @@ const ContractorDashboard = () => {
               } hover:bg-gray-800`}
             >
               <User className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Profile</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Profile
+              </span>
             </Link>
             <Link
               to="/contractor/project"
@@ -109,7 +133,9 @@ const ContractorDashboard = () => {
               } hover:bg-gray-800`}
             >
               <Briefcase className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Projects</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Projects
+              </span>
             </Link>
             <Link
               to="/contractor/settings"
@@ -118,7 +144,9 @@ const ContractorDashboard = () => {
               } hover:bg-gray-800`}
             >
               <Settings className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Settings</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Settings
+              </span>
             </Link>
           </nav>
 
@@ -132,7 +160,9 @@ const ContractorDashboard = () => {
               } hover:bg-gray-800 text-red-400 hover:text-red-300`}
             >
               <LogOut className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Logout</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Logout
+              </span>
             </Button>
           </div>
         </aside>
@@ -146,7 +176,9 @@ const ContractorDashboard = () => {
             }`}
           >
             {/* Title */}
-            <h1 className="text-lg font-semibold text-gray-800">Contractor Dashboard</h1>
+            <h1 className="text-lg font-semibold text-gray-800">
+              Contractor Dashboard
+            </h1>
             <a
               className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
                 isSidebarOpen ? "mr-60" : "mr-20"
@@ -173,7 +205,9 @@ const ContractorDashboard = () => {
       <Dialog open={open} onClose={handleCloseDialog} style={{ zIndex: 9999 }}>
         <DialogTitle>Confirm Logout</DialogTitle>
         <DialogContent>
-          <DialogContentText>Are you sure you want to log out?</DialogContentText>
+          <DialogContentText>
+            Are you sure you want to log out?
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">

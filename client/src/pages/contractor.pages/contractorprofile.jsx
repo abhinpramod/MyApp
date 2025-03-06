@@ -273,13 +273,15 @@ const ContractorProfile = () => {
                   type="number"
                   value={numberOfEmployees}
                   onChange={(e) => setNumberOfEmployees(e.target.value)}
-                  className="w-20"
+                  size="small"
+                  className="w-16"
                 />
                 <IconButton
+
                   onClick={handleSaveEmployees}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className=" hover:dark text-white"
                 >
-                  <Save />
+                  <Save size={15} />
                 </IconButton>
               </div>
             ) : (
@@ -287,9 +289,9 @@ const ContractorProfile = () => {
                 <span>{numberOfEmployees}</span>
                 <IconButton
                   onClick={() => setIsEditingEmployees(true)}
-                  className="text-blue-500 hover:text-blue-600"
+                  className="hover:bg-black"
                 >
-                  <Pencil />
+                  <Pencil size={15} />
                 </IconButton>
               </div>
             )}

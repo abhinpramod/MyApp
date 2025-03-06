@@ -1,12 +1,23 @@
 import React, { useState } from "react";
-import { TextField, Button, Typography, Container, Paper, Box, Grid, Link } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Grid,
+  Link,
+  IconButton,
+} from "@mui/material";
 import { useDispatch } from "react-redux";
-import { logincontractor } from "../../redux/contractorslice"; 
-import axiosInstance from "../../lib/axios"; 
-import { toast } from "react-hot-toast"; 
-import { useNavigate } from "react-router-dom"; 
+import { logincontractor } from "../../redux/contractorslice";
+import axiosInstance from "../../lib/axios";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { HomeIcon } from "lucide-react"; 
 
-export default function Logincontractors() {
+const  Logincontractors=()=> {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,7 +29,14 @@ export default function Logincontractors() {
 
   const validate = () => {
     let tempErrors = {};
-    tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
+   if (!formData.email ) {
+     tempErrors.email = "Email is required";
+     
+   }else{
+    tempErrors.email = /.+@.+\..+/.test(formData.email)
+    ? ""
+    : "Invalid email format";
+   }
     tempErrors.password = formData.password ? "" : "Password is required";
 
     setErrors(tempErrors);
@@ -33,15 +51,16 @@ export default function Logincontractors() {
         if (res.status === 200) {
           toast.success("Login successful!");
           dispatch(logincontractor(res.data));
-        console.log(res.data);
+          console.log(res.data);
           // Dispatch the login action with the contractor data
-          res.data.verified ? navigate("/contractor/contractorhome") : navigate("/contractor/contractorregisterstep2");
+          res.data.verified
+            ? navigate("/contractor/contractordashboard")
+            : navigate("/contractor/contractorregisterstep2");
         }
       } catch (error) {
         console.log(error);
 
         toast.error(error.response.data.msg || "Login failed!");
-        
       }
     }
   };
@@ -50,13 +69,77 @@ export default function Logincontractors() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleHomeClick = () => {
+    navigate("/"); // Navigate to the home page
+  };
+
   return (
     <Container maxWidth="lg">
-      <Paper elevation={3} sx={{ padding: 10, marginTop: 15 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          padding: 10,
+          marginTop: 10,
+          position: "relative", // Add relative positioning to the Paper
+        }}
+      >
+        {/* Home Icon Button inside Paper */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 16, // Adjust top position
+            right: 16, // Adjust right position
+          }}
+        >
+          <IconButton onClick={handleHomeClick} color="">
+            <HomeIcon fontSize="large" />
+          </IconButton>
+        </Box>
+
         <Grid container spacing={2}>
-          {/* Left Side Image (Only visible on large screens) */}
-          <Grid item xs={12} md={6} sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "center" }}>
-            <img src="/abstract-lines.svg" alt="image" style={{ maxWidth: "80%" }} />
+          {/* Left Side Image with Text Overlay */}
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{
+              position: "relative",
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              height: "500px", // Adjust height as needed
+            }}
+          >
+            <img
+              src="../../../public/cover.jpeg"
+              alt="image"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                color: "white",
+                backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+                padding: "20px",
+                borderRadius: "10px",
+              }}
+            >
+              <Typography variant="h4" gutterBottom>
+                Welcome Back!
+              </Typography>
+              <Typography variant="body1">
+                Login to access your contractor account and manage your projects.
+              </Typography>
+            </Box>
           </Grid>
 
           {/* Right Side Form */}
@@ -65,21 +148,43 @@ export default function Logincontractors() {
               Login contractor
             </Typography>
             <form onSubmit={handleSubmit}>
-              <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
-              <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
-              {/* <Box textAlign="right" marginTop={1}>
-                <Link href="#" variant="body2">
-                  Forgot password?
-                </Link>
-              </Box> */}
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={!!errors.password}
+                helperText={errors.password}
+                margin="normal"
+              />
               <Box textAlign="center" marginTop={2}>
-                <Button type="submit" variant="contained" color="primary" fullWidth>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                >
                   Login
                 </Button>
               </Box>
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
-                  Don't have an account? <Link href="/contractor/registercontractorstep1">Sign up</Link>
+                  Don't have an account?{" "}
+                  <Link href="/contractor/registercontractorstep1">
+                    Sign up
+                  </Link>
                 </Typography>
               </Box>
             </form>
@@ -89,3 +194,5 @@ export default function Logincontractors() {
     </Container>
   );
 }
+
+export default Logincontractors;

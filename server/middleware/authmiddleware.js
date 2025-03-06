@@ -16,7 +16,7 @@ const protectRoutecontractor = async (req, res, next) => {
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
-  console.log(decoded);
+  console.log( "gwet",decoded);
 console.log(decoded.Id);
 
     const contractordata = await contractor.findById(decoded.Id);
