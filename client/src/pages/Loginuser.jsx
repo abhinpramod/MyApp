@@ -104,7 +104,7 @@ export default function Login() {
             }}
           >
             <img
-              src="../../../public/cover.jpeg"
+              src="../../../public/coverpic.user.jpeg"
               alt="image"
               style={{
                 width: "100%",
@@ -129,8 +129,7 @@ export default function Login() {
                 Welcome Back!
               </Typography>
               <Typography variant="body1">
-                Login to access your contractor account and manage your
-                projects.
+                Login and find the skilled labors and store near you.
               </Typography>
             </Box>
           </Grid>
