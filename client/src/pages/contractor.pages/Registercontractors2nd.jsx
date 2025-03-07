@@ -10,6 +10,7 @@ const ContractorVerificationStep2 = () => {
   const Navigate = useNavigate();
   const { loading } = useAuthCheck(); // Check authentication status
   const contractor = useSelector((state) => state.contractor.contractor); // Get contractor from Redux
+  const [isloading, setisLoading] = useState(false);
 
   const [form, setForm] = useState({
     gstNumber: "",
@@ -58,6 +59,7 @@ const ContractorVerificationStep2 = () => {
     formData.append("licenseDocument", form.licenseDocument);
 
     try {
+      setisLoading(true);
       const res = await axiosInstance.post(
         `/contractor/register2ndstep${contractor._id}`,
         formData,
@@ -66,13 +68,18 @@ const ContractorVerificationStep2 = () => {
       if (res.status === 200) {
         toast.success("Verification details submitted successfully.");
         setForm({ gstNumber: "", gstDocument: null, licenseDocument: null });
+
         Navigate("/contractordashboard");
+        setisLoading(false);
       } else {
         toast.error("Submission failed!");
+        setisLoading(false);
       }
     } catch (error) {
+      setisLoading(false);
       console.error("Error during verification submission:", error);
       toast.error("An error occurred during submission.");
+
     }
   };
 
@@ -80,7 +87,10 @@ const ContractorVerificationStep2 = () => {
   <Loader className="size-10 animate-spin" />
 </div>;
   if (!contractor) return <Typography>Error: No contractor data found.</Typography>;
-
+ 
+  if (isloading) return <div className="flex items-center justify-center h-screen">
+  <Loader className="size-10 animate-spin" />
+</div>;
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", p: 2, background: "linear-gradient(135deg, #f5f7fa, #c3cfe2)" }}>
       <Paper elevation={8} sx={{ p: 4, borderRadius: 6, width: "100%", maxWidth: 600, background: "#ffffff", boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)" }}>

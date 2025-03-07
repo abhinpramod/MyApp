@@ -16,6 +16,7 @@ import axiosInstance from "../../lib/axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { HomeIcon } from "lucide-react";
+import { isBlock } from "typescript";
 
 const Logincontractors = () => {
   const [formData, setFormData] = useState({
@@ -47,14 +48,29 @@ const Logincontractors = () => {
     if (validate()) {
       try {
         const res = await axiosInstance.post("/contractor/login", formData);
+        console.log(res.data);
+
         if (res.status === 200) {
-          toast.success("Login successful!");
-          dispatch(logincontractor(res.data));
-          console.log(res.data);
+          
           // Dispatch the login action with the contractor data
-          res.data.verified
-            ? navigate("/contractor/contractordashboard")
-            : navigate("/contractor/contractorregisterstep2");
+          // res.data.verified&& res.data.approvalStatus
+          //   ? navigate("/contractor/contractordashboard")
+          //   : navigate("/contractor/registercontractorstep2");
+
+          if ( res.data.verified && res.data.isBlocked===false  ) {
+            navigate("/contractor/contractorhome");
+            toast.success("Login successful!");
+          dispatch(logincontractor(res.data));
+          } else if( res.data.approvalStatus==="Approved"&&res.data.verified===false){
+            dispatch(logincontractor(res.data));
+
+            navigate("/contractor/registercontractorstep2");
+          
+          }else {
+           
+          toast.error("Your account is not approved  yet.");
+          navigate("/home");
+          }
         }
       } catch (error) {
         console.log(error);

@@ -77,7 +77,7 @@ const registerstep2 = async (req, res) => {
     contractor.gstDocument = gstDocUrl;
     contractor.licenseDocument = licenseDocUrl;
     contractor.registrationStep = 2;
-    contractor.approvalStatus = "pending";
+    contractor.approvalStatus = "Pending";
     contractor.verified = false; // Mark as pending verification
 
     await contractor.save();

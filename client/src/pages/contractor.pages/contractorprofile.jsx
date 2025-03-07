@@ -227,7 +227,7 @@ const ContractorProfile = () => {
   }
 
   return (
-    < div className="p-6 mt-5 max-h-fit max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
+    < div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">

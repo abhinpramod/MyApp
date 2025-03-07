@@ -2,7 +2,7 @@ import Card from "../../components/ui/card";
 import CardContent from "../../components/ui/card-content";
 const contractorHome = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1   mt-5 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-700">Total Projects</h3>
