@@ -66,10 +66,14 @@ const Logincontractors = () => {
 
             navigate("/contractor/registercontractorstep2");
           
-          }else {
+          }else if( res.data.approvalStatus==="Rejected"){ 
            
-          toast.error("Your account is not approved  yet.");
+          toast.error("Your request is rejected  .");
           navigate("/home");
+          }else{
+            navigate("/home");
+            toast.success("your request is pending");
+            
           }
         }
       } catch (error) {
