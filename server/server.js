@@ -13,7 +13,6 @@ app.use(express.json());
 app.use(cookieParser())
 app.use("/api/user", userRoutes);
 app.use("/api/contractor", contractorRoutes);
-
 connectDB()
   .then(() => {
     const PORT = process.env.PORT || 4000;

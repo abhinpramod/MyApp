@@ -22,7 +22,7 @@ const contractorSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
   projects: [
     {
-      _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+      id: { type: mongoose.Schema.Types.ObjectId, required: true },
       image: { type: String, required: true }, // Cloudinary URL
       description: { type: String, required: true }, // Project description
       createdAt: { type: Date, default: Date.now },

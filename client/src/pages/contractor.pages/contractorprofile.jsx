@@ -1,13 +1,35 @@
 import { useState, useEffect } from "react";
-import Card from "@/components/ui/card";
-import CardContent from "@/components/ui/card-content";
-import Button from "@/components/ui/button";
-import Avatar from "@/components/ui/avatar";
-import Switch from "@/components/ui/switch";
-import { Camera, Trash2, CirclePlus, X, Pencil, Save, Loader } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Grid,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Button,
+  Avatar,
+  Switch,
+} from "@mui/material";
+import {
+  Camera,
+  Trash2,
+  CirclePlus,
+  X,
+  Pencil,
+  Save,
+  Loader,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
-import { TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from "@mui/material";
 import axiosInstance from "../../lib/axios";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutcontractor } from "../../redux/contractorslice";
+import { useNavigate } from "react-router-dom";
+import  useAuthCheck  from "../../hooks/usecheakAuth";
+
 
 // Confirmation Dialog Component
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
@@ -30,6 +52,9 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
 };
 
 const ContractorProfile = () => {
+  const { loading } = useAuthCheck();
+
+  const { contractordata } = useSelector((state) => state.contractor);
   const [contractor, setContractor] = useState({
     companyName: "",
     contractorName: "",
@@ -61,26 +86,33 @@ const ContractorProfile = () => {
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
 
-  // Fetch contractor data on component mount
-  useEffect(() => {
-    const fetchContractorData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.get("/contractor/profile");
-        setContractor(response.data);
-        setAvailability(response.data.availability);
-        setProfilePic(response.data.profilePic);
-        setProjects(response.data.projects || []);
-        setNumberOfEmployees(response.data.numberOfEmployees);
-        setIsLoading(false);
-      } catch (error) {
-        setIsLoading(false);
-        toast.error("Failed to fetch contractor data");
-      }
-    };
+ 
 
-    fetchContractorData();
-  }, []);
+console.log( "contractordata",contractordata);
+
+  // Fetch contractor data on component mount
+  // useEffect(() => {
+    
+  //   const fetchContractorData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axiosInstance.get("/contractor/profile");
+  //       setContractor(response.data);
+  //       setAvailability(response.data.availability);
+  //       setProfilePic(response.data.profilePic);
+  //       setProjects(response.data.projects || []);
+  //       setNumberOfEmployees(response.data.numberOfEmployees);
+  //       setIsLoading(false);
+        
+        
+  //     } catch (error) {
+  //       setIsLoading(false);
+  //       toast.error("Failed to fetch contractor data");
+  //     }
+  //   };
+
+  //   fetchContractorData();
+  // }, []);
 
   // Update availability
   const handleAvailabilityChange = async (checked) => {
@@ -91,7 +123,9 @@ const ContractorProfile = () => {
       });
       setAvailability(checked);
       setIsLoading(false);
-      toast.success(`Availability set to ${checked ? "Available" : "Not Available"}`);
+      toast.success(
+        `Availability set to ${checked ? "Available" : "Not Available"}`
+      );
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to update availability");
@@ -114,11 +148,15 @@ const ContractorProfile = () => {
     formData.append("profilePic", file);
 
     try {
-      const response = await axiosInstance.put("/contractor/updateProfilePic", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.put(
+        "/contractor/updateProfilePic",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setProfilePic(response.data.profilePicture);
       setIsLoading(false);
       toast.success("Profile picture updated successfully!");
@@ -153,11 +191,15 @@ const ContractorProfile = () => {
 
       try {
         setIsLoading(true);
-        const response = await axiosInstance.post("/contractor/addprojects", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await axiosInstance.post(
+          "/contractor/addprojects",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         setProjects([...projects, response.data.project]);
         toast.success("Project added successfully!");
         setOpenProjectDialog(false);
@@ -177,28 +219,48 @@ const ContractorProfile = () => {
   const handleDeleteProject = async (projectId) => {
     try {
       setIsLoading(true);
-      await axiosInstance.delete("/contractor/deleteproject", { data: { projectId } });
-      setProjects((prevProjects) => prevProjects.filter((project) => project._id !== projectId));
+      console.log("Deleting project with ID:", projectId); // Debugging
+
+      // Send the projectId in the request body
+      const response = await axiosInstance.delete("/contractor/deleteproject", {
+        data: { projectId }, // Ensure the backend expects projectId in the request body
+      });
+
+      console.log("Backend response:", response.data); // Debugging
+
+      // Update the state to remove the deleted project
+      setProjects((prevProjects) =>
+        prevProjects.filter((project) => project._id !== projectId)
+      );
+
       setIsLoading(false);
       toast.success("Project deleted successfully!");
     } catch (error) {
       setIsLoading(false);
+      console.error("Error deleting project:", error); // Debugging
       toast.error("Failed to delete project");
     }
   };
 
   // Open delete confirmation dialog
   const openDeleteConfirmation = (projectId) => {
+    console.log("Setting projectToDelete:", projectId); // Debugging
     setProjectToDelete(projectId);
     setDeleteConfirmationOpen(true);
   };
 
   // Confirm delete action
   const confirmDelete = () => {
+    console.log("Confirming deletion for project ID:", projectToDelete); // Debugging
+
     if (projectToDelete) {
       handleDeleteProject(projectToDelete);
       setSelectedProject(null); // Close the zoomed view after deletion
+    } else {
+      console.error("No project ID found for deletion"); // Debugging
+      toast.error("No project selected for deletion");
     }
+
     setDeleteConfirmationOpen(false);
   };
 
@@ -227,33 +289,36 @@ const ContractorProfile = () => {
   }
 
   return (
-    < div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
+    <div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex flex-col items-center w-full md:w-1/3">
-          <div className="relative">
-            <Avatar
-              className="w-24 h-24 rounded-full border-2 border-gray-200"
-              src={profilePic || contractor.profilePicture}
-            />
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
-            >
-              <Camera className="w-5 h-5 text-white" />
-              <input
-                type="file"
-                id="avatar-upload"
-                name="profilePic"
-                className="hidden"
-                accept="image/*"
-                onChange={handleProfilePicUpload}
-              />
-            </label>
-          </div>
-          <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
-          <h4 className="font-semibold text-gray-600">{contractor.contractorName}</h4>
-          <p className="text-gray-500 text-center mt-2">{contractor.description}</p>
-        </div>
+      <div className="flex flex-col items-center w-full md:w-1/3">
+  <div className="relative">
+    <Avatar
+    sx={{ width: 128, height: 128 }}
+      className=" rounded-full border-4 border-gray-200" // Increased size here
+      src={profilePic || contractor.profilePicture}
+    />
+
+    <label
+      htmlFor="avatar-upload"
+      className="absolute bottom-1 right-1 bg-gray-800  p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+    >
+      <Camera className="w-5  h -5 *: text-white" /> {/* Slightly larger icon */}
+      <input
+        type="file"
+        id="avatar-upload"
+        name="profilePic"
+        className="hidden"
+        accept="image/*"
+        onChange={handleProfilePicUpload}
+      />
+    </label>
+  </div>
+  <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
+  <h4 className="font-semibold text-gray-600">{contractor.contractorName}</h4>
+  <p className="text-gray-500 text-center mt-2">{contractor.description}</p>
+</div>
+
 
         <div className="w-full md:w-2/3 space-y-4">
           <p className="text-gray-600">
@@ -263,7 +328,8 @@ const ContractorProfile = () => {
             <strong>GST:</strong> {contractor.gstNumber}
           </p>
           <p className="text-gray-600">
-            <strong>Address:</strong> {contractor.address}, {contractor.city}, {contractor.state}, {contractor.country}
+            <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}
+            {contractor.state}, {contractor.country}
           </p>
           <div className="flex items-center gap-2">
             <strong>Number of Employees:</strong>
@@ -277,7 +343,6 @@ const ContractorProfile = () => {
                   className="w-16"
                 />
                 <IconButton
-
                   onClick={handleSaveEmployees}
                   className=" hover:dark text-white"
                 >
@@ -297,7 +362,10 @@ const ContractorProfile = () => {
             )}
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <Switch checked={availability} onCheckedChange={handleAvailabilityChange} />
+            <Switch
+              checked={availability}
+              onCheckedChange={handleAvailabilityChange}
+            />
             <span className={availability ? "text-green-600" : "text-red-600"}>
               {availability ? "Available" : "Not Available"}
             </span>
@@ -312,28 +380,39 @@ const ContractorProfile = () => {
       >
         <CirclePlus size={18} /> Add Project
       </Button>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-        {projects.map((project, index) => (
-          <Card
-            key={index}
-            className="relative cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => setSelectedProject(project)}
-          >
-            <CardContent>
-              <img
-                src={project.image}
-                alt={`Project ${index + 1}`}
-                className="w-full h-40 object-cover rounded-lg"
-              />
-              <p className="text-center text-sm mt-2 text-gray-600">
-                {project.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      <Dialog open={openProjectDialog} onClose={() => setOpenProjectDialog(false)}>
+      {/* Project List using MUI Grid and Card */}
+      <Grid container spacing={3} className="mt-6">
+  {projects.map((project, index) => (
+    <Grid item key={index} xs={12} sm={6} md={4}>
+      <Card
+        className="cursor-pointer hover:shadow-md transition-shadow h-90 flex flex-col"
+        onClick={() => setSelectedProject(project)}
+      >
+        <div className="h-40 w-full overflow-hidden">
+          <CardMedia
+            component="img"
+            className="w-full h-full object-cover"
+            image={project.image}
+            alt={`Project ${index + 1}`}
+          />
+        </div>
+        <CardContent className="flex-grow flex items-center justify-center">
+          <p className="text-center text-sm font-semibold text-gray-600">
+            {project.description}
+          </p>
+        </CardContent>
+      </Card>
+    </Grid>
+  ))}
+</Grid>
+
+
+      {/* Add Project Dialog */}
+      <Dialog
+        open={openProjectDialog}
+        onClose={() => setOpenProjectDialog(false)}
+      >
         <DialogTitle>Add New Project</DialogTitle>
         <DialogContent>
           {newProjectImage && (
@@ -360,50 +439,57 @@ const ContractorProfile = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddProject} className="bg-blue-500 hover:bg-blue-600 text-white">
+          <Button
+            onClick={handleAddProject}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
             Add
           </Button>
         </DialogActions>
       </Dialog>
 
-      {selectedProject && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-          onClick={() => setSelectedProject(null)}
-        >
-          <div
-            className="relative max-w-2xl w-full p-6 bg-white rounded-lg mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => setSelectedProject(null)}
-            >
+      {/* Full-Screen Project View */}
+      <Dialog
+        open={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        fullScreen
+      >
+        <DialogTitle>
+          <div className="flex justify-between items-center">
+            <span>Project Details</span>
+            <IconButton onClick={() => setSelectedProject(null)}>
               <X size={24} />
-            </button>
+            </IconButton>
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <div className="flex flex-col items-center">
             <img
-              src={selectedProject.image}
+              src={selectedProject?.image}
               alt="Selected Project"
               className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
             />
             <p className="text-center text-lg mt-4 text-gray-600">
-              {selectedProject.description}
+              {selectedProject?.description}
             </p>
             <p className="text-center text-sm text-gray-500 mt-2">
-              Added on: {new Date(selectedProject.createdAt).toLocaleString()}
+              Added on: {new Date(selectedProject?.createdAt).toLocaleString()}
             </p>
-            <button
-              className="absolute bottom-2 right-2 text-red-500 hover:text-red-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                openDeleteConfirmation(selectedProject._id);
-              }}
-            >
-              <Trash2 size={24} />
-            </button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              openDeleteConfirmation(selectedProject?._id);
+              console.log(selectedProject);
+            }}
+            color="error"
+          >
+            <Trash2 size={24} /> Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
