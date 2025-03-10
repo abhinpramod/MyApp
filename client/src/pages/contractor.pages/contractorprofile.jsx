@@ -12,7 +12,6 @@ import {
   IconButton,
   Button,
   Avatar,
-  Switch,
 } from "@mui/material";
 import {
   Camera,
@@ -25,11 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
-import { useSelector, useDispatch } from "react-redux";
-import { logoutcontractor } from "../../redux/contractorslice";
-import { useNavigate } from "react-router-dom";
-import  useAuthCheck  from "../../hooks/usecheakAuth";
-
+import Switch from "../../components/ui/switch";
 
 // Confirmation Dialog Component
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
@@ -52,9 +47,6 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
 };
 
 const ContractorProfile = () => {
-  const { loading } = useAuthCheck();
-
-  const { contractordata } = useSelector((state) => state.contractor);
   const [contractor, setContractor] = useState({
     companyName: "",
     contractorName: "",
@@ -86,33 +78,26 @@ const ContractorProfile = () => {
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
 
- 
-
-console.log( "contractordata",contractordata);
-
   // Fetch contractor data on component mount
-  // useEffect(() => {
-    
-  //   const fetchContractorData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await axiosInstance.get("/contractor/profile");
-  //       setContractor(response.data);
-  //       setAvailability(response.data.availability);
-  //       setProfilePic(response.data.profilePic);
-  //       setProjects(response.data.projects || []);
-  //       setNumberOfEmployees(response.data.numberOfEmployees);
-  //       setIsLoading(false);
-        
-        
-  //     } catch (error) {
-  //       setIsLoading(false);
-  //       toast.error("Failed to fetch contractor data");
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchContractorData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get("/contractor/profile");
+        setContractor(response.data);
+        setAvailability(response.data.availability);
+        setProfilePic(response.data.profilePic);
+        setProjects(response.data.projects || []);
+        setNumberOfEmployees(response.data.numberOfEmployees);
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+        toast.error("Failed to fetch contractor data");
+      }
+    };
 
-  //   fetchContractorData();
-  // }, []);
+    fetchContractorData();
+  }, []);
 
   // Update availability
   const handleAvailabilityChange = async (checked) => {
@@ -289,36 +274,40 @@ console.log( "contractordata",contractordata);
   }
 
   return (
-    <div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto bg-white shadow-lg rounded-2xl">
+    <div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto shadow-lg rounded-2xl">
       <div className="flex flex-col md:flex-row gap-6">
-      <div className="flex flex-col items-center w-full md:w-1/3">
-  <div className="relative">
-    <Avatar
-    sx={{ width: 128, height: 128 }}
-      className=" rounded-full border-4 border-gray-200" // Increased size here
-      src={profilePic || contractor.profilePicture}
-    />
+        <div className="flex flex-col items-center w-full md:w-1/3">
+          <div className="relative">
+            <Avatar
+              sx={{ width: 128, height: 128 }}
+              className=" rounded-full border-4 border-gray-200" // Increased size here
+              src={profilePic || contractor.profilePicture}
+            />
 
-    <label
-      htmlFor="avatar-upload"
-      className="absolute bottom-1 right-1 bg-gray-800  p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
-    >
-      <Camera className="w-5  h -5 *: text-white" /> {/* Slightly larger icon */}
-      <input
-        type="file"
-        id="avatar-upload"
-        name="profilePic"
-        className="hidden"
-        accept="image/*"
-        onChange={handleProfilePicUpload}
-      />
-    </label>
-  </div>
-  <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
-  <h4 className="font-semibold text-gray-600">{contractor.contractorName}</h4>
-  <p className="text-gray-500 text-center mt-2">{contractor.description}</p>
-</div>
-
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-1 right-1 bg-gray-800  p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+            >
+              <Camera className="w-5  h -5 *: text-white" />{" "}
+              {/* Slightly larger icon */}
+              <input
+                type="file"
+                id="avatar-upload"
+                name="profilePic"
+                className="hidden"
+                accept="image/*"
+                onChange={handleProfilePicUpload}
+              />
+            </label>
+          </div>
+          <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
+          <h4 className="font-semibold text-gray-600">
+            {contractor.contractorName}
+          </h4>
+          <p className="text-gray-500 text-center mt-2">
+            {contractor.description}
+          </p>
+        </div>
 
         <div className="w-full md:w-2/3 space-y-4">
           <p className="text-gray-600">
@@ -376,37 +365,36 @@ console.log( "contractordata",contractordata);
       <hr className="my-6 border-gray-200" />
       <Button
         onClick={() => setOpenProjectDialog(true)}
-        className="flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
+        className="flex items-center gap-2text-sm font-semibold  hover:text-gray-800 transition-colors"
       >
         <CirclePlus size={18} /> Add Project
       </Button>
 
       {/* Project List using MUI Grid and Card */}
       <Grid container spacing={3} className="mt-6">
-  {projects.map((project, index) => (
-    <Grid item key={index} xs={12} sm={6} md={4}>
-      <Card
-        className="cursor-pointer hover:shadow-md transition-shadow h-90 flex flex-col"
-        onClick={() => setSelectedProject(project)}
-      >
-        <div className="h-40 w-full overflow-hidden">
-          <CardMedia
-            component="img"
-            className="w-full h-full object-cover"
-            image={project.image}
-            alt={`Project ${index + 1}`}
-          />
-        </div>
-        <CardContent className="flex-grow flex items-center justify-center">
-          <p className="text-center text-sm font-semibold text-gray-600">
-            {project.description}
-          </p>
-        </CardContent>
-      </Card>
-    </Grid>
-  ))}
-</Grid>
-
+        {projects.map((project, index) => (
+          <Grid item key={index} xs={12} sm={6} md={4}>
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow mt-4 h-90 flex flex-col"
+              onClick={() => setSelectedProject(project)}
+            >
+              <div className="h-40 w-full overflow-hidden">
+                <CardMedia
+                  component="img"
+                  className="w-full h-full object-cover"
+                  image={project.image}
+                  alt={`Project ${index + 1}`}
+                />
+              </div>
+              <CardContent className="flex-grow flex items-center justify-center">
+                <p className="text-center text-sm font-semibold text-gray-600">
+                  {project.description}
+                </p>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
       {/* Add Project Dialog */}
       <Dialog
