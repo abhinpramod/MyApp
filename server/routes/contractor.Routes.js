@@ -49,6 +49,6 @@ router.post(
   addProject
 );
 router.delete("/deleteproject", protectRoutecontractor, handleDeleteProject);
-router.post("/logout", protectRoutecontractor,logoutcontractor);
+router.post("/logout",logoutcontractor);
 
 module.exports = router;

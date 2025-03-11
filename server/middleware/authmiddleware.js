@@ -24,6 +24,10 @@ console.log(decoded.Id);
       return res.status(401).json({ msg: "Unauthorized: User not found" });
     }
 
+    if (contractordata.isBlocked) {
+      return res.status(403).json({ msg: "your account  is blocked connect with admin." });
+    }
+
     req.contractor = contractordata;
     next();
   } catch (error) {

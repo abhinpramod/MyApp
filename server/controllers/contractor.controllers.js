@@ -149,7 +149,7 @@ const login = async (req, res) => {
     if (!contractor) return res.status(400).json({ msg: "Invalid Email" });
 
     if (contractor.isBlocked)
-      return res.status(403).json({ msg: "Contractor is blocked" });
+      return res.status(403).json({ msg: "your account  is blocked connect with admin." });
 
     const isMatch = await bcrypt.compare(password, contractor.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
