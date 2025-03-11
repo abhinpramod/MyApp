@@ -52,10 +52,7 @@ const Logincontractors = () => {
 
         if (res.status === 200) {
           
-          // Dispatch the login action with the contractor data
-          // res.data.verified&& res.data.approvalStatus
-          //   ? navigate("/contractor/contractordashboard")
-          //   : navigate("/contractor/registercontractorstep2");
+       
 
           if ( res.data.verified && res.data.isBlocked===false  ) {
             navigate("/contractor/dashboard");

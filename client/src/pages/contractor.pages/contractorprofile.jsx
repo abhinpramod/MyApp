@@ -86,7 +86,7 @@ const ContractorProfile = () => {
         const response = await axiosInstance.get("/contractor/profile");
         setContractor(response.data);
         setAvailability(response.data.availability);
-        setProfilePic(response.data.profilePic);
+        setProfilePic(response.data.profilePicture);
         setProjects(response.data.projects || []);
         setNumberOfEmployees(response.data.numberOfEmployees);
         setIsLoading(false);
@@ -97,6 +97,7 @@ const ContractorProfile = () => {
     };
 
     fetchContractorData();
+    
   }, []);
 
   // Update availability
@@ -142,7 +143,11 @@ const ContractorProfile = () => {
           },
         }
       );
-      setProfilePic(response.data.profilePicture);
+      setProfilePic(response.data.contractor.profilePicture);
+    console.log( "this the  samam",profilePic);
+      console.log( "this is not sattae",response.data.contractor.profilePicture);
+      
+      
       setIsLoading(false);
       toast.success("Profile picture updated successfully!");
     } catch (error) {
@@ -281,9 +286,10 @@ const ContractorProfile = () => {
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">
             <Avatar
+              
               sx={{ width: 128, height: 128 }}
               className=" rounded-full border-4 border-gray-200" // Increased size here
-              src={profilePic || contractor.profilePicture}
+              src={profilePic? profilePic : contractor.profilePicture} 
             />
 
             <label
