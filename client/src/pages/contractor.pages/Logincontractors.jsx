@@ -58,7 +58,7 @@ const Logincontractors = () => {
           //   : navigate("/contractor/registercontractorstep2");
 
           if ( res.data.verified && res.data.isBlocked===false  ) {
-            navigate("/contractor/contractorhome");
+            navigate("/contractor/dashboard");
             toast.success("Login successful!");
           dispatch(logincontractor(res.data));
           } else if( res.data.approvalStatus==="Approved"&&res.data.verified===false){
