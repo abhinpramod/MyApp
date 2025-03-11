@@ -92,30 +92,23 @@ const registerstep2 = async (req, res) => {
 // Add project controller
 const addProject = async (req, res) => {
   try {
-    const contractorId = req.contractor._id; // Ensure authentication middleware sets req.contractor
+    const contractorId = req.contractor._id;
 
-    // Check if files and description are provided
     if (!req.body.image || !req.body.description) {
       return res.status(400).json({ message: "Image and description are required" });
     }
 
-    // Validate description length
     if (req.body.description.length > 10000) {
       return res.status(400).json({ message: "Description is too long" });
     }
 
-    // If the image is sent as a base64 string
-    const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, ""); // Remove the data URL prefix
-    const buffer = Buffer.from(base64Data, "base64"); // Convert base64 to buffer
+    // Upload image directly to Cloudinary
+    const result = await cloudinary.uploader.upload(req.body.image, {
+      folder: "contractor_projects",
+      resource_type: "image",
+    });
 
-    // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(
-      `data:image/png;base64,${buffer.toString("base64")}`, // Use the buffer
-      {
-        folder: "contractor_projects", // Cloudinary folder name
-        resource_type: "image", // Ensure the file is treated as an image
-      }
-    );
+    console.log("Image uploaded:", result);
 
     // Update contractor's projects array
     const contractor = await Contractor.findByIdAndUpdate(
@@ -123,12 +116,13 @@ const addProject = async (req, res) => {
       {
         $push: {
           projects: {
-            image: result.secure_url, // Save the Cloudinary URL
-            description: req.body.description, // Save the project description
+            image: result.secure_url,
+            description: req.body.description,
+            imagePublicId: result.public_id,
           },
         },
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     res.status(200).json({
@@ -136,6 +130,7 @@ const addProject = async (req, res) => {
       project: {
         image: result.secure_url,
         description: req.body.description,
+        _id: contractor.projects[contractor.projects.length - 1]._id, // Returning ID for frontend
       },
     });
   } catch (error) {
@@ -143,9 +138,11 @@ const addProject = async (req, res) => {
     res.status(500).json({ message: "Failed to add project", error });
   }
 };
+
 // Other controllers remain unchanged
 const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log("email", email);
 
   try {
     const contractor = await Contractor.findOne({ email });
@@ -165,19 +162,49 @@ const login = async (req, res) => {
   }
 };
  
+
+
 const handleDeleteProject = async (req, res) => {
   const projectId = req.body.projectId;
+
   try {
-    await Contractor.findOneAndUpdate(
-      { _id: req.contractor._id },
-      { $pull: { projects: { _id: projectId } } }
+    const contractor = await Contractor.findById(req.contractor._id);
+    if (!contractor) {
+      return res.status(404).json({ message: "Contractor not found" });
+    }
+
+    const projectToDelete = contractor.projects.find((project) => project._id.toString() === projectId);
+    if (!projectToDelete) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Delete image from Cloudinary
+    if (projectToDelete.imagePublicId) {
+      const cloudinaryResponse = await cloudinary.uploader.destroy(projectToDelete.imagePublicId);
+      console.log("Cloudinary response:", cloudinaryResponse);
+      if (cloudinaryResponse.result !== "ok") {
+        console.warn("Cloudinary image deletion may have failed.");
+      }
+    }
+
+    // Remove project from contractor's projects array
+    const updatedContractor = await Contractor.findByIdAndUpdate(
+      req.contractor._id,
+      { $pull: { projects: { _id: projectId } } },
+      { new: true }
     );
-    res.status(200).json({ message: "Project deleted successfully" });
+
+    res.status(200).json({
+      message: "Project and image deleted successfully",
+      projects: updatedContractor.projects, // Returning updated project list
+    });
   } catch (error) {
     console.error("Error deleting project:", error);
     res.status(500).json({ message: "Failed to delete project" });
   }
 };
+
+
 
 const registerstep1 = async (req, res) => {
   const {
@@ -398,30 +425,35 @@ const uploadProfilePic = async (req, res) => {
   try {
     const contractorId = req.contractor._id; // Ensure authentication middleware sets req.contractor
 
-    // Check if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Upload to Cloudinary using the file buffer
+    // Fetch the current contractor's data
+    const contractor = await Contractor.findById(contractorId);
+    if (!contractor) {
+      return res.status(404).json({ message: "Contractor not found" });
+    }
+
+    // Delete the old profile picture from Cloudinary if it exists
+    if (contractor.profilePicturePublicId) {
+      await cloudinary.uploader.destroy(contractor.profilePicturePublicId);
+      console.log("Old profile picture deleted from Cloudinary");
+    }
+
+    // Upload new profile picture to Cloudinary
     const result = await cloudinary.uploader.upload(
       `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
       {
-        folder: "profile_pictures", // Cloudinary folder name
-        resource_type: "image", // Ensure the file is treated as an image
+        folder: "profile_pictures",
+        resource_type: "image",
       }
     );
 
-    // Update contractor's profile picture in the database
-    const contractor = await Contractor.findByIdAndUpdate(
-      contractorId,
-      { profilePicture: result.secure_url }, // Save the Cloudinary URL
-      { new: true } // Return the updated document
-    );
-    console.log(
-contractor
-    );
-
+    // Update contractor's profile picture and store the new public_id
+    contractor.profilePicture = result.secure_url;
+    contractor.profilePicturePublicId = result.public_id; // Store public_id for future deletions
+    await contractor.save();
 
     res.status(200).json(contractor);
   } catch (error) {

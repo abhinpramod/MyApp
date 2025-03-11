@@ -11,11 +11,13 @@ import ContractorProfile from "./pages/contractor.pages/contractorprofile";
 import { Toaster } from "react-hot-toast";
 import ContractorregisterStep2 from "./pages/contractor.pages/Registercontractors2nd";
 import Logincontractors from "./pages/contractor.pages/Logincontractors";
-import Contractordashboard from "./pages/contractor.pages/contractordashboard";
+import Contractordashboard from "./pages/contractor.pages/contractorlayout";
 import ContractorHome from "./pages/contractor.pages/contractorhome";
 import ContractorProject from "./pages/contractor.pages/contractorproject";
 import ContractorSettings from "./pages/contractor.pages/contractorsettings";
+import Dashboard from "./pages/contractor.pages/contractordashboard";
 import useAuthCheck from "./hooks/usecheakAuth";
+
 import { useSelector } from "react-redux";
 function App() {
   const { loading } = useAuthCheck();
@@ -34,14 +36,16 @@ function App() {
           <Route path="/contractors/contractors" element={<Contractors />} />
           <Route path="/contractor/registercontractorstep1" element={contractor && contractor.verified ? <Contractordashboard /> : <RegisterContractorStep1 />} />
           <Route path="/contractor/registercontractorstep2" element={contractor && contractor ? <ContractorregisterStep2 /> : <RegisterContractorStep1 />} />
-          <Route path="/contractor/Logincontractors" element={contractor && contractor.verified ? <Navigate to="/contractor/contractorhome" /> : <Logincontractors />} />
+          <Route path="/contractor/Logincontractors" element={contractor && contractor.verified ? <Navigate to="/contractor/dashboard" /> : <Logincontractors />} />
 
           {/* Contractor Dashboard Routes */}
           <Route path="/contractor" element={contractor && contractor.verified ? <Contractordashboard /> : <Logincontractors />}>
-            <Route path="contractorhome" element={contractor && contractor.verified ? <ContractorHome /> : <Logincontractors />} />
+            {/* <Route path="contractorhome" element={contractor && contractor.verified ? <ContractorHome /> : <Logincontractors />} /> */}
             <Route path="ContractorProfile" element={contractor &&contractor.verified ? <ContractorProfile /> : <Logincontractors />} />
             <Route path="project" element={contractor &&contractor.verified ? <ContractorProject /> : <Logincontractors />} />
             <Route path="settings" element={contractor &&contractor.verified  ? <ContractorSettings /> : <Logincontractors />} />
+            <Route path="dashboard" element={contractor &&contractor.verified  ? <Dashboard /> : <Logincontractors />} />
+
           </Route>
 
           {/* Fallback Route */}

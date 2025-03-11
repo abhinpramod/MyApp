@@ -211,7 +211,7 @@ export default function RegisterContractorStep1() {
         otp: otpValue,
       });
       if (res.status === 200) {
-        toast.success("Registration successful!");
+        toast.success("Registration successful wait for admin approval!");
         navigate("/contractors");
       }
     } catch (error) {

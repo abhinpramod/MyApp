@@ -231,6 +231,8 @@ const ContractorProfile = () => {
   const openDeleteConfirmation = (projectId) => {
     console.log("Setting projectToDelete:", projectId); // Debugging
     setProjectToDelete(projectId);
+    console.log("projectToDelete:", projectId);
+    
     setDeleteConfirmationOpen(true);
   };
 

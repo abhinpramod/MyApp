@@ -10,33 +10,29 @@ import {
   Link,
   IconButton,
 } from "@mui/material";
-import { useDispatch } from "react-redux";
-import { logincontractor } from "../../redux/contractorslice";
-import axiosInstance from "../../lib/axios";
-import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../lib/axios";
+import toast from "react-hot-toast";
 import { HomeIcon } from "lucide-react";
-import { isBlock } from "typescript";
+import { Loader } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { loginuser } from "../redux/userslice";
 
-const Logincontractors = () => {
+ Login() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({});
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const validate = () => {
     let tempErrors = {};
-    if (!formData.email) {
-      tempErrors.email = "Email is required";
-    } else {
-      tempErrors.email = /.+@.+\..+/.test(formData.email)
-        ? ""
-        : "Invalid email format";
-    }
+    tempErrors.email = /.+@.+\..+/.test(formData.email)
+      ? ""
+      : "Invalid email format";
     tempErrors.password = formData.password ? "" : "Password is required";
 
     setErrors(tempErrors);
@@ -46,39 +42,16 @@ const Logincontractors = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
+      console.log("Login Data:", formData);
       try {
-        const res = await axiosInstance.post("/contractor/login", formData);
-        console.log(res.data);
-
+        const res = await axiosInstance.post("/user/login", formData);
         if (res.status === 200) {
-          
-          // Dispatch the login action with the contractor data
-          // res.data.verified&& res.data.approvalStatus
-          //   ? navigate("/contractor/contractordashboard")
-          //   : navigate("/contractor/registercontractorstep2");
-
-          if ( res.data.verified && res.data.isBlocked===false  ) {
-            navigate("/contractor/contractorhome");
-            toast.success("Login successful!");
-          dispatch(logincontractor(res.data));
-          } else if( res.data.approvalStatus==="Approved"&&res.data.verified===false){
-            dispatch(logincontractor(res.data));
-
-            navigate("/contractor/registercontractorstep2");
-          
-          }else if( res.data.approvalStatus==="Rejected"){ 
-           
-          toast.error("Your request is rejected  .");
+          toast.success("Login successful!");
           navigate("/home");
-          }else{
-            navigate("/home");
-            toast.error("your request is pending");
-            
-          }
+          dispatch(loginuser(res.data));
         }
       } catch (error) {
         console.log(error);
-
         toast.error(error.response.data.msg || "Login failed!");
       }
     }
@@ -131,7 +104,7 @@ const Logincontractors = () => {
             }}
           >
             <img
-              src="../../../public/cover.jpeg"
+              src="../../../public/coverpic.user.jpeg"
               alt="image"
               style={{
                 width: "100%",
@@ -156,8 +129,7 @@ const Logincontractors = () => {
                 Welcome Back!
               </Typography>
               <Typography variant="body1">
-                Login to access your contractor account and manage your
-                projects.
+                Login and find the skilled labors and store near you.
               </Typography>
             </Box>
           </Grid>
@@ -165,7 +137,7 @@ const Logincontractors = () => {
           {/* Right Side Form */}
           <Grid item xs={12} md={6}>
             <Typography variant="h4" align="center" gutterBottom>
-              Login contractor
+              Login to Your Account
             </Typography>
             <form onSubmit={handleSubmit}>
               <TextField
@@ -202,9 +174,7 @@ const Logincontractors = () => {
               <Box textAlign="center" marginTop={2}>
                 <Typography variant="body2">
                   Don't have an account?{" "}
-                  <Link href="/contractor/registercontractorstep1">
-                    Sign up
-                  </Link>
+                  <Link href="/registeruser">Sign up</Link>
                 </Typography>
               </Box>
             </form>
@@ -213,6 +183,6 @@ const Logincontractors = () => {
       </Paper>
     </Container>
   );
-};
+}
 
-export default Logincontractors;
+export default Loginuser;

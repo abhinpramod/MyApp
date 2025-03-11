@@ -11,6 +11,7 @@ const contractorSchema = new mongoose.Schema({
   numberOfEmployees: { type: Number, required: true, min: 2 },
   jobTypes: { type: [String], required: true },
   profilePicture: { type: String },
+  profilePicturePublicId: { type: String },
   gstNumber: { type: String },
   country: { type: String },
   availability: { type: Boolean, default: false },
@@ -26,6 +27,7 @@ const contractorSchema = new mongoose.Schema({
       image: { type: String, required: true }, // Cloudinary URL
       description: { type: String, required: true }, // Project description
       createdAt: { type: Date, default: Date.now },
+      imagePublicId: { type: String },
     },
   ],
 
