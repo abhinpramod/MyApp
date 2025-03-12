@@ -1,29 +1,15 @@
-import React, { useState } from "react";
-import {
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Paper,
-  Box,
-  Grid,
-  Link,
-  IconButton,
-} from "@mui/material";
-import { useDispatch } from "react-redux";
-import { logincontractor } from "../../redux/contractorslice";
-import axiosInstance from "../../lib/axios";
-import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { HomeIcon } from "lucide-react";
-import { isBlock } from "typescript";
+import React, { useState } from 'react';
+import { TextField, Button, IconButton } from '@mui/material';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { logincontractor } from '../../redux/contractorslice';
+import axiosInstance from '../../lib/axios';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-const Logincontractors = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+export default function LoginPage() {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -31,185 +17,146 @@ const Logincontractors = () => {
   const validate = () => {
     let tempErrors = {};
     if (!formData.email) {
-      tempErrors.email = "Email is required";
+      tempErrors.email = 'Email is required';
     } else {
-      tempErrors.email = /.+@.+\..+/.test(formData.email)
-        ? ""
-        : "Invalid email format";
+      tempErrors.email = /.+@.+\..+/.test(formData.email) ? '' : 'Invalid email format';
     }
-    tempErrors.password = formData.password ? "" : "Password is required";
-
+    tempErrors.password = formData.password ? '' : 'Password is required';
     setErrors(tempErrors);
-    return Object.values(tempErrors).every((x) => x === "");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validate()) {
-      try {
-        const res = await axiosInstance.post("/contractor/login", formData);
-        console.log(res.data);
-
-        if (res.status === 200) {
-          
-       
-
-          if ( res.data.verified && res.data.isBlocked===false  ) {
-            navigate("/contractor/dashboard");
-            toast.success("Login successful!");
-          dispatch(logincontractor(res.data));
-          } else if( res.data.approvalStatus==="Approved"&&res.data.verified===false){
-            dispatch(logincontractor(res.data));
-
-            navigate("/contractor/registercontractorstep2");
-          
-          }else if( res.data.approvalStatus==="Rejected"){ 
-           
-          toast.error("Your request is rejected  .");
-          navigate("/home");
-          }else{
-            navigate("/home");
-            toast.error("your request is pending");
-            
-          }
-        }
-      } catch (error) {
-        console.log(error);
-
-        toast.error(error.response.data.msg || "Login failed!");
-      }
-    }
+    return Object.values(tempErrors).every((x) => x === '');
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleHomeClick = () => {
-    navigate("/"); // Navigate to the home page
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validate()) {
+      try {
+        const res = await axiosInstance.post('/contractor/login', formData);
+        if (res.status === 200) {
+          dispatch(logincontractor(res.data));
+          if (res.data.verified && res.data.isBlocked === false) {
+            navigate('/contractor/dashboard');
+            toast.success('Login successful!');
+          } else if (res.data.approvalStatus === 'Approved' && res.data.verified === false) {
+            navigate('/contractor/registercontractorstep2');
+          } else if (res.data.approvalStatus === 'Rejected') {
+            toast.error('Your request is rejected.');
+            navigate('/home');
+          } else {
+            toast.error('Your request is pending.');
+            navigate('/home');
+          }
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.msg || 'Login failed!');
+      }
+    }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 10,
-          marginTop: 10,
-          position: "relative", // Add relative positioning to the Paper
-        }}
-      >
-        {/* Home Icon Button inside Paper */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 16, // Adjust top position
-            right: 16, // Adjust right position
-          }}
-        >
-          <IconButton onClick={handleHomeClick} color="">
-            <HomeIcon fontSize="large" />
+    <div className="flex flex-col h-screen">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between p-4 shadow-md">
+        <div className="flex items-center">
+          <IconButton onClick={() => window.history.back()}>
+            <ArrowLeft size={20} />
           </IconButton>
-        </Box>
+          <span className="ml-2 text-gray-700 text-lg sm:text-xl">Back</span>
+        </div>
+        <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">LocalFinder</h1>
+        <div className="hidden sm:block">
+          <a href="/contractor/registercontractorstep1" className="text-gray-700 text-sm sm:text-base hover:underline">
+            Create an account
+          </a>
+        </div>
+      </nav>
 
-        <Grid container spacing={2}>
-          {/* Left Side Image with Text Overlay */}
-          <Grid
-            item
-            xs={12}
-            md={6}
-            sx={{
-              position: "relative",
-              display: { xs: "none", md: "flex" },
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              height: "500px", // Adjust height as needed
-            }}
-          >
-            <img
-              src="../../../public/cover.jpeg"
-              alt="image"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+      {/* Body Section (Takes Remaining Height) */}
+      <div className="flex flex-grow">
+        {/* Left Section (Form) */}
+        <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-6   bg-gray-100 sm:p-12">
+          <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-4"></div>
+          <h1 className="text-3xl font-semibold text-center mb-8 text-gray-800">Log in</h1>
+
+          <form className="w-full max-w-sm space-y-6" onSubmit={handleSubmit}>
+            {/* Email Input */}
+            <TextField
+              fullWidth
+              label="Email address"
+              variant="outlined"
+              size="small"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={!!errors.email}
+              helperText={errors.email}
+            
+              InputProps={{ style: { borderRadius: '20px', padding: '8px' } }}
             />
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                color: "white",
-                backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-                padding: "20px",
-                borderRadius: "10px",
-              }}
-            >
-              <Typography variant="h4" gutterBottom>
-                Welcome Back!
-              </Typography>
-              <Typography variant="body1">
-                Login to access your contractor account and manage your
-                projects.
-              </Typography>
-            </Box>
-          </Grid>
 
-          {/* Right Side Form */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="h4" align="center" gutterBottom>
-              Login contractor
-            </Typography>
-            <form onSubmit={handleSubmit}>
+            {/* Password Input */}
+            <div className="relative">
               <TextField
                 fullWidth
-                label="Email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
+                size="small"
                 label="Password"
                 name="password"
-                type="password"
+                type={passwordVisible ? 'text' : 'password'}
+                variant="outlined"
                 value={formData.password}
                 onChange={handleChange}
                 error={!!errors.password}
                 helperText={errors.password}
-                margin="normal"
+                InputProps={{ style: { borderRadius: '20px', padding: '8px' } }}
               />
-              <Box textAlign="center" marginTop={2}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                >
-                  Login
-                </Button>
-              </Box>
-              <Box textAlign="center" marginTop={2}>
-                <Typography variant="body2">
-                  Don't have an account?{" "}
-                  <Link href="/contractor/registercontractorstep1">
-                    Sign up
-                  </Link>
-                </Typography>
-              </Box>
-            </form>
-          </Grid>
-        </Grid>
-      </Paper>
-    </Container>
-  );
-};
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                onClick={() => setPasswordVisible(!passwordVisible)}
+              >
+                {passwordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
-export default Logincontractors;
+            {/* Login Button */}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              
+              sx={{ mt: 2, borderRadius: '20px', padding: '10px 0', bgcolor:'oklch(0.577 0.245 27.325)'}}
+            >
+              Log in
+            </Button>
+          </form>
+
+          <div className="text-center mt-6">
+            <a href="#" className="text-sm text-gray-500 hover:underline">
+              Can't Log in?
+            </a>
+          </div>
+
+          <p className="mt-4 text-xs text-center text-gray-400">
+            Secure login with reCAPTCHA subject to Google Terms & Privacy
+          </p>
+
+          <div className="mt-6 sm:hidden text-center">
+            <a href="/create-account" className="text-gray-700 text-sm hover:underline">
+              Create an account
+            </a>
+          </div>
+        </div>
+
+        {/* Right Section (Image) */}
+        <div className="hidden md:flex w-1/2 items-center justify-center ">
+          <div className="w-2/3 h-2/3  ">
+          <img src="../../../public/login.image.png" alt="iamge" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

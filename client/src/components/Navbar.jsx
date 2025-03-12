@@ -53,13 +53,14 @@ const Navbar = () => {
               <Briefcase size={20} />
               store
             </Link>
-          </div>
-          <Link
+            <Link
             to="/loginuser"
-            className="text-gray-900 hover:text-red-600 transition-all duration-300"
+            className="text-gray-900 mt-5 hover:text-red-600 transition-all duration-300"
           >
             <LogIn size={20} />
           </Link>
+          </div>
+      
 
           {/* Mobile Menu Button */}
           <button
