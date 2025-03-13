@@ -11,12 +11,8 @@ import FormFields from "../../components/Register/Registerformfields";
 import OTPModal from "../../components/Register/Otpmodal";
 import RightSection from "../../components/Register/Rightsidesection";
 
-const jobTypes = [
-  { value: "plumbing", label: "Plumbing" },
-  { value: "electrical", label: "Electrical" },
-  { value: "carpentry", label: "Carpentry" },
-  { value: "painting", label: "Painting" },
-];
+const jobTypes = ["plumbing","electrical", "carpentry", "painting"];
+ 
 
 export default function RegisterContractorStep1() {
   const navigate = useNavigate();
@@ -24,6 +20,7 @@ export default function RegisterContractorStep1() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [registrationData, setRegistrationData] = useState({});
+  const [jobTypes, setJobTypes] = useState([]);
   const [form, setForm] = useState({
     companyName: "",
     contractorName: "",
@@ -109,6 +106,24 @@ export default function RegisterContractorStep1() {
       jobTypes: value,
     }));
   };
+
+  useEffect(() => {
+    console.log('jobTypes');
+    
+  const  fectchjobtypes = async () => {
+    try {
+      const response = await axiosInstance.get("/contractor/jobtypes");
+      setJobTypes(response.data);
+      console.log(response.data);
+      
+    } catch (error) {
+      console.error("Error fetching job types:", error);
+    }
+  }
+  console.log(jobTypes);
+  fectchjobtypes();
+      
+  }, []);
 
   const handleCountryChange = (e) => {
     const countryCode = e.target.value;

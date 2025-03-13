@@ -7,6 +7,7 @@ const generateOTP = require("../lib/otpgenarator");
 const sendEmail = require("../lib/nodemailer");
 const cloudinary = require("../lib/cloudinary"); // Cloudinary config
 const multer = require("multer");
+const jobTypes = require("../model/jobtypes.js");
 
 // Multer setup for Cloudinary (used by other controllers)
 const storage = require("multer-storage-cloudinary").CloudinaryStorage({
@@ -382,6 +383,16 @@ const logoutcontractor = (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 }
+ const fectchjobtypes = async (req, res) => {
+  try {
+   const data= await jobTypes.find();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching job types:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+}
+
 
 const updateAvailability = async (req, res) => {
   console.log('updateAvailability');
@@ -486,5 +497,6 @@ module.exports = {
   addProject,
   uploadForProjects,
   logoutcontractor,
-  handleDeleteProject // Export the new Multer instance for addProject
+  handleDeleteProject,
+  fectchjobtypes 
 };

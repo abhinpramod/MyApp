@@ -45,8 +45,8 @@ import { Country, State, City } from "country-state-city";
           }}
         >
           {jobTypes.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
+            <MenuItem key={option._id} value={option.name}>
+              {option.name}
             </MenuItem>
           ))}
         </Select>

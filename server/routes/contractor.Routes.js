@@ -14,7 +14,9 @@ const {
   addProject,
   uploadForProjects,
   handleDeleteProject,
-  logoutcontractor // Import the new Multer instance
+  logoutcontractor ,
+  fectchjobtypes
+
 } = require("../controllers/contractor.controllers");
 const { protectRoutecontractor } = require("../middleware/authmiddleware");
 
@@ -50,5 +52,6 @@ router.post(
 );
 router.delete("/deleteproject", protectRoutecontractor, handleDeleteProject);
 router.post("/logout",logoutcontractor);
+router.get('/jobtypes', fectchjobtypes);
 
 module.exports = router;
