@@ -1,13 +1,43 @@
 // components/FormFields.js
 import React from "react";
-import { TextField, FormControl, InputLabel, Select, MenuItem, Typography, Box } from "@mui/material";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Typography,
+  Box,
+} from "@mui/material";
 import { Country, State, City } from "country-state-city";
 
- const FormFields = ({ form, errors, handleChange, handleJobTypesChange, jobTypes, states, cities, handleCountryChange, handleStateChange, handleCityChange }) => {
+const FormFields = ({
+  form,
+  errors,
+  handleChange,
+  handleJobTypesChange,
+  jobTypes,
+  states,
+  cities,
+  handleCountryChange,
+  handleStateChange,
+  handleCityChange,
+}) => {
   return (
     <>
-    <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" , fontSize: "1.5rem" }}>Register as Contractor</Typography>
-      {["companyName", "contractorName", "email", "phone", "numberOfEmployees"].map((field) => (
+      <Typography
+        variant="h6"
+        sx={{ mb: 2, fontWeight: "bold", fontSize: "1.5rem" }}
+      >
+        Register as Contractor
+      </Typography>
+      {[
+        "companyName",
+        "contractorName",
+        "email",
+        "phone",
+        "numberOfEmployees",
+      ].map((field) => (
         <Box key={field} sx={{ position: "relative", mb: 2 }}>
           <TextField
             fullWidth
@@ -15,7 +45,9 @@ import { Country, State, City } from "country-state-city";
             name={field}
             value={form[field]}
             onChange={handleChange}
-            label={field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+            label={field
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (str) => str.toUpperCase())}
             variant="outlined"
             error={!!errors[field]}
             helperText={errors[field]}
@@ -37,7 +69,6 @@ import { Country, State, City } from "country-state-city";
           onChange={handleJobTypesChange}
           multiple
           fullWidth
-          
           variant="outlined"
           error={!!errors.jobTypes}
           sx={{
@@ -65,7 +96,9 @@ import { Country, State, City } from "country-state-city";
             name={field}
             value={form[field]}
             onChange={handleChange}
-            label={field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+            label={field
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (str) => str.toUpperCase())}
             variant="outlined"
             error={!!errors[field]}
             helperText={errors[field]}
