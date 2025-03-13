@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Box, Grid } from "@mui/material";
 import { motion } from "framer-motion";
 import axiosInstance from "../../lib/axios";
@@ -18,6 +19,8 @@ const jobTypes = [
 ];
 
 export default function RegisterContractorStep1() {
+  const navigate = useNavigate();
+  const login=false
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [registrationData, setRegistrationData] = useState({});
@@ -160,11 +163,45 @@ export default function RegisterContractorStep1() {
     }
   };
 
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < otp.length - 1) {
+      document.getElementById(`otp-input-${index + 1}`).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-input-${index - 1}`).focus();
+    }
+  };
+
+  const verifyOtp = async () => {
+    const otpValue = otp.join("");
+    try {
+      const res = await axiosInstance.post("/contractor/verify-otp", {
+        ...registrationData,
+        otp: otpValue,
+      });
+      if (res.status === 200) {
+        toast.success("Registration successful! Wait for admin approval.");
+        navigate("/contractors");
+      }
+    } catch (error) {
+      console.error("Error during OTP verification:", error);
+      toast.error(error.response?.data?.msg || "Invalid OTP");
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <Navbar />
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#f8fafc" }}>
-        <Grid container sx={{ maxWidth: "screen", width: "100%", bgcolor: "white",  display: "flex", height: "100%" }}>
+      <Navbar login={false} />
+      <Box  sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#e5e7eb"   }}>
+        <Grid className="oklch(0.278 0.033 256.848)" container sx={{ maxWidth: "screen", width: "100%",   display: "flex", height: "100%" }}>
           <Grid margin={1} item xs={12} md={6} sx={{ p: 4 }}>
             <FormFields form={form} errors={errors} handleChange={handleChange} handleJobTypesChange={handleJobTypesChange} jobTypes={jobTypes} states={states} cities={cities} handleCountryChange={handleCountryChange} handleStateChange={handleStateChange} handleCityChange={handleCityChange} />
             <Button type="submit" variant="contained" size="large" sx={{ mt: 2, borderRadius: "8px", background: "#4f46e5", "&:hover": { background: "#4338ca" } }} onClick={handleSubmit}>
@@ -172,10 +209,18 @@ export default function RegisterContractorStep1() {
             </Button>
           </Grid>
           <Grid item md={0.03} sx={{ display: { xs: "none", md: "block" }, bgcolor: "#e5e7eb" }}></Grid>
-          <Grid item xs={12} md={5.8} sx={{ display: { xs: "none", md: "block" }, bgcolor: "white", p: 4 }}>
+          <Grid className="bg-oklch(0.278 0.033 256.848)" item xs={12} md={5.8} sx={{ display: { xs: "none", md: "block" },  p: 4 }}>
             <RightSection />
           </Grid>
         </Grid>
+        <OTPModal
+          showOtpModal={showOtpModal}
+          setShowOtpModal={setShowOtpModal}
+          otp={otp}
+          handleOtpChange={handleOtpChange}
+          handleOtpKeyDown={handleOtpKeyDown}
+          verifyOtp={verifyOtp}
+        />
       </Box>
     </motion.div>
   );

@@ -6,6 +6,7 @@ import { logincontractor } from '../../redux/contractorslice';
 import axiosInstance from '../../lib/axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../../components/Register/Registernav';
 
 export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -59,20 +60,7 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Navbar */}
-      <nav className="flex items-center justify-between p-4 shadow-md">
-        <div className="flex items-center">
-          <IconButton onClick={() => window.history.back()}>
-            <ArrowLeft size={20} />
-          </IconButton>
-          <span className="ml-2 text-gray-700 text-lg sm:text-xl">Back</span>
-        </div>
-        <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">LocalFinder</h1>
-        <div className="hidden sm:block">
-          <a href="/contractor/registercontractorstep1" className="text-gray-700 text-sm sm:text-base hover:underline">
-            Create an account
-          </a>
-        </div>
-      </nav>
+      <Navbar login={true} />
 
       {/* Body Section (Takes Remaining Height) */}
       <div className="flex flex-grow">
@@ -144,7 +132,7 @@ export default function LoginPage() {
           </p>
 
           <div className="mt-6 sm:hidden text-center">
-            <a href="/create-account" className="text-gray-700 text-sm hover:underline">
+            <a href="/contractor/registercontractorstep1" className="text-gray-700 text-sm hover:underline">
               Create an account
             </a>
           </div>

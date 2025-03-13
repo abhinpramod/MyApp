@@ -6,6 +6,7 @@ import { Country, State, City } from "country-state-city";
  const FormFields = ({ form, errors, handleChange, handleJobTypesChange, jobTypes, states, cities, handleCountryChange, handleStateChange, handleCityChange }) => {
   return (
     <>
+    <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" , fontSize: "1.5rem" }}>Register as Contractor</Typography>
       {["companyName", "contractorName", "email", "phone", "numberOfEmployees"].map((field) => (
         <Box key={field} sx={{ position: "relative", mb: 2 }}>
           <TextField
