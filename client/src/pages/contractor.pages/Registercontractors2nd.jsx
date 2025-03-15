@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { TextField, Button, Box, Paper, Typography, Avatar } from "@mui/material";
+import { TextField, Button, Box, Paper, Typography, Avatar,IconButton } from "@mui/material";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
 import { useSelector } from "react-redux";
 import useAuthCheck from "../../hooks/usecheakAuth";
 import { useNavigate } from "react-router-dom";
-import { Loader } from "lucide-react";
+import { Loader, Upload } from "lucide-react";
+import Navbar from "../../components/Register/Registernav";
 const ContractorVerificationStep2 = () => {
   const Navigate = useNavigate();
   const { loading } = useAuthCheck(); // Check authentication status
@@ -92,6 +93,9 @@ const ContractorVerificationStep2 = () => {
   <Loader className="size-10 animate-spin" />
 </div>;
   return (
+<>
+<Navbar />
+
     <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", p: 2, background: "linear-gradient(135deg, #f5f7fa, #c3cfe2)" }}>
       <Paper elevation={8} sx={{ p: 4, borderRadius: 6, width: "100%", maxWidth: 600, background: "#ffffff", boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)" }}>
         <Typography variant="h4" fontWeight="bold" mb={2} textAlign="center">
@@ -111,25 +115,27 @@ const ContractorVerificationStep2 = () => {
           />
           <FileUpload name="gstDocument" label="Upload GST Document" file={form.gstDocument} onChange={handleChange} error={errors.gstDocument} />
           <FileUpload name="licenseDocument" label="Upload License Document" file={form.licenseDocument} onChange={handleChange} error={errors.licenseDocument} />
-          <Button type="submit" variant="contained" size="large" sx={{ mt: 2, borderRadius: 3, fontWeight: "bold" }}>
+          <Button type="submit" variant="contained" color="error" size="large" sx={{ mt: 2, borderRadius: 3, fontWeight: "bold" }}>
             Submit
           </Button>
         </Box>
       </Paper>
-    </Box>
+    </Box>  </>
+
+
   );
 };
 
 // Reusable File Upload Component
 const FileUpload = ({ name, label, file, onChange, error }) => (
-  <Box sx={{ border: "2px dashed #1976d2", p: 2, borderRadius: 2, textAlign: "center", backgroundColor: "#f0f4f8" }}>
+  <Box sx={{ border: "2px dashed ", p: 2, borderRadius: 2, textAlign: "center", backgroundColor: "" }}>
     <Typography variant="body1" mb={1} color="textSecondary">
       {label}
     </Typography>
     <input type="file" name={name} onChange={onChange} accept="image/*" style={{ display: "none" }} id={name} />
     <label htmlFor={name}>
-      <Button variant="outlined" component="span">
-        Choose File
+      <Button variant="outlined" component="span" color="dark">
+      <Upload />
       </Button>
     </label>
     {file && (

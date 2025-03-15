@@ -60,7 +60,7 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Navbar */}
-      <Navbar login={true} />
+      <Navbar login={'login'} />
 
       {/* Body Section (Takes Remaining Height) */}
       <div className="flex flex-grow">

@@ -214,7 +214,7 @@ export default function RegisterContractorStep1() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <Navbar login={false} />
+      <Navbar login={'register'} />
       <Box  sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#e5e7eb"   }}>
         <Grid className="oklch(0.278 0.033 256.848)" container sx={{ maxWidth: "screen", width: "100%",   display: "flex", height: "100%" }}>
           <Grid margin={1} item xs={12} md={6} sx={{ p: 4 }}>
@@ -222,6 +222,11 @@ export default function RegisterContractorStep1() {
             <Button type="submit" variant="contained" size="large" sx={{ mt: 2, borderRadius: "8px", background: "#4f46e5", "&:hover": { background: "#4338ca" } }} onClick={handleSubmit}>
               Submit
             </Button>
+            <div className="mt-6 sm:hidden text-center">
+            <a href="/contractor/Logincontractors" className="text-gray-700 text-sm hover:underline">
+              Login
+            </a>
+          </div>
           </Grid>
           <Grid item md={0.03} sx={{ display: { xs: "none", md: "block" }, bgcolor: "#e5e7eb" }}></Grid>
           <Grid className="bg-oklch(0.278 0.033 256.848)" item xs={12} md={5.8} sx={{ display: { xs: "none", md: "block" },  p: 4 }}>
