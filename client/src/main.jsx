@@ -4,11 +4,14 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import contractorstore from './redux/store';
+import userstore from './redux/store';
 import { Provider } from 'react-redux';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
      <Provider store={contractorstore}> 
+      <Provider store={userstore}>
       <App />
+    </Provider>
     </Provider>
    
   </StrictMode>,

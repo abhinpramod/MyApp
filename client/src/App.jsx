@@ -35,7 +35,7 @@ function App() {
           <Route path="/registeruser" element={<Registeruser />} />
           <Route path="/contractors/contractors" element={<Contractors />} />
           <Route path="/contractor/registercontractorstep1" element={contractor && contractor.verified ? <Contractordashboard /> : <RegisterContractorStep1 />} />
-          <Route path="/contractor/registercontractorstep2" element={contractor && contractor ? <ContractorregisterStep2 /> : <RegisterContractorStep1 />} />
+          <Route path=" " element={contractor && contractor ? <ContractorregisterStep2 /> : <RegisterContractorStep1 />} />
           <Route path="/contractor/Logincontractors" element={contractor && contractor.verified ? <Navigate to="/contractor/dashboard" /> :  <Logincontractors />} />
 
           {/* Contractor Dashboard Routes */}
