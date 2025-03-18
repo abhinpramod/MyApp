@@ -82,9 +82,12 @@ const ContractorProfile = () => {
   const [projectToDelete, setProjectToDelete] = useState(null);
 
   // Confirmation dialogs for updates
-  const [availabilityConfirmationOpen, setAvailabilityConfirmationOpen] = useState(false);
-  const [employeesConfirmationOpen, setEmployeesConfirmationOpen] = useState(false);
-  const [profilePicConfirmationOpen, setProfilePicConfirmationOpen] = useState(false);
+  const [availabilityConfirmationOpen, setAvailabilityConfirmationOpen] =
+    useState(false);
+  const [employeesConfirmationOpen, setEmployeesConfirmationOpen] =
+    useState(false);
+  const [profilePicConfirmationOpen, setProfilePicConfirmationOpen] =
+    useState(false);
 
   // Fetch contractor data on component mount
   useEffect(() => {
