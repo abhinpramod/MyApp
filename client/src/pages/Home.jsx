@@ -1,11 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@mui/material";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
 import Navbar from "../components/Navbar";
+import { Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../lib/axios";
+import { use } from "react";
+import { useState } from "react";
+
 
 export default function LandingPage() {
-  const services = Array(6).fill({ name: "Manson Paper works LLC" });
+  const navigate = useNavigate();
+  const[service,setService]=useState([]);
+
+  const fectchServices = async () => {
+    try {
+      const response = await axiosInstance.get("/user/Jobtypes");
+      console.log(response.data);
+      setService(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fectchServices();
+  }, []);
 
   return (
     <>
@@ -29,23 +49,17 @@ export default function LandingPage() {
             </div>
             <Card className="hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-6">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <h3 className="text-3xl md:text-4xl font-bold mb-4">
                   India's First Local Skilled Labour Finding Application
-                </h2>
+                </h3>
                 <p className="text-gray-500 mb-8 text-base md:text-lg">
                   Local Skilled Labor is a platform connecting users with local
                   skilled laborers, contractors, and material stores. Find
                   trusted help easily!
                 </p>
-                <a
-                  href="/about"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  className="transform hover:scale-105 hover:underline transition-transform duration-300"
-                >
-                  Learn More
-                </a>
+               <button className="hover:underline" onClick={() => navigate("/about")}>
+                Lern more
+               </button>
               </CardContent>
             </Card>
           </section>
@@ -71,7 +85,7 @@ export default function LandingPage() {
 
         {/* Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 w-full p-8">
-          <Card className="transform hover:scale-105 transition-transform duration-300 shadow-lg">
+          <button onClick={() => navigate("/contractors/contractors")} ><Card className="transform hover:scale-105 transition-transform duration-300 shadow-lg">
             <CardContent>
               <h3 className="font-bold text-xl mb-4">Find Contractors</h3>
               <p className="text-gray-700 text-base">
@@ -79,8 +93,10 @@ export default function LandingPage() {
                 with contractors and get quotations easily.
               </p>
             </CardContent>
-          </Card>
-          <Card className="transform hover:scale-105 transition-transform duration-300 shadow-lg">
+          </Card></button>   
+          
+          
+          <button onClick={() => navigate("/stores")}> <Card className="transform hover:scale-105 transition-transform duration-300 shadow-lg">
             <CardContent>
               <h3 className="font-bold text-xl mb-4">Material Stores</h3>
               <p className="text-gray-700 text-base">
@@ -88,7 +104,10 @@ export default function LandingPage() {
                 Get everything you need for construction.
               </p>
             </CardContent>
-          </Card>
+          </Card></button>
+          
+        
+         
         </div>
 
         {/* About Section */}
@@ -96,16 +115,16 @@ export default function LandingPage() {
         {/* Services Section */}
         <section className="flex-grow w-full p-8 bg-gray-100">
           <h2 className="text-3xl md:text-4xl font-bold mb-8">
-            Services Near You
+            Services
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {services.map((service, idx) => (
+            { service && service.map((service, idx) => (
               <Card
-                key={idx}
+                key={service._id}
                 className="overflow-hidden transform hover:scale-105 transition-transform duration-300 shadow-lg"
               >
                 <img
-                  src="/service-image.jpg" // Update this path to your actual image
+                  src={service.image} // Update this path to your actual image
                   alt="Service"
                   className="w-full h-48 object-cover"
                 />

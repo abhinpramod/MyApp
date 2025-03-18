@@ -3,8 +3,10 @@ const bcrypt = require("bcrypt");
 const generateToken = require("../lib/utils.js");
 const TempUser = require("../model/tempuser.model.js");
 const OTP = require("../model/otp.model.js");
-const generateOTP = require("../lib/otpgenarator");
-const sendEmail = require("../lib/nodemailer");
+const generateOTP = require("../lib/otpgenarator.js");
+const sendEmail = require("../lib/nodemailer.js");
+const jobTypes = require("../model/jobtypes.js");
+const Contractor = require("../model/contractors.model.js");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -134,5 +136,25 @@ console.log(email,otp);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
+  const fectchjobtypes=async(req,res)=>{
+    try {
+      const data= await jobTypes.find();
+      res.status(200).json(data);
+    } catch (error) {
+      console.error("Error fetching job types:", error);
+      return null;
+    }
+  }
 
-module.exports = { login, register, verifyOTP };
+  fectchallcontractors=async(req,res)=>{
+    try {
+      const data= await Contractor.find({verified:true});
+      res.status(200).json(data);
+    } catch (error) {
+      console.error("fectchallcontractors error:", error);
+      return null;
+    }
+  }
+
+
+module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors };
