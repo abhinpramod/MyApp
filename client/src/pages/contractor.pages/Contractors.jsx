@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Card from '@/components/ui/card';
-import CardContent from '@/components/ui/card-content';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { LucideUser, LucideMapPin, LucideSearch } from 'lucide-react';
-import axiosInstance from '../../lib/axios';
+import React, { useEffect, useState } from "react";
+import Navbar from "../../components/Navbar";
+import Card from "@/components/ui/card";
+import CardContent from "@/components/ui/card-content";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LucideUser, LucideMapPin, LucideSearch } from "lucide-react";
+import axiosInstance from "../../lib/axios";
 
 const Contractors = () => {
   const [contractors, setContractors] = useState([]); // All contractors from the API
   const [filteredContractors, setFilteredContractors] = useState([]); // Contractors after applying search
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(''); // Search query state
+  const [searchQuery, setSearchQuery] = useState(""); // Search query state
 
   // Fetch contractors from the backend
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const response = await axiosInstance.get('/user/all-contractors');
+        const response = await axiosInstance.get("/user/all-contractors");
         setContractors(response.data);
         setFilteredContractors(response.data); // Initialize filtered contractors with all contractors
       } catch (error) {
-        console.error('Error fetching contractors:', error);
+        console.error("Error fetching contractors:", error);
       } finally {
         setLoading(false);
       }
@@ -41,12 +41,13 @@ const Contractors = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter((contractor) => {
-        const contractorName = contractor.contractorName?.toLowerCase() || '';
-        const companyName = contractor.companyName?.toLowerCase() || '';
-        const country = contractor.country?.toLowerCase() || '';
-        const state = contractor.state?.toLowerCase() || '';
-        const city = contractor.city?.toLowerCase() || '';
-        const jobTypes = contractor.jobTypes?.map((job) => job.toLowerCase()) || [];
+        const contractorName = contractor.contractorName?.toLowerCase() || "";
+        const companyName = contractor.companyName?.toLowerCase() || "";
+        const country = contractor.country?.toLowerCase() || "";
+        const state = contractor.state?.toLowerCase() || "";
+        const city = contractor.city?.toLowerCase() || "";
+        const jobTypes =
+          contractor.jobTypes?.map((job) => job.toLowerCase()) || [];
 
         return (
           contractorName.includes(query) ||
@@ -109,7 +110,7 @@ const Contractors = () => {
                     {contractor.profilePicture ? (
                       <img
                         src={contractor.profilePicture}
-                        alt={contractor.contractorName || 'Contractor'}
+                        alt={contractor.contractorName || "Contractor"}
                         className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
                       />
                     ) : (
@@ -117,10 +118,10 @@ const Contractors = () => {
                     )}
                     <div>
                       <h2 className="text-xl font-semibold text-gray-900">
-                        {contractor.contractorName || 'Unnamed Contractor'}
+                        {contractor.contractorName || "Unnamed Contractor"}
                       </h2>
                       <p className="text-sm text-gray-500">
-                        {contractor.companyName || 'No Company'}
+                        {contractor.companyName || "No Company"}
                       </p>
                     </div>
                   </div>
@@ -128,7 +129,9 @@ const Contractors = () => {
                   {/* Location Section */}
                   <div className="flex items-center text-sm text-gray-600">
                     <LucideMapPin className="w-4 h-4 mr-1 text-primary" />
-                    {contractor.country || 'Unknown Country'}, {contractor.state || 'Unknown State'}, {contractor.city || 'Unknown City'}
+                    {contractor.country || "Unknown Country"},{" "}
+                    {contractor.state || "Unknown State"},{" "}
+                    {contractor.city || "Unknown City"}
                   </div>
 
                   {/* Job Types Section */}
