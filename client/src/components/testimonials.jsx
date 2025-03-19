@@ -1,20 +1,23 @@
-import { Star } from 'lucide-react';
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: 'Alexander Jacob',
-    image: 'https://randomuser.me/api/portraits/men/75.jpg',
-    feedback: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard',
+    name: "Alexander Jacob",
+    image: "https://randomuser.me/api/portraits/men/75.jpg",
+    feedback:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard",
   },
   {
-    name: 'Jenny Wilson',
-    image: 'https://randomuser.me/api/portraits/women/65.jpg',
-    feedback: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard',
+    name: "Jenny Wilson",
+    image: "https://randomuser.me/api/portraits/women/65.jpg",
+    feedback:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard",
   },
   {
-    name: 'Cameron Williamson',
-    image: 'https://randomuser.me/api/portraits/men/45.jpg',
-    feedback: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard',
+    name: "Cameron Williamson",
+    image: "https://randomuser.me/api/portraits/men/45.jpg",
+    feedback:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard",
   },
 ];
 
@@ -24,7 +27,10 @@ export default function Testimonials() {
       <h2 className="text-3xl font-bold text-center mb-6">Testimonials</h2>
       <div className="flex flex-wrap justify-center gap-6">
         {testimonials.map((testimonial, index) => (
-          <div key={index} className="bg-white shadow-lg rounded-xl p-6 w-72 text-center">
+          <div
+            key={index}
+            className="bg-white shadow-lg rounded-xl p-6 w-72 text-center"
+          >
             <img
               src={testimonial.image}
               alt={testimonial.name}
