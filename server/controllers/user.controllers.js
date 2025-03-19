@@ -8,7 +8,8 @@ const sendEmail = require("../lib/nodemailer.js");
 const jobTypes = require("../model/jobtypes.js");
 const Contractor = require("../model/contractors.model.js");
 const Intrests = require("../model/Intrests.model.js");
-const { urlencoded } = require("body-parser");
+// const sendEmail = require("../lib/nodemailer.js");
+
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -174,13 +175,32 @@ console.log(email,otp);
   }
 
   const addintrests=async(req,res)=>{
-    const _id=req.params.id;
-    const {formData}=req.body;
-    const {user}=req;
-    console.log(formData,_id);
-    console.log(user);
+    const contractorId=req.params.id;
+    const {phoneNumber,address,expectedDate,jobTypes}=req.body.formData;
+    const {_id,name,email}=req.user;
+    console.log(_id);
+
+  
     
     try {
+      const newinterests=new Intrests({
+        contractorId,
+        userId:_id,
+        phoneNumber,
+        address,
+        expectedDate,
+        jobTypes,
+        name,
+        email
+      })
+      await newinterests.save();
+      const contractor=await Contractor.findOne({_id:contractorId});
+      const to = contractor.email;
+      const subject="New Intrests Added";
+      const msg=`Name:${name}\nPhone Number:${phoneNumber}\nAddress:${address}\nExpected Date:${expectedDate}\nJob Types:${jobTypes}`
+      
+      sendEmail(to,subject,msg);
+      res.status(200).json({msg:"intrests send to contractor"});
     
     } catch (error) {
       console.error("fectchcontractors error:", error);
@@ -188,7 +208,18 @@ console.log(email,otp);
     }
   }
 
+  const cheak=async(req,res)=>{
+    const {_id}=req.user;
+    console.log(_id);
+    try {
+      const user=await User.findOne({_id});
+      res.status(200).json(user);
+    } catch (error) {
+      console.error("fectchcontractors error:", error);
+      res.status(500).json({ msg: "Internal server error" });
+    }
+  }
  
 
 
-module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors,addintrests };
+module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors,addintrests,cheak };

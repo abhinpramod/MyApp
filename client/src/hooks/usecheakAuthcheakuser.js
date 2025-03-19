@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import axiosInstance from "../lib/axios"; // Ensure the correct path
-import { logincontractor, logoutcontractor } from "../redux/contractorslice";
+import { loginuser, logoutuser } from "../redux/userslice";
 import toast from "react-hot-toast";
 
-const useAuthCheck = () => {
-  const [loading, setLoading] = useState(true);
+const useAuthCheckuser = () => {
+  const [loadinguser, setLoadinguser] = useState(true);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await axiosInstance.get("/contractor/check");
+        const res = await axiosInstance.get("/user/check");
         console.log(res);
         if (res.status === 200) {
-          dispatch(logincontractor(res.data));
+          dispatch(loginuser(res.data));
         } else {
           
-          dispatch(logoutcontractor());
-          axiosInstance.post("/contractor/logout");
+          dispatch(logoutuser());
+          axiosInstance.post("/user/logout");
         }
       } catch (error) {
 
@@ -29,19 +29,19 @@ const useAuthCheck = () => {
           toast.error(error.response.data.msg);
         }
         // toast.error(error.response.data.msg);
-        axiosInstance.post("/contractor/logout");
+        axiosInstance.post("/user/logout");
 
 
-        dispatch(logoutcontractor());
+        dispatch(logoutuser());
       } finally {
-        setLoading(false);
+        setLoadinguser(false);
       }
     };
 
     checkAuth();
   }, [dispatch]);
 
-  return { loading };
+  return { loadinguser };
 };
 
-export default useAuthCheck;
+export default useAuthCheckuser;

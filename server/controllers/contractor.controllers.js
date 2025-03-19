@@ -8,6 +8,7 @@ const sendEmail = require("../lib/nodemailer");
 const cloudinary = require("../lib/cloudinary"); // Cloudinary config
 const multer = require("multer");
 const jobTypes = require("../model/jobtypes.js");
+const interests = require("../model/Intrests.model.js");
 
 // Multer setup for Cloudinary (used by other controllers)
 const storage = require("multer-storage-cloudinary").CloudinaryStorage({
@@ -482,6 +483,16 @@ const uploadProfilePic = async (req, res) => {
   }
 };
 
+const fectchintrestes   = async (req, res) => {
+  const {_id}=req.contractor
+  try {
+   const data= await interests.find();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching job types:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+}
 
 module.exports = {
   login,
@@ -498,5 +509,6 @@ module.exports = {
   uploadForProjects,
   logoutcontractor,
   handleDeleteProject,
-  fectchjobtypes 
+  fectchjobtypes ,
+  fectchintrestes
 };

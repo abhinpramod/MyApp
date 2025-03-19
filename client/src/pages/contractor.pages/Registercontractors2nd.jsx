@@ -3,7 +3,7 @@ import { TextField, Button, Box, Paper, Typography, Avatar,IconButton } from "@m
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
 import { useSelector } from "react-redux";
-import useAuthCheck from "../../hooks/usecheakAuth";
+import useAuthCheck from "../../hooks/usecheakAuthcontractor";
 import { useNavigate } from "react-router-dom";
 import { Loader, Upload } from "lucide-react";
 import Navbar from "../../components/Register/Registernav";

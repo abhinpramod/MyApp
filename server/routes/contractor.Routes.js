@@ -15,7 +15,8 @@ const {
   uploadForProjects,
   handleDeleteProject,
   logoutcontractor ,
-  fectchjobtypes
+  fectchjobtypes,
+  fectchintrestes
 
 } = require("../controllers/contractor.controllers");
 const { protectRoutecontractor } = require("../middleware/authmiddleware");
@@ -53,5 +54,6 @@ router.post(
 router.delete("/deleteproject", protectRoutecontractor, handleDeleteProject);
 router.post("/logout",logoutcontractor);
 router.get('/jobtypes', fectchjobtypes);
+router.get("/all-interests", protectRoutecontractor,fectchintrestes);
 
 module.exports = router;

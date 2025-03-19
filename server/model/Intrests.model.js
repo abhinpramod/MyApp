@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 
 const intrestSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
    userId: { type: String, required: true },
    contractorId: { type: String, required: true },
    phoneNumber: { type: String, required: true },

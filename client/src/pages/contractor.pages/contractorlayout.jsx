@@ -10,9 +10,15 @@ import {
   Settings,
   LogOut,
   LayoutDashboard,
+  Users,
+  MapPin,
+  ArrowLeft,
+  Loader,
+  Upload,
+  BellRing 
 } from "lucide-react";
 import Button from "@/components/ui/button";
-import useAuthCheck from "../../hooks/usecheakAuth";
+import useAuthCheck from "../../hooks/usecheakAuthcontractor";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutcontractor } from "../../redux/contractorslice";
 import { toast } from "react-hot-toast";
@@ -132,9 +138,9 @@ const ContractorDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <Briefcase className="w-5 h-5" />
+              <BellRing className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                Projects
+                notification
               </span>
             </Link>
             <Link
@@ -179,14 +185,13 @@ const ContractorDashboard = () => {
             <h1 className="text-lg font-semibold text-gray-800">
               Contractor Dashboard
             </h1>
-            <a
-              className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
+            <button className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
                 isSidebarOpen ? "mr-60" : "mr-20"
-              }`}
-              href="/"
-            >
-              <Home className="w-5 h-5 text-gray-800" />
-            </a>
+            }`} onClick={() => navigate("/")}>              <Home className="w-5 h-5 text-gray-800" />
+</button>
+              
+            
+            
           </header>
 
           {/* Dynamic Main Content */}
