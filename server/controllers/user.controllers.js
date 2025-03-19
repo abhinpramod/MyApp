@@ -1,6 +1,6 @@
 const User = require("../model/user.model.js");
 const bcrypt = require("bcrypt");
-const generateToken = require("../lib/utils.js");
+const{generateTokenuser}  = require("../lib/utils.js");
 const TempUser = require("../model/tempuser.model.js");
 const OTP = require("../model/otp.model.js");
 const generateOTP = require("../lib/otpgenarator.js");
@@ -20,7 +20,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    generateToken(user._id, res);
+    generateTokenuser(user._id, res);
     res.status(200).json({
       _id: user._id,
       name: user.name,
@@ -152,9 +152,22 @@ console.log(email,otp);
       res.status(200).json(data);
     } catch (error) {
       console.error("fectchallcontractors error:", error);
-      return null;
+      res.status(500).json({ msg: "Internal server error" });
+    }
+  }
+
+  const fectchcontractors=async(req,res)=>{
+    const _id=req.params.id;
+    console.log(_id);
+    
+    try {
+      const data= await Contractor.findOne({_id});
+      res.status(200).json(data);
+    } catch (error) {
+      console.error("fectchcontractors error:", error);
+      res.status(500).json({ msg: "Internal server error" });
     }
   }
 
 
-module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors };
+module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors };

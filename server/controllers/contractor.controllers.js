@@ -2,7 +2,7 @@ const Contractor = require("../model/contractors.model.js");
 const TempContractor = require("../model/tempcontractor.model.js");
 const OTP = require("../model/otp.model.js");
 const bcrypt = require("bcrypt");
-const generateToken = require("../lib/utils.js");
+const {generateTokencontractor} = require("../lib/utils.js");
 const generateOTP = require("../lib/otpgenarator");
 const sendEmail = require("../lib/nodemailer");
 const cloudinary = require("../lib/cloudinary"); // Cloudinary config
@@ -155,7 +155,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, contractor.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    generateToken(contractor._id, res);
+    generateTokencontractor(contractor._id, res);
     res.status(200).json(contractor);
   } catch (error) {
     console.error("Login error:", error.message);

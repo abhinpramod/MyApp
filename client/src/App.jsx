@@ -17,6 +17,7 @@ import ContractorProject from "./pages/contractor.pages/contractorproject";
 import ContractorSettings from "./pages/contractor.pages/contractorsettings";
 import Dashboard from "./pages/contractor.pages/contractordashboard";
 import useAuthCheck from "./hooks/usecheakAuth";
+import ContractorProfileforuser from "./pages/ContractorProfileforuser";
 
 import { useSelector } from "react-redux";
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Route path="/contractor/registercontractorstep1" element={contractor && contractor.verified ? <Contractordashboard /> : <RegisterContractorStep1 />} />
           <Route path=" " element={contractor && contractor ? <ContractorregisterStep2 /> : <RegisterContractorStep1 />} />
           <Route path="/contractor/Logincontractors" element={contractor && contractor.verified ? <Navigate to="/contractor/dashboard" /> :  <Logincontractors />} />
+          <Route path="/contractor/contractorprofileforuser/:contractorId" element={<ContractorProfileforuser />} />
 
           {/* Contractor Dashboard Routes */}
           <Route path="/contractor" element={contractor && contractor.verified ? <Contractordashboard /> : <Logincontractors />}>

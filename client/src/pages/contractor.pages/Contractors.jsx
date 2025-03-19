@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import Navbar from "../../components/Navbar";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
@@ -8,18 +9,18 @@ import { LucideUser, LucideMapPin, LucideSearch } from "lucide-react";
 import axiosInstance from "../../lib/axios";
 
 const Contractors = () => {
-  const [contractors, setContractors] = useState([]); // All contractors from the API
-  const [filteredContractors, setFilteredContractors] = useState([]); // Contractors after applying search
+  const [contractors, setContractors] = useState([]);
+  const [filteredContractors, setFilteredContractors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  // Fetch contractors from the backend
   useEffect(() => {
     const fetchContractors = async () => {
       try {
         const response = await axiosInstance.get("/user/all-contractors");
         setContractors(response.data);
-        setFilteredContractors(response.data); // Initialize filtered contractors with all contractors
+        setFilteredContractors(response.data);
       } catch (error) {
         console.error("Error fetching contractors:", error);
       } finally {
@@ -29,12 +30,10 @@ const Contractors = () => {
     fetchContractors();
   }, []);
 
-  // Handle search changes
   useEffect(() => {
     applySearch();
   }, [searchQuery, contractors]);
 
-  // Apply search
   const applySearch = () => {
     let result = contractors;
 
@@ -63,9 +62,14 @@ const Contractors = () => {
     setFilteredContractors(result);
   };
 
-  // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleCardClick = (contractorId) => {
+    console.log("Contractor ID:", contractorId);
+    
+    navigate(`/contractor/contractorprofileforuser/${contractorId}`); // Navigate to the contractor's profile
   };
 
   return (
@@ -102,7 +106,8 @@ const Contractors = () => {
             filteredContractors.map((contractor) => (
               <Card
                 key={contractor._id}
-                className="hover:shadow-xl transition-shadow rounded-2xl overflow-hidden border border-gray-200"
+                className="hover:shadow-xl transition-shadow rounded-2xl overflow-hidden border border-gray-200 cursor-pointer"
+                onClick={() => handleCardClick(contractor._id)} // Handle card click
               >
                 <CardContent className="p-5 space-y-4">
                   {/* Header Section */}
