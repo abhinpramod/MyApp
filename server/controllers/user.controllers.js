@@ -7,6 +7,8 @@ const generateOTP = require("../lib/otpgenarator.js");
 const sendEmail = require("../lib/nodemailer.js");
 const jobTypes = require("../model/jobtypes.js");
 const Contractor = require("../model/contractors.model.js");
+const Intrests = require("../model/Intrests.model.js");
+const { urlencoded } = require("body-parser");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -158,10 +160,12 @@ console.log(email,otp);
 
   const fectchcontractors=async(req,res)=>{
     const _id=req.params.id;
-    console.log(_id);
+    console.log( "in controll",_id);
     
     try {
       const data= await Contractor.findOne({_id});
+      console.log(data);
+      
       res.status(200).json(data);
     } catch (error) {
       console.error("fectchcontractors error:", error);
@@ -169,5 +173,22 @@ console.log(email,otp);
     }
   }
 
+  const addintrests=async(req,res)=>{
+    const _id=req.params.id;
+    const {formData}=req.body;
+    const {user}=req;
+    console.log(formData,_id);
+    console.log(user);
+    
+    try {
+    
+    } catch (error) {
+      console.error("fectchcontractors error:", error);
+      res.status(500).json({ msg: "Internal server error" });
+    }
+  }
 
-module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors };
+ 
+
+
+module.exports = { login, register, verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors,addintrests };

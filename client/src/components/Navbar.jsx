@@ -78,7 +78,7 @@ const Navbar = () => {
           <div className="flex flex-col items-center space-y-6 text-lg font-medium">
             {[
               { name: "Home", path: "/" },
-              { name: "Contractors", path: "/Logincontractors" },
+              { name: "Contractors", path: "/contractors/contractors" },
               { name: "Stores", path: "/stores" },
               { name: "About", path: "/about" },
             ].map((item) => (

@@ -1,6 +1,6 @@
 const express= require('express')
 const router = express.Router();
-const {register,login,verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors}= require("../controllers/user.controllers");
+const {register,login,verifyOTP, fectchjobtypes, fectchallcontractors, fectchcontractors,addintrests}= require("../controllers/user.controllers");
 const { protectRouteuser } = require("../middleware/authmiddleware");
 
 
@@ -15,6 +15,8 @@ router.get ('/Jobtypes', fectchjobtypes);
 router.get("/all-contractors",fectchallcontractors);
 
 router.get("/contractor/:id",protectRouteuser, fectchcontractors);
+
+router.post ("/contractor/interest/:id",protectRouteuser,addintrests);
 
 
 module.exports = router;    

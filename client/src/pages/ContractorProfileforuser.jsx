@@ -50,6 +50,7 @@ const ContractorProfile = () => {
         setContractor(response.data);
         setProjects(response.data.projects || []);
         setJobTypes(response.data.jobTypes || []);
+        setIsLoading(false);
       } catch (error) {
         if (error.response?.status === 401) {
           toast.error("You are not authorized to view this page.");
@@ -97,8 +98,8 @@ const ContractorProfile = () => {
 
     try {
       const response = await axiosInstance.post(
-        `/user/contractor/interest/${contractorId}`,
-        formData
+        `/user/contractor/interest/${contractorId}`,{formData}
+        
       );
       toast.success("Interest expressed successfully!");
       setShowInterestDialog(false);
@@ -119,6 +120,8 @@ const ContractorProfile = () => {
   if (!contractor) {
     return <div>No contractor data found.</div>;
   }
+
+  console.log(jobTypes)
 
   return (
     <>
