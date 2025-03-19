@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   Loader,
   Upload,
-  BellRing 
+  BellRing ,
+  BriefcaseBusiness
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import useAuthCheck from "../../hooks/usecheakAuthcontractor";
@@ -133,7 +134,7 @@ const ContractorDashboard = () => {
               </span>
             </Link>
             <Link
-              to="/contractor/project"
+              to="/contractor/notifications"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
@@ -141,6 +142,17 @@ const ContractorDashboard = () => {
               <BellRing className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
                 notification
+              </span>
+            </Link>
+            <Link
+              to="/contractor/project"
+              className={`flex items-center p-3 rounded-lg transition-colors ${
+                isSidebarOpen ? "justify-start" : "justify-center"
+              } hover:bg-gray-800`}
+            >
+              <BriefcaseBusiness className="w-5 h-5" />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                projects
               </span>
             </Link>
             <Link

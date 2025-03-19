@@ -16,7 +16,8 @@ const {
   handleDeleteProject,
   logoutcontractor ,
   fectchjobtypes,
-  fectchintrestes
+  fectchintrestes,
+  markseen
 
 } = require("../controllers/contractor.controllers");
 const { protectRoutecontractor } = require("../middleware/authmiddleware");
@@ -55,5 +56,7 @@ router.delete("/deleteproject", protectRoutecontractor, handleDeleteProject);
 router.post("/logout",logoutcontractor);
 router.get('/jobtypes', fectchjobtypes);
 router.get("/all-interests", protectRoutecontractor,fectchintrestes);
+
+router.patch("/mark-interest-seen/:id", markseen);
 
 module.exports = router;

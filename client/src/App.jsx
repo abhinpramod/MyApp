@@ -23,6 +23,7 @@ import Dashboard from "./pages/contractor.pages/contractordashboard";
 import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import ContractorProfileforuser from "./pages/ContractorProfileforuser";
+import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
 
 import { useSelector } from "react-redux";
 function App() {
@@ -135,6 +136,16 @@ function App() {
               element={
                 contractor && contractor.verified ? (
                   <Dashboard />
+                ) : (
+                  <Logincontractors />
+                )
+              }
+            />
+            <Route
+              path="notifications"
+              element={
+                contractor && contractor.verified ? (
+                  <ContractorNotifications />
                 ) : (
                   <Logincontractors />
                 )

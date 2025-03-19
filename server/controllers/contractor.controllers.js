@@ -494,6 +494,22 @@ const fectchintrestes   = async (req, res) => {
   }
 }
 
+
+const markseen = async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  
+  try {
+    const interest = await interests.findOneAndUpdate({ _id: id }, { $set: { seeenByContractor: true } }, { new: true });
+   
+ 
+    res.status(200).json({ msg: "Interest marked as seen" });
+  } catch (error) {
+    console.error("Error marking interest as seen:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
 module.exports = {
   login,
   registerstep1,
@@ -510,5 +526,6 @@ module.exports = {
   logoutcontractor,
   handleDeleteProject,
   fectchjobtypes ,
-  fectchintrestes
+  fectchintrestes,
+  markseen
 };
