@@ -4,6 +4,9 @@ import axiosInstance from "../lib/axios";
 import Navbar from "../components/Navbar";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
+import { LucideUser, LucideMapPin, LucideSearch } from "lucide-react";
+import  Footer from "../components/footer";
+import Testimonials from "../components/testimonials";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -129,6 +132,8 @@ export default function LandingPage() {
           </div>
         </section>
       </div>
+      <Testimonials/>
+      <Footer/>
     </>
   );
 }
