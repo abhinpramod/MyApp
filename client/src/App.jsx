@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import React from "react";
 import Home from "./pages/Home";
 import Contractors from "./pages/contractor.pages/Contractors";
@@ -22,7 +27,7 @@ import ContractorProfileforuser from "./pages/ContractorProfileforuser";
 import { useSelector } from "react-redux";
 function App() {
   const { loading } = useAuthCheckcontractor();
-  const {  loadinguser } = useAuthCheckuser();
+  const { loadinguser } = useAuthCheckuser();
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
   return (
@@ -34,22 +39,107 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/stores" element={<Stores />} />
           <Route path="/about" element={<About />} />
-          <Route path="/loginuser" element={user&&user?<Navigate to="/" />:<Loginuser />} />
-          <Route path="/registeruser" element={user&&user?<Navigate to="/" />:<Registeruser />} />
-          <Route path="/contractors/contractors" element={user && user ?   <Contractors />: <Loginuser />} />
-          <Route path="/contractor/registercontractorstep1" element={contractor && contractor.verified ? <Contractordashboard /> : <RegisterContractorStep1 />} />
-          <Route path=" " element={contractor && contractor ? <ContractorregisterStep2 /> : <RegisterContractorStep1 />} />
-          <Route path="/contractor/Logincontractors" element={contractor && contractor.verified ? <Navigate to="/contractor/dashboard" /> :  <Logincontractors />} />
-          <Route path="/contractor/contractorprofileforuser/:contractorId" element={ user && user? <ContractorProfileforuser />: <Loginuser />} />
+          <Route
+            path="/loginuser"
+            element={user && user ? <Navigate to="/" /> : <Loginuser />}
+          />
+          <Route
+            path="/registeruser"
+            element={user && user ? <Navigate to="/" /> : <Registeruser />}
+          />
+          <Route
+            path="/contractors/contractors"
+            element={user && user ? <Contractors /> : <Loginuser />}
+          />
+          <Route
+            path="/contractor/registercontractorstep1"
+            element={
+              contractor && contractor.verified ? (
+                <Contractordashboard />
+              ) : (
+                <RegisterContractorStep1 />
+              )
+            }
+          />
+          <Route
+            path=" "
+            element={
+              contractor && contractor ? (
+                <ContractorregisterStep2 />
+              ) : (
+                <RegisterContractorStep1 />
+              )
+            }
+          />
+          <Route
+            path="/contractor/Logincontractors"
+            element={
+              contractor && contractor.verified ? (
+                <Navigate to="/contractor/dashboard" />
+              ) : (
+                <Logincontractors />
+              )
+            }
+          />
+          <Route
+            path="/contractor/contractorprofileforuser/:contractorId"
+            element={
+              user && user ? <ContractorProfileforuser /> : <Loginuser />
+            }
+          />
 
           {/* Contractor Dashboard Routes */}
-          <Route path="/contractor" element={contractor && contractor.verified ? <Contractordashboard /> : <Logincontractors />}>
+          <Route
+            path="/contractor"
+            element={
+              contractor && contractor.verified ? (
+                <Contractordashboard />
+              ) : (
+                <Logincontractors />
+              )
+            }
+          >
             {/* <Route path="contractorhome" element={contractor && contractor.verified ? <ContractorHome /> : <Logincontractors />} /> */}
-            <Route path="ContractorProfile" element={contractor &&contractor.verified ? <ContractorProfile />  : <Logincontractors />} />
-            <Route path="project" element={contractor &&contractor.verified ? <ContractorProject /> : <Logincontractors />} />
-            <Route path="settings" element={contractor &&contractor.verified  ? <ContractorSettings /> : <Logincontractors />} />
-            <Route path="dashboard" element={contractor &&contractor.verified  ? <Dashboard /> : <Logincontractors />} />
-
+            <Route
+              path="ContractorProfile"
+              element={
+                contractor && contractor.verified ? (
+                  <ContractorProfile />
+                ) : (
+                  <Logincontractors />
+                )
+              }
+            />
+            <Route
+              path="project"
+              element={
+                contractor && contractor.verified ? (
+                  <ContractorProject />
+                ) : (
+                  <Logincontractors />
+                )
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                contractor && contractor.verified ? (
+                  <ContractorSettings />
+                ) : (
+                  <Logincontractors />
+                )
+              }
+            />
+            <Route
+              path="dashboard"
+              element={
+                contractor && contractor.verified ? (
+                  <Dashboard />
+                ) : (
+                  <Logincontractors />
+                )
+              }
+            />
           </Route>
 
           {/* Fallback Route */}
@@ -60,4 +150,4 @@ function App() {
   );
 }
 
-export default App;               
+export default App;
