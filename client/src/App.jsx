@@ -43,10 +43,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/stores" element={<Stores />} />
           <Route path="/about" element={<About />} />
-          <Route path="/userprofile" element={<UserProfile />} />
+          <Route path="/userprofile" element={user && user ? <UserProfile /> : <Loginuser />} />
           <Route
             path="/loginuser"
-            element={user && user ? <Navigate to="/" /> : <Loginuser />}
+            element={user && user ? <UserProfile/> : <Loginuser />}
           />
           <Route
             path="/registeruser"

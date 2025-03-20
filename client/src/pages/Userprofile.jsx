@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { CircularProgress, IconButton, Menu, MenuItem } from '@mui/material';
+import { CircularProgress, IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { Camera, Mail, User, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from "../lib/axios";
 import Card from '../components/ui/card';
 import CardContent from '../components/ui/card-content';
 import Navbar from '../components/Navbar';
+import { logoutuser } from '../redux/userslice';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-const UserProfile = ({ userId }) => {
+const UserProfile = () => {
+    
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
   const open = Boolean(anchorEl);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -23,18 +30,27 @@ const UserProfile = ({ userId }) => {
     setAnchorEl(null);
   };
 
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const fetchUser = async () => {
+    try {
+      const response = await axiosInstance.get("user/check");
+      setUser(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      toast.error('Failed to fetch user data');
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axiosInstance.get("user/check");
-        setUser(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        toast.error('Failed to fetch user data');
-        setLoading(false);
-      }
-    };
     fetchUser();
   }, []);
 
@@ -47,17 +63,32 @@ const UserProfile = ({ userId }) => {
 
     setUploading(true);
     try {
-      const response = await axios.put(`/api/users/${userId}/upload`, formData, {
+      const response = await axiosInstance.put("/user/uploadprofile", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       setUser((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
       toast.success('Profile picture updated successfully!');
+      fetchUser();
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to update profile picture');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/user/logout");
+      dispatch(logoutuser());
+      navigate("/");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Failed to log out");
+    } finally {
+      handleCloseDialog();
     }
   };
 
@@ -71,84 +102,100 @@ const UserProfile = ({ userId }) => {
 
   return (
     <>
-    <Navbar/>
-    <div className="h-screen flex items-center justify-center mt-16 p-4">
-      <Card className="max-w-2xl w-full shadow-lg rounded-lg overflow-hidden">
-        <CardContent className="p-6 space-y-6">
-          {/* Info Button */}
-          <div className="flex justify-end">
-            <IconButton onClick={handleMenuClick}>
-              <Info />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <MenuItem onClick={handleMenuClose}>Account Info</MenuItem>
-              <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
-              <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
-            </Menu>
-          </div>
-
-          {/* Avatar Upload Section */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <img
-                src={user?.profilePicture || '/default-avatar.png'}
-                alt="Profile"
-                className="size-32 rounded-full object-cover border-2 "
-              />
-              <label
-                htmlFor="upload-image"
-                className={`absolute bottom-0 right-0 bg-base-content hover:scale-105 p-2 rounded-full cursor-pointer transition-all duration-200 ${uploading ? "animate-pulse pointer-events-none" : ""}`}
+      <Navbar />
+      <div className="h-screen flex items-center justify-center mt-16 p-4">
+        <Card className="max-w-2xl w-full shadow-xl rounded-lg overflow-hidden">
+          <CardContent className="p-6 space-y-6">
+            {/* Info Button */}
+            <div className="flex justify-end">
+              <IconButton onClick={handleMenuClick}>
+                <Info />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleMenuClose}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               >
-                <Camera className="w-5 h-5 text-base-200" />
-                <input
-                  id="upload-image"
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
+                <MenuItem onClick={handleMenuClose}>Account Info</MenuItem>
+                <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                <MenuItem onClick={handleOpenDialog}>Logout</MenuItem>
+              </Menu>
+            </div>
+
+            {/* Avatar Upload Section */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <img
+                  src={user?.profileImage || '/default-avatar.png'}
+                  alt="Profile"
+                  className="size-32 rounded-full object-cover border-2 "
                 />
-              </label>
+                <label
+                  htmlFor="upload-image"
+                  className={`absolute bottom-0 right-0 bg-base-content hover:scale-105 p-2 rounded-full cursor-pointer transition-all duration-200 ${uploading ? "animate-pulse pointer-events-none" : ""}`}
+                >
+                  <Camera className="w-5 h-5 text-base-200" />
+                  <input
+                    id="upload-image"
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+              <p className="text-sm text-zinc-400">
+                {uploading ? "Uploading..." : "Click the camera icon to update your photo"}
+              </p>
             </div>
-            <p className="text-sm text-zinc-400">
-              {uploading ? "Uploading..." : "Click the camera icon to update your photo"}
-            </p>
-          </div>
 
-          {/* User Details Section */}
-          <div className="space-y-4">
-            <div className="text-sm text-zinc-400 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Full Name
+            {/* User Details Section */}
+            <div className="space-y-4">
+              <div className="text-sm text-zinc-400 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Full Name
+              </div>
+              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{user?.name}</p>
+
+              <div className="text-sm text-zinc-400 flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email Address
+              </div>
+              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{user?.email}</p>
             </div>
-            <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{user?.name}</p>
 
-            <div className="text-sm text-zinc-400 flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Email Address
-            </div>
-            <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{user?.email}</p>
-          </div>
-
-          {/* Account Information Section */}
-          <div className="mt-6 bg-base-300 rounded-xl p-4">
-            <h2 className="text-lg font-medium mb-4">Account Information</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between py-2 border-b border-zinc-700">
-                <span>Member Since</span>
-                <span>{new Date(user?.createdAt).toLocaleDateString()}</span>
+            {/* Account Information Section */}
+            <div className="mt-6 bg-base-300 rounded-xl p-4">
+              <h2 className="text-lg font-medium mb-4">Account Information</h2>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-zinc-700">
+                  <span>Member Since</span>
+                  <span>{new Date(user?.createdAt).toLocaleDateString()}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <p>Are you sure you want to log out?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleLogout} color="primary" autoFocus>
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

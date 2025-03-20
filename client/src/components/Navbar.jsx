@@ -62,9 +62,14 @@ const Navbar = () => {
             </Link>
             <Link
               to="/loginuser"
-              className="text-gray-900 mt-5 hover:text-red-600 transition-all duration-300"
+              className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <LogIn size={20} />
+              {user ? (
+                <img src={user.profileImage} alt="User Profile" className="w-10 h-10 rounded-full" />
+              ) : (
+                <LogIn size={20} />
+              )}
+              {user ? "" : "Login"}
             </Link>
           </div>
 
