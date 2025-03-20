@@ -75,9 +75,9 @@ export default function LandingPage() {
                     India's First Local Skilled Labour Finding Application
                   </h3>
                   <p className="text-gray-500 mb-4 md:mb-8 text-base md:text-lg">
-                    Local Skilled Labor is a platform connecting users with local
-                    skilled laborers, contractors, and material stores. Find
-                    trusted help easily!
+                    Local Skilled Labor is a platform connecting users with
+                    local skilled laborers, contractors, and material stores.
+                    Find trusted help easily!
                   </p>
                   <button
                     className="hover:underline text-blue-500"
