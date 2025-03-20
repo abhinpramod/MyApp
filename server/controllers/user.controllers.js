@@ -188,8 +188,15 @@ const fectchcontractors = async (req, res) => {
 const addintrests = async (req, res) => {
   const contractorId = req.params.id;
   const { phoneNumber, address, expectedDate, jobTypes } = req.body.formData;
+  const {contractor} = req.body;
   const { _id, name, email } = req.user;
   console.log(_id);
+
+  console.log("from addintrests",
+    contractor
+  );
+
+  
 
   try {
     const newinterests = new Intrests({
@@ -201,9 +208,13 @@ const addintrests = async (req, res) => {
       jobTypes,
       name,
       email,
+      contractorName:contractor.contractorName,
+      contractorEmail:contractor.email,
+      companyName : contractor.companyName
+      
     });
     await newinterests.save();
-    const contractor = await Contractor.findOne({ _id: contractorId });
+  
     const to = contractor.email;
     const subject = "New Interests Added";
     const msg = `Name:${name}\nPhone Number:${phoneNumber}\nAddress:${address}\nExpected Date:${expectedDate}\nJob Types:${jobTypes}`;

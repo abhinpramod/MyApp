@@ -11,6 +11,7 @@ import { logoutuser } from '../redux/userslice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+
 const UserProfile = () => {
     
   const [user, setUser] = useState(null);
@@ -21,6 +22,8 @@ const UserProfile = () => {
   const open = Boolean(anchorEl);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+//  const {user} = useSelector((state) => state.user);
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -91,6 +94,9 @@ const UserProfile = () => {
       handleCloseDialog();
     }
   };
+  const handleAccountInfo = () => {
+    navigate("/InterestSentHistory");
+  };
 
   if (loading) {
     return (
@@ -118,7 +124,7 @@ const UserProfile = () => {
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               >
-                <MenuItem onClick={handleMenuClose}>Account Info</MenuItem>
+                <MenuItem onClick={handleAccountInfo}>Account Info</MenuItem>
                 <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
                 <MenuItem onClick={handleOpenDialog}>Logout</MenuItem>
               </Menu>

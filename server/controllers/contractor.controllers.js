@@ -486,7 +486,7 @@ const uploadProfilePic = async (req, res) => {
 const fectchintrestes   = async (req, res) => {
   const {_id}=req.contractor
   try {
-   const data= await interests.find();
+   const data= await interests.find({contractorId:_id});
     res.status(200).json(data);
   } catch (error) {
     console.error("Error fetching job types:", error);
@@ -500,7 +500,7 @@ const markseen = async (req, res) => {
   console.log(id);
   
   try {
-    const interest = await interests.findOneAndUpdate({ _id: id }, { $set: { seeenByContractor: true } }, { new: true });
+    const interest = await interests.findOneAndUpdate({ _id: id }, { $set: { seenByContractor: true } }, { new: true });
    
  
     res.status(200).json({ msg: "Interest marked as seen" });

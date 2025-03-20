@@ -98,7 +98,7 @@ const ContractorProfile = () => {
 
     try {
       const response = await axiosInstance.post(
-        `/user/contractor/interest/${contractorId}`,{formData}
+        `/user/contractor/interest/${contractorId}`,{formData,contractor}
         
       );
       toast.success("Interest expressed successfully!");

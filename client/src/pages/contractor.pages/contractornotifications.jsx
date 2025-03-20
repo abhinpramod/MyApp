@@ -46,7 +46,7 @@ const ContractorNotifications = () => {
       try {
         const response = await axiosInstance.get('/contractor/all-interests');
         const filteredInterests = response.data.filter(
-            (interest) => !interest.seeenByContractor
+            (interest) => !interest.seenByContractor
           );
           setInterests(filteredInterests);
       } catch (error) {

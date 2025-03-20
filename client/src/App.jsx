@@ -24,9 +24,9 @@ import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import ContractorProfileforuser from "./pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
-import UserProfile from "./pages/Userprofile";
+import UserProfile from "./pages/Userprofile"
+import InterestSentHistory from "./pages/Interesthistory";
 import { useSelector } from "react-redux";
-
 
 function App() {
   const { loading } = useAuthCheckcontractor();
@@ -43,10 +43,19 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/stores" element={<Stores />} />
           <Route path="/about" element={<About />} />
-          <Route path="/userprofile" element={user && user ? <UserProfile /> : <Loginuser />} />
+          <Route
+            path="/userprofile"
+            element={user && user ? <UserProfile /> : <Loginuser />}
+          />
+          <Route
+            path="/InterestSentHistory"
+            element={user && user ? <InterestSentHistory /> : <Loginuser /> }
+          />
+
+
           <Route
             path="/loginuser"
-            element={user && user ? <UserProfile/> : <Loginuser />}
+            element={user && user ? <UserProfile /> : <Loginuser />}
           />
           <Route
             path="/registeruser"

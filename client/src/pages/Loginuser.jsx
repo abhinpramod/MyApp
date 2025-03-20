@@ -47,8 +47,9 @@ export default function Login() {
         const res = await axiosInstance.post("/user/login", formData);
         if (res.status === 200) {
           toast.success("Login successful!");
-          navigate("/userprofile");
           dispatch(loginuser(res.data));
+          navigate("/userprofile");
+            
         }
       } catch (error) {
         console.log(error);

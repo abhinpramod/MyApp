@@ -9,7 +9,10 @@ const intrestSchema = new mongoose.Schema({
    address: { type: String, required: true },
    expectedDate: { type: String, required: true },
    jobTypes: { type: [String], required: true },
-   seeenByContractor: { type: Boolean, default: false },
+   seenByContractor: { type: Boolean, default: false },
+   contractorName: { type: String, required: true },
+   contractorEmail: { type: String, required: true },
+   companyName : { type: String, required: true },
   },
   { timestamps: true }
 );
