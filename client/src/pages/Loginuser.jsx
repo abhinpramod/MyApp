@@ -49,7 +49,6 @@ export default function Login() {
           toast.success("Login successful!");
           dispatch(loginuser(res.data));
           navigate("/userprofile");
-            
         }
       } catch (error) {
         console.log(error);
