@@ -124,7 +124,7 @@ const UserProfile = () => {
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               >
-                <MenuItem onClick={handleAccountInfo}>Account Info</MenuItem>
+                <MenuItem onClick={handleAccountInfo}>History</MenuItem>
                 <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
                 <MenuItem onClick={handleOpenDialog}>Logout</MenuItem>
               </Menu>
