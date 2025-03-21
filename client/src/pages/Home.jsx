@@ -85,13 +85,13 @@ export default function LandingPage() {
             <motion.img
               src="../../public/coverpic.user.jpeg"
               alt="Construction"
-              className="w-full md:w-1/3 max-w-sm mx-auto md:mx-0 shadow-lg rounded-lg"
+              className="w-full md:w-1/3 max-w-sm mx-auto md:mx-0 shadow-lg "
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             />
             <div className="text-center md:text-left md:ml-8 flex flex-col justify-center">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Book Trusted Help for All Construction Tasks
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+                Book Trusted Help for All  Tasks
               </h1>
               <p className="text-gray-500 text-sm md:text-lg mb-4 text-center">
                 Your Vision, Our Commitment to Excellence
@@ -148,7 +148,7 @@ export default function LandingPage() {
         {/* Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 my-8 w-full p-4 md:p-7">
           <motion.button
-            onClick={() => navigate("/contractors/contractors")}
+            onClick={() => navigate("/contractors")}
             variants={scaleUp}
             initial="hidden"
             animate="visible"
@@ -193,7 +193,7 @@ export default function LandingPage() {
             spaceBetween={30}
             slidesPerView={1}
             navigation
-            onClick={() => navigate("/contractors/contractors")}
+            onClick={() => navigate("/contractors")}
             pagination={{ clickable: true }}
             autoplay={{ delay: 3000 }}
             breakpoints={{

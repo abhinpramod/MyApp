@@ -24,7 +24,7 @@ import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import ContractorProfileforuser from "./pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
-import UserProfile from "./pages/Userprofile"
+import UserProfile from "./pages/Userprofile";
 import InterestSentHistory from "./pages/Interesthistory";
 import { useSelector } from "react-redux";
 
@@ -35,7 +35,7 @@ function App() {
   const { contractor } = useSelector((state) => state.contractor);
 
   return (
-    <div >
+    <div>
       <Toaster position="top-center" reverseOrder={false} />
       <Router>
         <Routes>
@@ -49,9 +49,8 @@ function App() {
           />
           <Route
             path="/InterestSentHistory"
-            element={user && user ? <InterestSentHistory /> : <Loginuser /> }
+            element={user && user ? <InterestSentHistory /> : <Loginuser />}
           />
-
 
           <Route
             path="/loginuser"
@@ -65,11 +64,23 @@ function App() {
             path="/contractors"
             element={user && user ? <Contractors /> : <Loginuser />}
           />
+
           <Route
-            path="/contractors/contractors"
-            element={user && user ? <Contractors /> : <Loginuser />}
+            path="/contractor/registercontractorstep2" 
+            element={
+              contractor && contractor.verified ? (
+                <Contractordashboard />
+              ) : (
+
+                <ContractorregisterStep2 />
+              )
+            }
           />
-          <Route
+          {/* <Route
+            path="/contractors"
+            element={user && user ? <Contractors /> : <Loginuser />}
+          /> */}
+          <Route 
             path="/contractor/registercontractorstep1"
             element={
               contractor && contractor.verified ? (

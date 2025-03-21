@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const menuItems = [
     { name: "Home", path: "/" },
-    { name: "Contractors", path: "/contractors/contractors" },
+    { name: "Contractors", path: "/contractors" },
     { name: "Stores", path: "/stores" },
     { name: "About", path: "/about" },
   ];

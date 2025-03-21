@@ -204,7 +204,7 @@ export default function RegisterContractorStep1() {
       });
       if (res.status === 200) {
         toast.success("Registration successful! Wait for admin approval.");
-        navigate("/contractors");
+        navigate("/");
       }
     } catch (error) {
       console.error("Error during OTP verification:", error);

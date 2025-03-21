@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../lib/axios'; // Adjust the import path as needed
 import toast from 'react-hot-toast';
+import { LucideCheckCircle, LucideClock,Badge } from 'lucide-react';
+
+  const statusIcon = (status) => {
+    switch (status) {
+      case true:
+        return <LucideCheckCircle className="text-green-500" />;
+      case false:
+        return <LucideClock className="text-yellow-500" />;
+      default:
+        return null;
+    }
+  };
 
 const InterestCard = ({ interest }) => {
   return (
@@ -12,6 +24,16 @@ const InterestCard = ({ interest }) => {
         <p className="text-gray-700"><span className="font-semibold">Job Type:</span> {interest.jobTypes}</p>
         <p className="text-gray-700"><span className="font-semibold">Phone Number:</span> {interest.phoneNumber}</p>
         <p className="text-gray-700"><span className="font-semibold">Email:</span> {interest.email}</p>
+        <div className="flex items-center gap-2 mt-2">
+                          {statusIcon(interest.seenByContractor)}
+                          <Badge
+                            color={
+                              interest.seenByContractor ? "success" : "warning"
+                            }
+                          >
+                            {interest.seenByContractor ? "Seen" : "Pending"}
+                          </Badge>
+                        </div>
       </div>
     </div>
   );
