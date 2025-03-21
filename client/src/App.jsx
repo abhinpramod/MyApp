@@ -35,7 +35,7 @@ function App() {
   const { contractor } = useSelector((state) => state.contractor);
 
   return (
-    <div>
+    <div >
       <Toaster position="top-center" reverseOrder={false} />
       <Router>
         <Routes>

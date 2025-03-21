@@ -134,7 +134,7 @@ const ContractorProfile = () => {
               <Avatar
                 sx={{ width: 128, height: 128 }}
                 className="rounded-full border-4 border-gray-200"
-                src={contractor.profilePicture || "/default-profile.png"}
+                src={contractor.profilePicture || "../../public/avatar.png"}
               />
             </div>
             <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>

@@ -114,9 +114,9 @@ const Contractors = () => {
                   <div className="flex items-center space-x-4">
                     {contractor.profilePicture ? (
                       <img
-                        src={contractor.profilePicture}
+                        src={contractor.profilePicture || "../../../public/avatar.png"}
                         alt={contractor.contractorName || "Contractor"}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                        className="w-24 h-24  rounded-full object-cover border-1 border-gray-300"
                       />
                     ) : (
                       <LucideUser className="w-16 h-16 text-gray-400" />

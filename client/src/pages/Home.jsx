@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/footer";
 import Testimonials from "../components/testimonials";
 import { LucideUser, LucideMapPin, LucideSearch } from "lucide-react";
-import { motion } from "framer-motion";
+import { color, motion } from "framer-motion";
 import Card from "../components/ui/card";
 import CardContent from "../components/ui/card-content";
 
@@ -43,10 +43,35 @@ export default function LandingPage() {
     visible: { scale: 1, opacity: 1, transition: { duration: 0.5 } },
   };
 
+  const customStyles = `
+    .swiper-button-next, .swiper-button-prev {
+      color: oklch(0.21 0.034 264.665);
+    }
+    .swiper-button-next::after, .swiper-button-prev::after {
+      font-size: 1.5rem;
+    }
+    .swiper-pagination-bullet {
+      width: 8px;
+      height: 8px;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 1;
+    }
+    .swiper-pagination-bullet-active {
+      background-color: oklch(0.21 0.034 264.665);
+    }
+    @media (max-width: 640px) {
+      .swiper-pagination-bullet {
+        width: 6px;
+        height: 6px;
+      }
+    }
+  `;
+
   return (
     <>
+      <style>{customStyles}</style>
       <Navbar />
-      <div className="min-h-screen w-full flex flex-col mt-20 p-4 md:p-7">
+      <div className="min-h-screen w-full flex flex-col mt-20 ">
         {/* Header Section */}
         <motion.section
           initial="hidden"
@@ -68,8 +93,8 @@ export default function LandingPage() {
             <p className="text-gray-500 text-sm md:text-lg mb-4 text-center">
               Your Vision, Our Commitment to Excellence
             </p>
-            <div className="flex justify-center">
-              <Card className="hover:shadow-lg transition-shadow duration-200 mt-6 max-w-XL">
+            <div className="flex justify-center ">
+              <Card className="hover:shadow-lg transition-shadow duration-200 mt-6 max-w-XL p-4 md:p-7">
                 <CardContent className="p-4 md:p-6 text-center">
                   <h3 className="text-2xl md:text-4xl font-bold mb-4">
                     India's First Local Skilled Labour Finding Application
@@ -117,7 +142,7 @@ export default function LandingPage() {
         </motion.div>
 
         {/* Info Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 my-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 my-8 w-full p-4 md:p-7">
           <motion.button
             onClick={() => navigate("/contractors/contractors")}
             variants={scaleUp}
@@ -164,6 +189,7 @@ export default function LandingPage() {
             spaceBetween={30}
             slidesPerView={1}
             navigation
+            onClick={() => navigate("/contractors/contractors")}
             pagination={{ clickable: true }}
             autoplay={{ delay: 3000 }}
             breakpoints={{
@@ -182,7 +208,7 @@ export default function LandingPage() {
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.3 }}
-                    className="overflow-hidden bg-white shadow-lg rounded-lg"
+                    className="overflow-hidden bg-white shadow-lg rounded-lg "
                   >
                     <img
                       src={service.image}
@@ -193,6 +219,8 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-center">
                         {service.name}
                       </h3>
+                      <div className="custom-pagination mt-4 flex justify-center"></div>
+
                     </div>
                   </motion.div>
                 </SwiperSlide>

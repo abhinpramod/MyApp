@@ -46,7 +46,7 @@ const Navbar = () => {
               className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               {contractor ? (
-                <img src={contractor.profilePicture} alt="Contractor Profile" className="w-10 h-10 rounded-full" />
+                <img src={contractor.profilePicture || "/avatar.png"} alt="Contractor Profile" className="w-10 h-10 rounded-full" />
               ) : (
                 <Briefcase size={20} />
               )}
@@ -65,7 +65,7 @@ const Navbar = () => {
               className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               {user ? (
-                <img src={user.profileImage} alt="User Profile" className="w-10 h-10 rounded-full" />
+                <img src={user.profileImage || "/avatar.png"} alt="User Profile" className="w-10 h-10 rounded-full" />
               ) : (
                 <LogIn size={20} />
               )}

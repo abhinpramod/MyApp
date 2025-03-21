@@ -10,10 +10,10 @@ import Navbar from '../components/Navbar';
 import { logoutuser } from '../redux/userslice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { loginuser } from '../redux/userslice';
 
 
 const UserProfile = () => {
-    
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -22,7 +22,7 @@ const UserProfile = () => {
   const open = Boolean(anchorEl);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  
 //  const {user} = useSelector((state) => state.user);
 
   const handleMenuClick = (event) => {
@@ -46,6 +46,7 @@ const UserProfile = () => {
       const response = await axiosInstance.get("user/check");
       setUser(response.data);
       setLoading(false);
+      dispatch(loginuser(response.data));
     } catch (error) {
       console.error('Error fetching user:', error);
       toast.error('Failed to fetch user data');
