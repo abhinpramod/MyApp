@@ -73,48 +73,52 @@ export default function LandingPage() {
       <Navbar />
       <div className="min-h-screen w-full flex flex-col mt-20 ">
         {/* Header Section */}
-        <motion.section
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          className="text-center mb-8 flex flex-col md:flex-row items-center md:items-start"
-        >
-          <motion.img
-            src="../../public/coverpic.user.jpeg"
-            alt="Construction"
-            className="w-full md:w-1/3 max-w-sm mx-auto md:mx-0 shadow-lg rounded-lg"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.3 }}
-          />
-          <div className="text-center md:text-left md:ml-8 flex flex-col justify-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Book Trusted Help for All Construction Tasks
-            </h1>
-            <p className="text-gray-500 text-sm md:text-lg mb-4 text-center">
-              Your Vision, Our Commitment to Excellence
-            </p>
-            <div className="flex justify-center ">
-              <Card className="hover:shadow-lg transition-shadow duration-200 mt-6 max-w-XL p-4 md:p-7">
-                <CardContent className="p-4 md:p-6 text-center">
-                  <h3 className="text-2xl md:text-4xl font-bold mb-4">
-                    India's First Local Skilled Labour Finding Application
-                  </h3>
-                  <p className="text-gray-500 mb-4 md:mb-8 text-base md:text-lg">
-                    Local Skilled Labor is a platform connecting users with
-                    local skilled laborers, contractors, and material stores.
-                    Find trusted help easily!
-                  </p>
-                  <button
-                    className="hover:underline text-blue-500"
-                    onClick={() => navigate("/about")}
-                  >
-                    Learn more
-                  </button>
-                </CardContent>
-              </Card>
+
+        <div className="container mx-auto px-4 md:px-8 ">
+          {" "}
+          <motion.section
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            className="text-center mb-8 flex flex-col md:flex-row items-center md:items-start"
+          >
+            <motion.img
+              src="../../public/coverpic.user.jpeg"
+              alt="Construction"
+              className="w-full md:w-1/3 max-w-sm mx-auto md:mx-0 shadow-lg rounded-lg"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="text-center md:text-left md:ml-8 flex flex-col justify-center">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Book Trusted Help for All Construction Tasks
+              </h1>
+              <p className="text-gray-500 text-sm md:text-lg mb-4 text-center">
+                Your Vision, Our Commitment to Excellence
+              </p>
+              <div className="flex justify-center ">
+                <Card className="hover:shadow-lg transition-shadow duration-200 mt-6 max-w-XL p-4 md:p-7">
+                  <CardContent className="p-4 md:p-6 text-center">
+                    <h3 className="text-2xl md:text-4xl font-bold mb-4">
+                      India's First Local Skilled Labour Finding Application
+                    </h3>
+                    <p className="text-gray-500 mb-4 md:mb-8 text-base md:text-lg">
+                      Local Skilled Labor is a platform connecting users with
+                      local skilled laborers, contractors, and material stores.
+                      Find trusted help easily!
+                    </p>
+                    <button
+                      className="hover:underline text-blue-500"
+                      onClick={() => navigate("/about")}
+                    >
+                      Learn more
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
-        </motion.section>
+          </motion.section>
+        </div>
 
         {/* Stats Section */}
         <motion.div
@@ -220,7 +224,6 @@ export default function LandingPage() {
                         {service.name}
                       </h3>
                       <div className="custom-pagination mt-4 flex justify-center"></div>
-
                     </div>
                   </motion.div>
                 </SwiperSlide>
