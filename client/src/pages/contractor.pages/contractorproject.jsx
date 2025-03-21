@@ -57,7 +57,7 @@ const ContractorProjects = () => {
   }, []);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6  min-h-screen">
       <h1 className="text-3xl font-bold text-gray-900">Interests</h1>
       <p className="text-lg text-gray-600 mt-2">View and manage your ongoing projects.</p>
       {interests.length === 0 && (

@@ -39,7 +39,7 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
           Cancel
         </Button>
         <Button onClick={onConfirm} color="error">
-          Delete
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>
@@ -77,6 +77,11 @@ const ContractorProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
+  const [confirmEmployeesOpen, setConfirmEmployeesOpen] = useState(false);
+  const [confirmAvailabilityOpen, setConfirmAvailabilityOpen] = useState(false);
+  const [tempNumberOfEmployees, setTempNumberOfEmployees] = useState(numberOfEmployees);
+  const [tempAvailability, setTempAvailability] = useState(availability);
+
   const fetchContractorData = async () => {
     try {
       setIsLoading(true);
@@ -92,33 +97,51 @@ const ContractorProfile = () => {
       toast.error("Failed to fetch contractor data");
     }
   };
-  // Fetch contractor data on component mount
-  useEffect(() => {
-   
 
+  useEffect(() => {
     fetchContractorData();
-    
   }, []);
 
-  // Update availability
-  const handleAvailabilityChange = async (checked) => {
+  const handleEditEmployees = () => {
+    setTempNumberOfEmployees(numberOfEmployees);
+    setIsEditingEmployees(true);
+  };
+
+  const handleConfirmEmployees = async () => {
+    setIsLoading(true);
+    try {
+      await axiosInstance.put("/contractor/employeesnumber", {
+        numberOfEmployees: tempNumberOfEmployees,
+      });
+      setNumberOfEmployees(tempNumberOfEmployees);
+      setIsEditingEmployees(false);
+      setIsLoading(false);
+      toast.success("Number of employees updated successfully!");
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Failed to update number of employees");
+    }
+    setConfirmEmployeesOpen(false);
+  };
+
+  const handleConfirmAvailability = async () => {
     setIsLoading(true);
     try {
       await axiosInstance.put("/contractor/availability", {
-        availability: checked,
+        availability: tempAvailability,
       });
-      setAvailability(checked);
+      setAvailability(tempAvailability);
       setIsLoading(false);
       toast.success(
-        `Availability set to ${checked ? "Available" : "Not Available"}`
+        `Availability set to ${tempAvailability ? "Available" : "Not Available"}`
       );
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to update availability");
     }
+    setConfirmAvailabilityOpen(false);
   };
 
-  // Update profile picture
   const handleProfilePicUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return toast.error("No file selected");
@@ -143,10 +166,7 @@ const ContractorProfile = () => {
           },
         }
       );
-      console.log( "this the  samam",profilePic);
-      
       fetchContractorData();
-
       setIsLoading(false);
       toast.success("Profile picture updated successfully!");
     } catch (error) {
@@ -172,7 +192,6 @@ const ContractorProfile = () => {
     reader.readAsDataURL(file);
   };
 
-  // Add project
   const handleAddProject = async () => {
     if (newProjectImage && newProjectDescription) {
       const formData = new FormData();
@@ -205,71 +224,38 @@ const ContractorProfile = () => {
     }
   };
 
-  // Delete project
   const handleDeleteProject = async (projectId) => {
     try {
       setIsLoading(true);
-      console.log("Deleting project with ID:", projectId); // Debugging
-
-      // Send the projectId in the request body
       const response = await axiosInstance.delete("/contractor/deleteproject", {
-        data: { projectId }, // Ensure the backend expects projectId in the request body
+        data: { projectId },
       });
-
-      console.log("Backend response:", response.data); // Debugging
-
-      // Update the state to remove the deleted project
       setProjects((prevProjects) =>
         prevProjects.filter((project) => project._id !== projectId)
       );
-
       setIsLoading(false);
       toast.success("Project deleted successfully!");
     } catch (error) {
       setIsLoading(false);
-      console.error("Error deleting project:", error); // Debugging
+      console.error("Error deleting project:", error);
       toast.error("Failed to delete project");
     }
   };
 
-  // Open delete confirmation dialog
   const openDeleteConfirmation = (projectId) => {
-    console.log("Setting projectToDelete:", projectId); // Debugging
     setProjectToDelete(projectId);
-    console.log("projectToDelete:", projectId);
-    
     setDeleteConfirmationOpen(true);
   };
 
-  // Confirm delete action
   const confirmDelete = () => {
-    console.log("Confirming deletion for project ID:", projectToDelete); // Debugging
-
     if (projectToDelete) {
       handleDeleteProject(projectToDelete);
-      setSelectedProject(null); // Close the zoomed view after deletion
+      setSelectedProject(null);
     } else {
-      console.error("No project ID found for deletion"); // Debugging
+      console.error("No project ID found for deletion");
       toast.error("No project selected for deletion");
     }
-
     setDeleteConfirmationOpen(false);
-  };
-
-  // Update number of employees
-  const handleSaveEmployees = async () => {
-    try {
-      setIsLoading(true);
-      await axiosInstance.put("/contractor/employeesnumber", {
-        numberOfEmployees,
-      });
-      setIsEditingEmployees(false);
-      setIsLoading(false);
-      toast.success("Number of employees updated successfully!");
-    } catch (error) {
-      setIsLoading(false);
-      toast.error("Failed to update number of employees");
-    }
   };
 
   if (isLoading) {
@@ -286,18 +272,15 @@ const ContractorProfile = () => {
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">
             <Avatar
-              
               sx={{ width: 128, height: 128 }}
-              className=" rounded-full border-4 border-gray-200" // Increased size here
-              src={profilePic? profilePic : contractor.profilePicture} 
+              className="rounded-full border-4 border-gray-200"
+              src={profilePic || contractor.profilePicture}
             />
-
             <label
               htmlFor="avatar-upload"
-              className="absolute bottom-1 right-1 bg-gray-800  p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+              className="absolute bottom-1 right-1 bg-gray-800 p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
             >
-              <Camera className="w-5  h -5 *: text-white" />{" "}
-              {/* Slightly larger icon */}
+              <Camera className="w-5 h-5 text-white" />
               <input
                 type="file"
                 id="avatar-upload"
@@ -334,14 +317,14 @@ const ContractorProfile = () => {
               <div className="flex items-center gap-2">
                 <TextField
                   type="number"
-                  value={numberOfEmployees}
-                  onChange={(e) => setNumberOfEmployees(e.target.value)}
+                  value={tempNumberOfEmployees}
+                  onChange={(e) => setTempNumberOfEmployees(e.target.value)}
                   size="small"
                   className="w-16"
                 />
                 <IconButton
-                  onClick={handleSaveEmployees}
-                  className=" hover:dark text-white"
+                  onClick={() => setConfirmEmployeesOpen(true)}
+                  className="hover:dark text-white"
                 >
                   <Save size={15} />
                 </IconButton>
@@ -350,7 +333,7 @@ const ContractorProfile = () => {
               <div className="flex items-center gap-2">
                 <span>{numberOfEmployees}</span>
                 <IconButton
-                  onClick={() => setIsEditingEmployees(true)}
+                  onClick={handleEditEmployees}
                   className="hover:bg-black"
                 >
                   <Pencil size={15} />
@@ -360,11 +343,14 @@ const ContractorProfile = () => {
           </div>
           <div className="flex items-center gap-2 mt-3">
             <Switch
-              checked={availability}
-              onCheckedChange={handleAvailabilityChange}
+              checked={tempAvailability}
+              onCheckedChange={(checked) => {
+                setTempAvailability(checked);
+                setConfirmAvailabilityOpen(true);
+              }}
             />
-            <span className={availability ? "text-green-600" : "text-red-600"}>
-              {availability ? "Available" : "Not Available"}
+            <span className={tempAvailability ? "text-green-600" : "text-red-600"}>
+              {tempAvailability ? "Available" : "Not Available"}
             </span>
           </div>
         </div>
@@ -373,12 +359,11 @@ const ContractorProfile = () => {
       <hr className="my-6 border-gray-200" />
       <Button
         onClick={() => setOpenProjectDialog(true)}
-        className="flex items-center gap-2text-sm font-semibold  hover:text-gray-800 transition-colors"
+        className="flex items-center gap-2 text-sm font-semibold hover:text-gray-800 transition-colors"
       >
         <CirclePlus size={18} /> Add Project
       </Button>
 
-      {/* Project List using MUI Grid and Card */}
       <Grid container spacing={3} className="mt-6">
         {projects.map((project, index) => (
           <Grid item key={index} xs={12} sm={6} md={4}>
@@ -404,7 +389,6 @@ const ContractorProfile = () => {
         ))}
       </Grid>
 
-      {/* Add Project Dialog */}
       <Dialog
         open={openProjectDialog}
         onClose={() => setOpenProjectDialog(false)}
@@ -444,7 +428,6 @@ const ContractorProfile = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Full-Screen Project View */}
       <Dialog
         open={!!selectedProject}
         onClose={() => setSelectedProject(null)}
@@ -478,7 +461,6 @@ const ContractorProfile = () => {
             onClick={(e) => {
               e.stopPropagation();
               openDeleteConfirmation(selectedProject?._id);
-              console.log(selectedProject);
             }}
             color="error"
           >
@@ -487,13 +469,28 @@ const ContractorProfile = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
         open={deleteConfirmationOpen}
         onClose={() => setDeleteConfirmationOpen(false)}
         onConfirm={confirmDelete}
         title="Delete Project"
         message="Are you sure you want to delete this project?"
+      />
+
+      <ConfirmationDialog
+        open={confirmEmployeesOpen}
+        onClose={() => setConfirmEmployeesOpen(false)}
+        onConfirm={handleConfirmEmployees}
+        title="Update Number of Employees"
+        message="Are you sure you want to update the number of employees?"
+      />
+
+      <ConfirmationDialog
+        open={confirmAvailabilityOpen}
+        onClose={() => setConfirmAvailabilityOpen(false)}
+        onConfirm={handleConfirmAvailability}
+        title="Update Availability"
+        message="Are you sure you want to update your availability?"
       />
     </div>
   );

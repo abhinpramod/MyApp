@@ -22,7 +22,10 @@ const Navbar = () => {
       <div className="max-w-screen-xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="text-4xl font-extrabold text-red-600 tracking-wider">
+          <Link
+            to="/"
+            className="text-4xl font-extrabold text-red-600 tracking-wider"
+          >
             LocalFinder
           </Link>
 
@@ -46,7 +49,11 @@ const Navbar = () => {
               className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               {contractor ? (
-                <img src={contractor.profilePicture || "/avatar.png"} alt="Contractor Profile" className="w-10 h-10 rounded-full" />
+                <img
+                  src={contractor.profilePicture || "/avatar.png"}
+                  alt="Contractor Profile"
+                  className="w-10 h-10 rounded-full"
+                />
               ) : (
                 <Briefcase size={20} />
               )}
@@ -65,7 +72,11 @@ const Navbar = () => {
               className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               {user ? (
-                <img src={user.profileImage || "/avatar.png"} alt="User Profile" className="w-10 h-10 rounded-full" />
+                <img
+                  src={user.profileImage || "/avatar.png"}
+                  alt="User Profile"
+                  className="w-10 h-10 rounded-full"
+                />
               ) : (
                 <LogIn size={20} />
               )}
