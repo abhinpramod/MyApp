@@ -10,7 +10,8 @@ const {
   addintrests,
   cheak,
   uploadProfilePicture,
-  Logoutuser
+  Logoutuser,
+  fectchallintrestes
   // Import the new function
 } = require("../controllers/user.controllers");
 const { protectRouteuser } = require("../middleware/authmiddleware");
@@ -26,6 +27,7 @@ router.get("/contractor/:id", protectRouteuser, fectchcontractors);
 router.post("/contractor/interest/:id", protectRouteuser, addintrests);
 router.get("/check", protectRouteuser, cheak);
 router.post("/logout", Logoutuser);
+router.get("/all-interests", protectRouteuser, fectchallintrestes);
 
 // New route for uploading profile picture
 router.put("/uploadprofile", protectRouteuser, upload.single("profilePicture"), uploadProfilePicture);

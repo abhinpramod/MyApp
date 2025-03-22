@@ -6,7 +6,7 @@ const protectRoutecontractor = async (req, res, next) => {
   console.log("protectRoute middleware triggered");
 
   try {
-    const token = req.cookies?.jwtcontractor; // Ensure token is read properly
+    const token = req.cookies?.jwt; // Ensure token is read properly
     if (!token) {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
@@ -40,7 +40,7 @@ const protectRouteuser = async (req, res, next) => {
   console.log("protectRoute middleware triggered user ");
 
   try {
-    const token = req.cookies?.jwtuser; // Ensure token is read properly
+    const token = req.cookies?.jwt; // Ensure token is read properly
     if (!token) {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }

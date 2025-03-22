@@ -28,9 +28,7 @@ const SearchSection = ({ onSearch }) => {
             className="px-4 py-2 w-96 rounded-lg text-black"
             onChange={(e) => onSearch(e.target.value)}
           />
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
-            Search
-          </button>
+          
         </div>
       </div>
     </div>

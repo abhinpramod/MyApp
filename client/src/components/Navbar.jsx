@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Briefcase, LogIn } from "lucide-react";
+import { Menu, X, Briefcase, LogIn,User } from "lucide-react";
 import React from "react";
 import { useSelector } from "react-redux";
 
@@ -9,6 +9,11 @@ const Navbar = () => {
 
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
+  // const { store } = useSelector((state) => state.store);
+  // 
+  //  // Assuming you have a store state in Redux
+
+  const store= false
 
   const menuItems = [
     { name: "Home", path: "/" },
@@ -44,44 +49,53 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden lg:flex space-x-6">
-            <Link
-              to="/contractor/Logincontractors"
-              className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              {contractor ? (
-                <img
-                  src={contractor.profilePicture || "/avatar.png"}
-                  alt="Contractor Profile"
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <Briefcase size={20} />
-              )}
-              {contractor ? "" : "Contractor"}
-            </Link>
+            {/* Show Contractor Profile or Login Button if no user or store is logged in */}
+            {!user && !store && (
+              <Link
+                to="/contractor/Logincontractors"
+                className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              >
+                {contractor ? (
+                  <img
+                    src={contractor.profilePicture || "/avatar.png"}
+                    alt="Contractor Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                ) : (
+                  <Briefcase size={20} />
+                )}
+                {contractor ? "" : "Contractor"}
+              </Link>
+            )}
 
-            <Link
-              to="/contractor/registercontractorstep1"
-              className="py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              <Briefcase size={20} />
-              Store
-            </Link>
-            <Link
-              to="/loginuser"
-              className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              {user ? (
-                <img
-                  src={user.profileImage || "/avatar.png"}
-                  alt="User Profile"
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <LogIn size={20} />
-              )}
-              {user ? "" : "Login"}
-            </Link>
+            {/* Show Store Registration Button if no user or contractor is logged in */}
+            {!user && !contractor && (
+              <Link
+                to="/contractor/registercontractorstep1"
+                className="py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              >
+                <Briefcase size={20} />
+                Store
+              </Link>
+            )}
+
+            {/* Show User Profile or Login Button if no contractor or store is logged in */}
+            {!contractor && !store && (
+              <Link
+                to="/loginuser"
+                className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              >
+                {user ? (
+                  <img
+                    src={user.profileImage || "/avatar.png"}
+                    alt="User Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                ) : (
+<User />                  )}
+                {user ? "" : "Login"}
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -108,27 +122,38 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Link
-              to="/loginuser"
-              className="text-gray-900 hover:text-red-600 transition-all duration-300"
-            >
-              <LogIn size={20} />
-            </Link>
 
-            <Link
-              to="/contractor/Logincontractors"
-              className="px-6 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              <Briefcase size={20} />
-              Contractor
-            </Link>
-            <Link
-              to="/contractor/registercontractorstep1"
-              className="px-6 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              <Briefcase size={20} />
-              Store
-            </Link>
+            {/* Show User Login Button if no contractor or store is logged in */}
+            {!contractor && !store && (
+              <Link
+                to="/loginuser"
+                className="text-gray-900 hover:text-red-600 transition-all duration-300"
+              >
+                <User size={20} />
+              </Link>
+            )}
+
+            {/* Show Contractor Login Button if no user or store is logged in */}
+            {!user && !store && (
+              <Link
+                to="/contractor/Logincontractors"
+                className="px-6 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              >
+                <Briefcase size={20} />
+                Contractor
+              </Link>
+            )}
+
+            {/* Show Store Registration Button if no user or contractor is logged in */}
+            {!user && !contractor && (
+              <Link
+                to="/contractor/registercontractorstep1"
+                className="px-6 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              >
+                <Briefcase size={20} />
+                Store
+              </Link>
+            )}
           </div>
         </div>
       )}

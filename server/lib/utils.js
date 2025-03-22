@@ -5,7 +5,7 @@ const generateTokencontractor = async (Id, res) => {
     expiresIn: "7d",
   });
 
-  res.cookie("jwtcontractor", token, {
+  res.cookie("jwt", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV !== "development",
@@ -17,7 +17,7 @@ const generateTokenuser = async (Id, res) => {
     expiresIn: "7d",
   });
 
-  res.cookie("jwtuser", token, {
+  res.cookie("jwt", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV !== "development",

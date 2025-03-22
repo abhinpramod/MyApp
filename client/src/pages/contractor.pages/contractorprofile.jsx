@@ -349,8 +349,8 @@ const ContractorProfile = () => {
                 setConfirmAvailabilityOpen(true);
               }}
             />
-            <span className={tempAvailability ? "text-green-600" : "text-red-600"}>
-              {tempAvailability ? "Available" : "Not Available"}
+            <span className={contractor.availability ? "text-green-600" : "text-red-600"}>
+              {contractor.availability ? "Available" : "Not Available"}
             </span>
           </div>
         </div>

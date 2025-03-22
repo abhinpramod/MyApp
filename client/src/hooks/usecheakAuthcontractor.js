@@ -18,7 +18,7 @@ const useAuthCheckcontractor = () => {
         } else {
           
           dispatch(logoutcontractor());
-          axiosInstance.post("/contractor/logout");
+          // axiosInstance.post("/contractor/logout");
         }
       } catch (error) {
 
@@ -29,7 +29,7 @@ const useAuthCheckcontractor = () => {
           toast.error(error.response.data.msg);
         }
         // toast.error(error.response.data.msg);
-        axiosInstance.post("/contractor/logout");
+        // axiosInstance.post("/contractor/logout");
 
 
         dispatch(logoutcontractor());

@@ -161,7 +161,7 @@ const fectchjobtypes = async (req, res) => {
 // Fetch All Contractors Controller
 const fectchallcontractors = async (req, res) => {
   try {
-    const data = await Contractor.find({ verified: true });
+    const data = await Contractor.find({ verified: true, isBlocked: false });
     res.status(200).json(data);
   } catch (error) {
     console.error("fectchallcontractors error:", error);
@@ -285,13 +285,24 @@ const uploadProfilePicture = async (req, res) => {
 const Logoutuser = async (req, res) => {
 
   try {
-    res.clearCookie("jwtuser");
+    res.clearCookie("jwt");
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
     console.log("Error from logoutuser:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 }
+
+const fectchallintrestes = async (req, res) => {
+  try {
+    const data = await Intrests.find({userId : req.user._id});
+    console.log(data);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("fectchcontractors error:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
 
 // Export all controllers
 module.exports = {
@@ -304,6 +315,7 @@ module.exports = {
   addintrests,
   cheak,
   uploadProfilePicture,
-  Logoutuser
+  Logoutuser,
+  fectchallintrestes
   // Add the new function here
 };

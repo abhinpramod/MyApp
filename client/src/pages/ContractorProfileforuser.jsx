@@ -158,6 +158,9 @@ const ContractorProfile = () => {
               <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}
               {contractor.state}, {contractor.country}
             </p>
+            <p className="text-gray-600">
+              <strong>jobTypes:</strong> {jobTypes.join(", ")}
+            </p>
 
             {/* Availability Section */}
             <div className="flex items-center gap-2 mt-3">

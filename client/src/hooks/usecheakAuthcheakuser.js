@@ -18,7 +18,7 @@ const useAuthCheckuser = () => {
         } else {
           
           dispatch(logoutuser());
-          axiosInstance.post("/user/logout");
+          // axiosInstance.post("/user/logout");
         }
       } catch (error) {
 
@@ -29,7 +29,7 @@ const useAuthCheckuser = () => {
           toast.error(error.response.data.msg);
         }
         // toast.error(error.response.data.msg);
-        axiosInstance.post("/user/logout");
+        // axiosInstance.post("/user/logout");
 
 
         dispatch(logoutuser());

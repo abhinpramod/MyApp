@@ -377,7 +377,7 @@ const checkAuth = (req, res) => {
 
 const logoutcontractor = (req, res) => {
   try {
-    res.clearCookie("jwtcontractor");
+    res.clearCookie("jwt");
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
     console.log("Error from logoutcontractor:", error.message);

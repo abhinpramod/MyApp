@@ -17,6 +17,7 @@ import { HomeIcon } from "lucide-react";
 import { Loader } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { loginuser } from "../redux/userslice";
+import { logoutcontractor } from "../redux/contractorslice";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -48,6 +49,7 @@ export default function Login() {
         if (res.status === 200) {
           toast.success("Login successful!");
           dispatch(loginuser(res.data));
+          dispatch(logoutcontractor());
           navigate("/userprofile");
         }
       } catch (error) {
@@ -137,7 +139,7 @@ export default function Login() {
           {/* Right Side Form */}
           <Grid item xs={12} md={6}>
             <Typography variant="h4" align="center" gutterBottom>
-              Login to Your Account
+              Login User  
             </Typography>
             <form onSubmit={handleSubmit}>
               <TextField
