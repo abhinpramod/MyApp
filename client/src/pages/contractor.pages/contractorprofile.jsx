@@ -135,6 +135,8 @@ const ContractorProfile = () => {
       toast.success(
         `Availability set to ${tempAvailability ? "Available" : "Not Available"}`
       );
+      fetchContractorData();
+
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to update availability");
@@ -343,7 +345,7 @@ const ContractorProfile = () => {
           </div>
           <div className="flex items-center gap-2 mt-3">
             <Switch
-              checked={tempAvailability}
+              checked={contractor.availability}
               onCheckedChange={(checked) => {
                 setTempAvailability(checked);
                 setConfirmAvailabilityOpen(true);

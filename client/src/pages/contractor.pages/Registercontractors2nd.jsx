@@ -95,7 +95,7 @@ const ContractorVerificationStep2 = () => {
 </div>;
   return (
 <>
-<Navbar />
+<Navbar type="contractor" />
 
     <Box sx={{ minHeight: "100vh", display: "flex",  alignItems: "center", justifyContent: "center", p: 2, background: "linear-gradient(135deg, #f5f7fa, #c3cfe2)" }}>
       <Paper elevation={8} sx={{ p: 4, mt: 0, borderRadius: 2, width: "100%", maxWidth: 650, background: "#ffffff", boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)" }}>

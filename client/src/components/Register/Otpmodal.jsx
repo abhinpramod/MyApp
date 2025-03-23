@@ -46,7 +46,7 @@ import { Modal, Backdrop, Fade, Typography, Box, Button, TextField } from "@mui/
             ))}
           </Box>
           <Box textAlign="center" marginTop={2}>
-            <Button variant="contained" color="primary" onClick={verifyOtp}>
+            <Button variant="contained" sx={{backgroundColor: "black", opacity: 0.9}}  onClick={verifyOtp}>
               Verify OTP
             </Button>
           </Box>

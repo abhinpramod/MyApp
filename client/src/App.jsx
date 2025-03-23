@@ -25,7 +25,8 @@ import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import ContractorProfileforuser from "./pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
 import UserProfile from "./pages/Userprofile";
-import InterestSentHistory from "./pages/Interesthistory";
+import InterestSentHistory from "./pages/Interesthistory"
+import StoreRegistration from "./pages/Store.pages/Storeregistration";
 import { useSelector } from "react-redux";
 
 function App() {
@@ -51,6 +52,8 @@ function App() {
             path="/InterestSentHistory"
             element={user && user ? <InterestSentHistory /> : <Loginuser />}
           />
+
+          <Route path="/storeregistration" element={<StoreRegistration />}/>
 
           <Route
             path="/loginuser"

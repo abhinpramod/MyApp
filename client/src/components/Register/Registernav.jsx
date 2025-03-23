@@ -1,36 +1,85 @@
 import { useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, IconButton } from "@mui/material";
-import { Home, ArrowLeft } from "lucide-react";
+import { IconButton, Button } from "@mui/material";
+import { ArrowLeft } from "lucide-react";
 
-const Navbar = ({login}) => {
-    const navigate = useNavigate();
-  
-    return (
-      <nav className="flex items-center justify-between p-4 shadow-md   ">
+const Navbar = ({ type, login }) => {
+  const navigate = useNavigate();
+
+  // Debugging logs
+  console.log("Type:", type);
+  console.log("Login:", login);
+
+  // Determine the paths and labels based on the `type` prop
+  const getNavbarDetails = () => {
+    switch (type) {
+      case "store":
+        return {
+          registerPath: "/storeregistration",
+          loginPath: "/store/login",
+          registerLabel: "Register as Store",
+          loginLabel: "Login as Store",
+        };
+      case "contractor":
+        return {
+          registerPath: "/contractor/registercontractorstep1",
+          loginPath: "/contractor/Logincontractors",
+          registerLabel: "Register as Contractor",
+          loginLabel: "Login as Contractor",
+        };
+      default:
+        return {
+          registerPath: "/",
+          loginPath: "/",
+          registerLabel: "Register",
+          loginLabel: "Login",
+        };
+    }
+  };
+
+  const { registerPath, loginPath, registerLabel, loginLabel } = getNavbarDetails();
+
+  // Handle navigation for Register/Login buttons
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  return (
+    <nav className="flex items-center justify-between p-4 shadow-md">
+      {/* Back Button */}
       <div className="flex items-center">
         <IconButton onClick={() => window.history.back()}>
           <ArrowLeft size={20} />
         </IconButton>
         <span className="ml-2 text-gray-700 text-lg sm:text-xl">Back</span>
       </div>
-      <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">LocalFinder</h1>
+
+      {/* Logo or Title */}
+      <button onClick={() => navigate("/")}> <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">
+        LocalFinder
+      </h1></button>
+     
+
+      {/* Conditional Buttons for Register/Login */}
       <div className="hidden sm:block">
-
-        {/* {login ? <a href="/contractor/registercontractorstep1" className="text-gray-700 text-sm sm:text-base hover:underline">
-          Register as Contractor
-        </a> : <a href="/contractor/login" className="text-gray-700 text-sm sm:text-base hover:underline">
-          Login
-        </a>} */}
-
-        {login ==='login'? <a href="/contractor/registercontractorstep1" className="text-gray-700 text-sm sm:text-base hover:underline">
-          Register as Contractor
-        </a> : login ==='register' && <a href="/contractor/login" className="text-gray-700 text-sm sm:text-base hover:underline">
-          Login
-        </a>}
-        
+        {login === "login" ? (
+          <Button
+            onClick={() => handleNavigation(registerPath)}
+            className="text-black text-sm sm:text-base hover:underline"
+          >
+            {registerLabel}
+          </Button>
+        ) : login === "register" ? (
+          <Button
+            onClick={() => handleNavigation(loginPath)}
+            className="text-black text-sm sm:text-base hover:underline"
+            sx={{color:"black"}}
+          >
+            {loginLabel}
+          </Button>
+        ) : null}
       </div>
     </nav>
-    );
-  };
+  );
+};
 
-  export default Navbar
+export default Navbar;

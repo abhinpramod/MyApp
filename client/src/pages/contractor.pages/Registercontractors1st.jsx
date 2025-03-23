@@ -214,7 +214,7 @@ export default function RegisterContractorStep1() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <Navbar login={'register'} />
+      <Navbar type={'contractor'} login={'register'} />
       <Box  sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#e5e7eb"   }}>
         <Grid className="oklch(0.278 0.033 256.848)" container sx={{ maxWidth: "screen", width: "100%",   display: "flex", height: "100%" }}>
           <Grid margin={1} item xs={12} md={6} sx={{ p: 4 }}>
