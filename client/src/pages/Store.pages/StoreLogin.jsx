@@ -3,9 +3,13 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../lib/axios";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import { loginstore } from "../../redux/storeslice";
 import LoginFormUI from "@/components/LoginFormUI"; 
+import { Loader } from "lucide-react";
+// import { s } from "framer-motion/dist/types.d-6pKw1mTI";
 
 const storeLoginPage = () => {
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -43,22 +47,30 @@ const storeLoginPage = () => {
     e.preventDefault();
   
     if (validate()) {
+    setLoading(true);
+      
       try {
         const res = await axiosInstance.post("/store/login", formData);
         if (res.status ===400) {
           toast.success(res.data.msg || "invalid credentials!");
           navigate("/");
+          setLoading(false);
+
         }
   
         if (res.status === 200) {
           toast.success(res.data.msg || "Login successful!");
           navigate("/");
+          dispatch(loginstore(res.data));
+          setLoading(false);
         }
+        setLoading(false);
       } catch (error) {
+        setLoading(false);
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
+          
           toast.error(error.response.data.msg || "Login failed!");
+
         } else if (error.request) {
           // The request was made but no response was received
           toast.error("No response from server. Please try again.");
@@ -78,6 +90,10 @@ const storeLoginPage = () => {
   const handleNavigateRegister = () => {
     navigate("/storeregistration");
   };
+
+  if (loading) return <div className="flex items-center justify-center h-screen">
+  <Loader className="size-10 animate-spin" />
+</div>;
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
