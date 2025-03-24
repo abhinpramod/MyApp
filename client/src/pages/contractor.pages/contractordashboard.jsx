@@ -40,8 +40,7 @@ const Dashboard = () => {
           <CardContent>
             
             <Typography variant="h5" component="div" gutterBottom>
-                G
-                roth
+              Groth
             </Typography>
             <Typography variant="body2" color="text.secondary">
               This is the profile card. View and edit your personal information here.

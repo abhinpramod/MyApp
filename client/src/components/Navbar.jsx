@@ -53,7 +53,7 @@ const Navbar = () => {
                 to="/contractor/Logincontractors"
                 className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
-                {contractor ? (
+                {contractor?.verified ? (
                   <img
                     src={contractor.profilePicture || "/avatar.png"}
                     alt="Contractor Profile"
@@ -62,14 +62,14 @@ const Navbar = () => {
                 ) : (
                   <Briefcase size={20} />
                 )}
-                {contractor ? "" : "Contractor"}
+                {contractor?.verified ? "" : "Contractor"}
               </Link>
             )}
 
             {/* Show Store Registration Button if no user or contractor is logged in */}
             {!user && !contractor && (
               <Link
-                to="/storeregistration"
+                to="/storeLogin"
                 className="py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
                 <Briefcase size={20} />
@@ -145,7 +145,7 @@ const Navbar = () => {
             {/* Show Store Registration Button if no user or contractor is logged in */}
             {!user && !contractor && (
               <Link
-                to="/contractor/registercontractorstep1"
+                to="/storeLogin"
                 className="px-6 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
                 <Briefcase size={20} />

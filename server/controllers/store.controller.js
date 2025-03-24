@@ -114,8 +114,29 @@ const registerStore = async (req, res) => {
       res.status(500).send('Failed to register store');
     }
   };
+
+  const login = async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const store = await Store.findOne({ email });
+      if (!store) {
+        return res.status(400).json({ msg: 'Store not registered' });
+      }
+  
+      const isMatch = await bcrypt.compare(password, store.password);
+      if (!isMatch) {
+        return res.status(400).json({ msg: 'Invalid password' });
+      }
+  
+      res.status(200).json({ msg: 'Login successful' });
+    } catch (error) {
+      console.error('Login failed:', error);
+      res.status(500).json({ msg: 'Internal server error' });
+    }
+  };
   
   
   
 
-module.exports = { sendOtp, verifyOtp, registerStore };
+module.exports = { sendOtp, verifyOtp, registerStore, login };

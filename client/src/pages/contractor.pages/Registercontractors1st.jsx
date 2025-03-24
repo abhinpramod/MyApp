@@ -154,6 +154,8 @@ export default function RegisterContractorStep1() {
   };
 
   const handleSubmit = async (e) => {
+    console.log(form);
+    
     e.preventDefault();
     if (validate()) {
       try {

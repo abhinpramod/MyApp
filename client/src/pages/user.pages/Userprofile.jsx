@@ -3,14 +3,14 @@ import axios from 'axios';
 import { CircularProgress, IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { Camera, Mail, User, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axiosInstance from "../lib/axios";
-import Card from '../components/ui/card';
-import CardContent from '../components/ui/card-content';
-import Navbar from '../components/Navbar';
-import { logoutuser } from '../redux/userslice';
+import axiosInstance from "../../lib/axios";
+import Card from '../../components/ui/card';
+import CardContent from '../../components/ui/card-content';
+import Navbar from '../../components/Navbar';
+import { logoutuser } from '../../redux/userslice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginuser } from '../redux/userslice';
+import { loginuser } from '../../redux/userslice';
 
 
 const UserProfile = () => {

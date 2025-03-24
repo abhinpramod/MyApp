@@ -62,7 +62,7 @@ const ContractorVerificationStep2 = () => {
     try {
       setisLoading(true);
       const res = await axiosInstance.post(
-        `/contractor/register2ndstep${contractor._id}`,
+        "/contractor/register2ndstep",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

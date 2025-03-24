@@ -6,11 +6,11 @@ import {
 } from "react-router-dom";
 import React from "react";
 import Home from "./pages/Home";
-import Contractors from "./pages/contractor.pages/Contractors";
+import Contractors from "./pages/user.pages/Contractors";
 import Stores from "./pages/Stores";
 import About from "./pages/About";
-import Loginuser from "./pages/Loginuser";
-import Registeruser from "./pages/Registeruser";
+import Loginuser from "./pages/user.pages/Loginuser";
+import Registeruser from "./pages/user.pages/Registeruser";
 import RegisterContractorStep1 from "./pages/contractor.pages/Registercontractors1st";
 import ContractorProfile from "./pages/contractor.pages/contractorprofile";
 import toast, { Toaster } from "react-hot-toast";
@@ -22,11 +22,12 @@ import ContractorSettings from "./pages/contractor.pages/contractorsettings";
 import Dashboard from "./pages/contractor.pages/contractordashboard";
 import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
-import ContractorProfileforuser from "./pages/ContractorProfileforuser";
+import ContractorProfileforuser from "./pages/user.pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
-import UserProfile from "./pages/Userprofile";
-import InterestSentHistory from "./pages/Interesthistory"
+import UserProfile from "./pages/user.pages/Userprofile";
+import InterestSentHistory from "./pages/user.pages/Interesthistory"
 import StoreRegistration from "./pages/Store.pages/Storeregistration";
+import StoreLoginPage from "./pages/Store.pages/StoreLogin";
 import { useSelector } from "react-redux";
 
 function App() {
@@ -53,7 +54,12 @@ function App() {
             element={user && user ? <InterestSentHistory /> : <Loginuser />}
           />
 
+
+    {/* store routes */}
           <Route path="/storeregistration" element={<StoreRegistration />}/>
+          <Route path="/storeLogin" element={<StoreLoginPage />}/>
+
+
 
           <Route
             path="/loginuser"

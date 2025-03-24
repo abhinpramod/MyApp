@@ -60,6 +60,34 @@ const FormFields = ({
         </Box>
       ))}
 
+<FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel id="jobTypes-label">Job Types</InputLabel>
+        <Select
+          labelId="jobTypes-label"
+          name="jobTypes"
+          value={form.jobTypes}
+          onChange={handleJobTypesChange}
+          multiple
+          fullWidth
+          variant="outlined"
+          error={!!errors.jobTypes}
+          sx={{
+            borderRadius: "8px",
+          }}
+        >
+          {jobTypes.map((option) => (
+            <MenuItem key={option._id} value={option.name}>
+              {option.name}
+            </MenuItem>
+          ))}
+        </Select>
+        {errors.jobTypes && (
+          <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+            {errors.jobTypes}
+          </Typography>
+        )}
+      </FormControl>
+
      
 
       {["password", "confirmPassword"].map((field) => (
@@ -167,6 +195,8 @@ const FormFields = ({
               {errors.city}
             </Typography>
           )}
+
+          
         </FormControl>
       </Box>
     </>

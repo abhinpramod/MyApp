@@ -17,9 +17,9 @@ import {
   Grid,
 } from "@mui/material";
 import { LucideCheckCircle, LucideClock } from "lucide-react";
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 
 const InterestSentHistory = () => {
   const [interestHistory, setInterestHistory] = useState([]);

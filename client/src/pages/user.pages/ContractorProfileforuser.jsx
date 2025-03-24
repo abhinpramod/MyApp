@@ -17,9 +17,9 @@ import {
 } from "@mui/material";
 import { X, Loader } from "lucide-react";
 import { toast } from "react-hot-toast";
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 import { useParams, useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 
 const ContractorProfile = () => {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ const ContractorProfile = () => {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(
-          `/user/contractor/${contractorId}`
+          `/user/contractors/${contractorId}`
         );
         setContractor(response.data);
         setProjects(response.data.projects || []);
@@ -97,15 +97,26 @@ const ContractorProfile = () => {
     setErrors({});
 
     try {
+      setIsLoading(true);
       const response = await axiosInstance.post(
         `/user/contractor/interest/${contractorId}`,{formData,contractor}
         
       );
       toast.success("Interest expressed successfully!");
       setShowInterestDialog(false);
+      setFormData({
+        phoneNumber: "",
+        address: "",
+        expectedDate: "",
+        jobTypes: [],
+      })
+      setIsLoading(false);
     } catch (error) {
       console.error("Failed to express interest:", error);
       toast.error("Failed to express interest");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 

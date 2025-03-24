@@ -31,12 +31,18 @@ const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "Invalid Email" });
+    if (!user) {
+      return res.status(400).json({ msg: "Invalid Email" });
+    }
 
-    if (user.isBlocked) return res.status(403).json({ msg: "User is blocked" });
+    if (user.isBlocked) {
+      return res.status(403).json({ msg: "User is blocked" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Invalid password" });
+    }
 
     generateTokenuser(user._id, res);
     res.status(200).json({
@@ -305,17 +311,17 @@ const fectchallintrestes = async (req, res) => {
 };
 
 // Export all controllers
-module.exports = {
-  login,
-  register,
-  verifyOTP,
-  fectchjobtypes,
-  fectchallcontractors,
-  fectchcontractors,
-  addintrests,
-  cheak,
-  uploadProfilePicture,
-  Logoutuser,
-  fectchallintrestes
-  // Add the new function here
-};
+// module.exports = {
+//   login,
+//   register,
+//   verifyOTP,
+//   fectchjobtypes,
+//   fectchallcontractors,
+//   fectchcontractors,
+//   addintrests,
+//   cheak,
+//   uploadProfilePicture,
+//   Logoutuser,
+//   fectchallintrestes
+//   // Add the new function here
+// };

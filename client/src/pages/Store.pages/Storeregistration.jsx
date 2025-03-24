@@ -11,7 +11,7 @@ import OTPModal from '@/components/Register/Otpmodal';
 import Navbar from '@/components/Register/Registernav';
 
 const StoreRegistration = () => {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     storeName: '',

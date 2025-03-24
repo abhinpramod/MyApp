@@ -13,7 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
-import axiosInstance from "../lib/axios";
+import axiosInstance from "../../lib/axios";
 import toast from "react-hot-toast";
 import { v4 as uuid } from "uuid";
 import { HomeIcon } from "lucide-react";

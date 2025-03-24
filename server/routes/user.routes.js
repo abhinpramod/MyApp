@@ -4,32 +4,38 @@ const {
   register,
   login,
   verifyOTP,
-  fectchjobtypes,
-  fectchallcontractors,
-  fectchcontractors,
-  addintrests,
-  cheak,
+  logout,
+  fetchJobTypes,
+  fetchAllContractors,
+  fetchContractorById,
+  addInterests,
+  checkUser,
   uploadProfilePicture,
-  Logoutuser,
-  fectchallintrestes
-  // Import the new function
-} = require("../controllers/user.controllers");
+  fetchAllInterests
+} = require("../controllers/user/index.js");
 const { protectRouteuser } = require("../middleware/authmiddleware");
-const upload = require("../middleware/Multermiddleware"); // Import Multer middleware
+const upload = require("../middleware/Multermiddleware");
 
-// Existing routes
+// ==================== Authentication Routes ====================
 router.post("/register", register);
 router.post("/login", login);
 router.post("/verify-otp", verifyOTP);
-router.get("/Jobtypes", fectchjobtypes);
-router.get("/all-contractors", fectchallcontractors);
-router.get("/contractor/:id", protectRouteuser, fectchcontractors);
-router.post("/contractor/interest/:id", protectRouteuser, addintrests);
-router.get("/check", protectRouteuser, cheak);
-router.post("/logout", Logoutuser);
-router.get("/all-interests", protectRouteuser, fectchallintrestes);
+router.post("/logout", logout);
 
-// New route for uploading profile picture
-router.put("/uploadprofile", protectRouteuser, upload.single("profilePicture"), uploadProfilePicture);
+// ==================== User Profile Routes ====================
+router.get("/check", protectRouteuser, checkUser);
+router.put(
+  "/upload-profile", 
+  protectRouteuser, 
+  upload.single("profilePicture"), 
+  uploadProfilePicture
+);
+
+// ==================== Job/Contractor Routes ====================
+router.get("/job-types", fetchJobTypes);
+router.get("/contractors", protectRouteuser, fetchAllContractors);
+router.get("/contractors/:id", protectRouteuser, fetchContractorById);
+router.post("/contractor/interest/:id", protectRouteuser, addInterests);
+router.get("/interests", protectRouteuser, fetchAllInterests);
 
 module.exports = router;

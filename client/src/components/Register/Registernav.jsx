@@ -4,18 +4,13 @@ import { ArrowLeft } from "lucide-react";
 
 const Navbar = ({ type, login }) => {
   const navigate = useNavigate();
-
-  // Debugging logs
-  console.log("Type:", type);
-  console.log("Login:", login);
-
   // Determine the paths and labels based on the `type` prop
   const getNavbarDetails = () => {
     switch (type) {
       case "store":
         return {
           registerPath: "/storeregistration",
-          loginPath: "/store/login",
+          loginPath: "/storeLogin",
           registerLabel: "Register as Store",
           loginLabel: "Login as Store",
         };

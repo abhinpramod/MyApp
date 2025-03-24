@@ -423,7 +423,7 @@ const ContractorProfile = () => {
           <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
           <Button
             onClick={handleAddProject}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="b text-white"
           >
             Add
           </Button>
