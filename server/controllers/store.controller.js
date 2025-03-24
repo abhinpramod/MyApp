@@ -3,7 +3,7 @@ const Otp = require('../model/otp.model');
 const  sendEmail  = require('../lib/nodemailer');
 const bcrypt = require('bcryptjs');
 const cloudinary = require('cloudinary').v2;
-
+const{ generateTokenstore }= require('../lib/utils');
 // Send OTP
 const sendOtp = async (req, res) => {
   const { email } = req.body;
@@ -129,6 +129,8 @@ const registerStore = async (req, res) => {
         return res.status(400).json({ msg: 'Invalid password' });
       }
   
+      generateTokenstore(store._id, res);
+  
       res.status(200).json({ msg: 'Login successful' });
     } catch (error) {
       console.error('Login failed:', error);
@@ -138,5 +140,16 @@ const registerStore = async (req, res) => {
   
   
   
+    const checkstore = (req, res) => {
+      try {
+        console.log("controll", req.contractor);
+        res.status(200).json(req.contractor);
+      } catch (error) {
+        console.log("error from checkAuth", error.message);
+        res.status(500).json({ msg: error.message });
+      }
+    };
+  
+  
 
-module.exports = { sendOtp, verifyOtp, registerStore, login };
+module.exports = { sendOtp, verifyOtp, registerStore, login, checkstore };

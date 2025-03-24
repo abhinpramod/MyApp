@@ -61,8 +61,8 @@ function App() {
 
 
     {/* store routes */}
-          <Route path="/storeregistration" element={<StoreRegistration />}/>
-          <Route path="/storeLogin" element={<StoreLoginPage />}/>
+          <Route path="/storeregistration" element={store && store ? <Navigate to="/" /> : <StoreRegistration />}/>
+          <Route path="/storeLogin" element={ store && store ? <Navigate to="/" /> : <StoreLoginPage />}/>
 
 
 
