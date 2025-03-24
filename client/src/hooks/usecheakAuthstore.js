@@ -4,7 +4,7 @@ import axiosInstance from "../lib/axios"; // Ensure the correct path
 import { loginstore, logoutstore } from "../redux/storeslice";
 import toast from "react-hot-toast";
 
-const useAuthCheckcontractor = () => {
+const useAuthCheckstore = () => {
   const [loadingstore, setLoadingstore] = useState(true);
   const dispatch = useDispatch();
 
@@ -41,7 +41,7 @@ const useAuthCheckcontractor = () => {
     checkAuth();
   }, [dispatch]);
 
-  return { loading };
+  return { loadingstore };
 };
 
 export default useAuthCheckstore;
