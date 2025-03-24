@@ -20,8 +20,11 @@ import Contractordashboard from "./pages/contractor.pages/contractorlayout";
 import ContractorProject from "./pages/contractor.pages/contractorproject";
 import ContractorSettings from "./pages/contractor.pages/contractorsettings";
 import Dashboard from "./pages/contractor.pages/contractordashboard";
+
 import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
+import useAuthCheckstore from "./hooks/usecheakAuthstore";
+
 import ContractorProfileforuser from "./pages/user.pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
 import UserProfile from "./pages/user.pages/Userprofile";
@@ -32,9 +35,11 @@ import { useSelector } from "react-redux";
 
 function App() {
   const { loading } = useAuthCheckcontractor();
+  const {loadingstore}=useAuthCheckstore();
   const { loadinguser } = useAuthCheckuser();
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
+  const { store } = useSelector((state) => state.store);
 
   return (
     <div>
