@@ -9,9 +9,8 @@ const Navbar = () => {
 
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
-  // const { store } = useSelector((state) => state.store);  // Assuming you have a store state in Redux
-
-  const store= false // this want to change after adding store redux
+  const {store} = useSelector((state) => state.store);
+ 
 
   const menuItems = [
     { name: "Home", path: "/" },
