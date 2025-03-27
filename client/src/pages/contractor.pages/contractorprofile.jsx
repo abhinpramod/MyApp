@@ -85,6 +85,7 @@ const ContractorProfile = () => {
   const [tempAvailability, setTempAvailability] = useState(availability);
 
   const fetchContractorData = async () => {
+    
     try {
       setIsLoading(true);
       const response = await axiosInstance.get("/contractor/profile");
