@@ -74,6 +74,8 @@ const ContractorProfile = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
@@ -91,6 +93,7 @@ const ContractorProfile = () => {
       setProfilePic(response.data.profilePicture);
       setProjects(response.data.projects || []);
       setNumberOfEmployees(response.data.numberOfEmployees);
+      setTempDescription(response.data.description || "");
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
@@ -101,6 +104,26 @@ const ContractorProfile = () => {
   useEffect(() => {
     fetchContractorData();
   }, []);
+
+  const handleEditDescription = () => {
+    setTempDescription(contractor.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const handleSaveDescription = async () => {
+    setIsLoading(true);
+    try {
+      await axiosInstance.put("/contractor/updatedescription", {
+        description: tempDescription,
+      });
+      setContractor(prev => ({ ...prev, description: tempDescription }));
+      setIsEditingDescription(false);
+      toast.success("Description updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update description");
+    }
+    setIsLoading(false);
+  };
 
   const handleEditEmployees = () => {
     setTempNumberOfEmployees(numberOfEmployees);
@@ -136,7 +159,6 @@ const ContractorProfile = () => {
         `Availability set to ${tempAvailability ? "Available" : "Not Available"}`
       );
       fetchContractorData();
-
     } catch (error) {
       setIsLoading(false);
       toast.error("Failed to update availability");
@@ -297,9 +319,59 @@ const ContractorProfile = () => {
           <h4 className="font-semibold text-gray-600">
             {contractor.contractorName}
           </h4>
-          <p className="text-gray-500 text-center mt-2">
-            {contractor.description}
-          </p>
+          
+          {/* Description Section with Edit Option */}
+          <div className="w-full mt-2">
+            {isEditingDescription ? (
+              <div className="space-y-2">
+                <TextField
+                  multiline
+                  rows={4}
+                  fullWidth
+                  value={tempDescription}
+                  onChange={(e) => setTempDescription(e.target.value)}
+                  placeholder="Tell us about your company, expertise, and experience..."
+                  variant="outlined"
+                  className="bg-gray-50 rounded-lg"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setIsEditingDescription(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleSaveDescription}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={handleEditDescription}
+                className={`p-4 rounded-lg transition-all ${
+                  contractor.description 
+                    ? "border border-gray-200 hover:border-blue-300 bg-white cursor-text"
+                    : "border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50 cursor-pointer"
+                }`}
+              >
+                <p className={`text-center ${
+                  contractor.description 
+                    ? "text-gray-700" 
+                    : "text-gray-500 italic"
+                }`}>
+                  {contractor.description || "Click here to add a description about your company..."}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="w-full md:w-2/3 space-y-4">
@@ -308,6 +380,9 @@ const ContractorProfile = () => {
           </p>
           <p className="text-gray-600">
             <strong>GST:</strong> {contractor.gstNumber}
+          </p>
+          <p className="text-gray-600">
+            <strong>phone:</strong> {contractor.phone}
           </p>
           <p className="text-gray-600">
             <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}

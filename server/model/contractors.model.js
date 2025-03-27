@@ -21,6 +21,7 @@ const contractorSchema = new mongoose.Schema({
   licenseDocument: { type: String },
   registrationStep: { type: Number, enum: [1, 2], default: 1 },
   verified: { type: Boolean, default: false },
+  description: { type: String },
   projects: [
     {
       id: { type: mongoose.Schema.Types.ObjectId, required: true },

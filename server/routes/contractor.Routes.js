@@ -18,6 +18,7 @@ const {
 const {
   updateAvailability,
   updateemployeesnumber,
+  updateDescription
 } = require("../controllers/contractor/Settings.Controller");
 const { protectRoutecontractor } = require("../middleware/authmiddleware");
 const  upload  = require("../middleware/Multermiddleware");
@@ -62,6 +63,7 @@ router.patch("/mark-interest-seen/:id", markseen); // Mark interest as seen
 // Settings Routes
 router.put("/availability", protectRoutecontractor, updateAvailability); // Update availability
 router.put("/employeesnumber", protectRoutecontractor, updateemployeesnumber); // Update number of employees
+router.put("/updatedescription", protectRoutecontractor, updateDescription);
 
 // Auth Middleware Route
 router.get("/check", protectRoutecontractor, checkAuth); // Check authentication status

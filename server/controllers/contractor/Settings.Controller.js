@@ -48,7 +48,27 @@ const updateemployeesnumber = async (req, res) => {
   }
 };
 
+const updateDescription = async (req, res) => {
+  try {
+    const { description } = req.body;
+    console.log(description);
+    const contractor = await Contractor.findByIdAndUpdate(
+      req.contractor._id, // Assuming you're using authentication middleware
+      { description },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .json({ message: "Description updated successfully", contractor });
+  } catch (error) {
+    console.error("Error updating description:", error);
+    res.status(500).json({ message: "Failed to update description", error });
+  }
+};
+
 module.exports = {
   updateAvailability,
   updateemployeesnumber,
+  updateDescription,
 };
