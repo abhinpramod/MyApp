@@ -22,6 +22,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -36,6 +37,12 @@ export default function Register() {
     let tempErrors = {};
     tempErrors.name = formData.name ? "" : "Name is required";
     tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
+    if (!formData.phone) {
+      tempErrors.phone = "Phone number is required";
+    }else{
+    tempErrors.phone = /^[0-9]{10,15}$/.test(formData.phone) ? "" : "Invalid phone number (10-15 digits)";
+
+    }
     tempErrors.password = formData.password.length >= 6 ? "" : "Password must be at least 6 characters";
     tempErrors.confirmPassword = formData.confirmPassword === formData.password ? "" : "Passwords must match";
     setErrors(tempErrors);
@@ -116,7 +123,7 @@ export default function Register() {
         elevation={3}
         sx={{
           padding: 10,
-          marginTop: 10,
+          marginTop: 2,
           position: "relative", // Add relative positioning to the Paper
         }}
       >
@@ -174,7 +181,8 @@ export default function Register() {
                 Welcome!
               </Typography>
               <Typography variant="body1">
-              Join now to hire experts, find trusted stores, and build with confidence              </Typography>
+                Join now to hire experts, find trusted stores, and build with confidence
+              </Typography>
             </Box>
           </Grid>
 
@@ -203,6 +211,21 @@ export default function Register() {
                 error={!!errors.email}
                 helperText={errors.email}
                 margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Phone Number"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+                error={!!errors.phone}
+                helperText={errors.phone}
+                margin="normal"
+                placeholder="Enter 10-15 digit phone number"
+                inputProps={{
+                  maxLength: 15,
+                  pattern: "[0-9]{10,15}",
+                }}
               />
               <TextField
                 fullWidth

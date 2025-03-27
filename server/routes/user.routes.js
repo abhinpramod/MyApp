@@ -25,17 +25,17 @@ router.post("/logout", logout);
 // ==================== User Profile Routes ====================
 router.get("/check", protectRouteuser, checkUser);
 router.put(
-  "/upload-profile", 
+  "/uploadprofile", 
   protectRouteuser, 
   upload.single("profilePicture"), 
   uploadProfilePicture
 );
 
 // ==================== Job/Contractor Routes ====================
-router.get("/job-types", fetchJobTypes);
+router.get("/Jobtypes", fetchJobTypes);
 router.get("/contractors", protectRouteuser, fetchAllContractors);
 router.get("/contractors/:id", protectRouteuser, fetchContractorById);
 router.post("/contractor/interest/:id", protectRouteuser, addInterests);
-router.get("/interests", protectRouteuser, fetchAllInterests);
+router.get("/all-interests", protectRouteuser, fetchAllInterests);
 
 module.exports = router;

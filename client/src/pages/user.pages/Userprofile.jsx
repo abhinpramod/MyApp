@@ -48,6 +48,10 @@ const UserProfile = () => {
       setLoading(false);
       dispatch(loginuser(response.data));
     } catch (error) {
+      
+              if(error.response.status===403){
+               return toast.error(error.response.data.msg);
+              }
       console.error('Error fetching user:', error);
       toast.error('Failed to fetch user data');
       setLoading(false);
@@ -77,6 +81,10 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to update profile picture');
+      
+              if(error.response.status===403){
+                toast.error(error.response.data.msg);
+              }
     } finally {
       setUploading(false);
     }

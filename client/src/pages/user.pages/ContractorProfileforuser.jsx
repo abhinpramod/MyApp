@@ -112,6 +112,9 @@ const ContractorProfile = () => {
       })
       setIsLoading(false);
     } catch (error) {
+        if(error.response.status===403){
+                     return toast.error(error.response.data.msg);
+                    }
       console.error("Failed to express interest:", error);
       toast.error("Failed to express interest");
       setIsLoading(false);
@@ -191,9 +194,12 @@ const ContractorProfile = () => {
             </div>
 
             {/* Interested Button */}
-            <button
+            <button 
               onClick={() => setShowInterestDialog(true)}
-              className="bg-red-700 text-white px-4 w-1/2 h-8 rounded-md mt-4"
+className={`bg-red-700 text-white px-4 w-1/2 h-8 rounded-md mt-4 ${
+  contractor.availability ? "" : "opacity-50 cursor-not-allowed"
+}`}
+disabled={!contractor.availability}
             >
               Interested
             </button>

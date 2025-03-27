@@ -32,6 +32,7 @@ const InterestSentHistory = () => {
         const response = await axiosInstance.get("/user/all-interests");
         setInterestHistory(response.data || []);
       } catch (error) {
+        
         console.error("Failed to fetch interest history:", error);
       }
     };

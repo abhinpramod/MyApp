@@ -62,6 +62,9 @@ const Contractors = () => {
       setTotal(response.data.total);
       setHasMore(response.data.hasMore);
     } catch (error) {
+        if(error.response.status===403){
+                     return toast.error(error.response.data.msg);
+                    }
       console.error("Error fetching contractors:", error);
     } finally {
       setLoading(false);

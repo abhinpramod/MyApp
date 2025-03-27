@@ -2,9 +2,8 @@
 const User = require("../../model/user.model.js");
 const bcrypt = require("bcrypt");
 const { generateTokenuser } = require("../../lib/utils.js");
-const TempUser = require("../../model/tempuser.model.js");
 const OTP = require("../../model/otp.model.js");
-const generateOTP = require("../../lib/otpgenarator.js");
+const{ generateOTP }= require("../../lib/otpgenarator.js");
 const sendEmail = require("../../lib/nodemailer.js");
 
 // Login Controller
@@ -42,7 +41,7 @@ const login = async (req, res) => {
 
 // Register Controller
 const register = async (req, res) => {
-  const { email, password, name, uniqueId } = req.body;
+  const { email, password, name, uniqueId,phone } = req.body;
   console.log(req.body);
 
   try {
@@ -59,15 +58,8 @@ const register = async (req, res) => {
     const user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: "user already exists" });
 
-    const salt = await bcrypt.genSalt();
-    const hashPassword = await bcrypt.hash(password, salt);
-    const tempUser = new TempUser({
-      name,
-      email,
-      password: hashPassword,
-      uniqueId,
-    });
-    await tempUser.save();
+   
+
 
     // Generate and save OTP
     const otp = generateOTP();
@@ -88,7 +80,9 @@ const register = async (req, res) => {
 
 // Verify OTP Controller
 const verifyOTP = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp, password, uniqueId, phone,name } = req.body;
+  console.log(req.body);
+  
   console.log(email, otp);
 
   try {
@@ -98,37 +92,33 @@ const verifyOTP = async (req, res) => {
     }
 
     // Retrieve OTP and temporary user data
-    const otpRecord = await OTP.findOne({ email });
-    const tempUser = await TempUser.findOne({ email });
+    const otpRecord = await OTP.findOne({ email, otp });
+    // const    = await   .findOne({ email });
 
-    if (!otpRecord || !tempUser) {
-      return res.status(400).json({ msg: "OTP expired or not found" });
-    }
-    if (otpRecord.otp !== otp) {
+    if (!otpRecord   ) {
       return res.status(400).json({ msg: "Invalid OTP" });
     }
+    
+
+    const salt = await bcrypt.genSalt();
+    const hashPassword = await bcrypt.hash(password, salt);
 
     // Save the user data to the database
     const newUser = new User({
-      name: tempUser.name,
-      email: tempUser.email,
-      password: tempUser.password,
-      uniqueId: tempUser.uniqueId,
+        name,
+       email,
+        password:hashPassword,
+         uniqueId,
+         phone
     });
     await newUser.save();
 
     // Clear temporary data
     await OTP.deleteOne({ email });
-    await TempUser.deleteOne({ email });
+
     console.log("OTP deleted");
 
-    res.status(200).json({
-      _id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
-      uniqueId: newUser.uniqueId,
-      message: "User registered successfully",
-    });
+    res.status(200).json({ msg: "Registration successful" ,user:newUser});
   } catch (error) {
     console.error("Error verifying OTP:", error.message);
     res.status(500).json({ msg: "Internal server error" });

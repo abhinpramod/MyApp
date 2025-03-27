@@ -2,7 +2,6 @@
 const bcrypt = require("bcrypt");
 const { generateTokencontractor } = require("../../lib/utils.js");
 const Contractor = require("../../model/contractors.model.js");
-const TempContractor = require("../../model/tempcontractor.model.js");
 const OTP = require("../../model/otp.model.js");
 const { generateOTP } = require("../../lib/otpgenarator");
 const  sendEmail  = require("../../lib/nodemailer");
