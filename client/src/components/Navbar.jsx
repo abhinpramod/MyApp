@@ -4,7 +4,7 @@ import { Menu, X, Briefcase, LogIn,User } from "lucide-react";
 import React from "react";
 import { useSelector } from "react-redux";
 
-const Navbar = () => {
+const Navbar = (isOwnerView) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { user } = useSelector((state) => state.user);
@@ -20,7 +20,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-white shadow-lg border-b border-gray-200">
+    <nav className={`fixed top-0 left-0 w-full z-50 bg-white shadow-lg border-b ${isOwnerView ? "": "hidden"} border-gray-200`}>
       <div className="max-w-screen-xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}

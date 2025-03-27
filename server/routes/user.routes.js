@@ -34,7 +34,7 @@ router.put(
 // ==================== Job/Contractor Routes ====================
 router.get("/Jobtypes", fetchJobTypes);
 router.get("/contractors", protectRouteuser, fetchAllContractors);
-router.get("/contractors/:id", protectRouteuser, fetchContractorById);
+router.get("/contractors/:id", fetchContractorById);
 router.post("/contractor/interest/:id", protectRouteuser, addInterests);
 router.get("/all-interests", protectRouteuser, fetchAllInterests);
 

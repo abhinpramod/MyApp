@@ -4,14 +4,19 @@ import {
   CardContent,
   CardMedia,
   Grid,
-  TextField,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
-  Button,
   Avatar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Typography,
+  TextField,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import {
   Camera,
@@ -24,9 +29,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Switch from "../../components/ui/switch";
+import Navbar from "../../components/Navbar";
 
-// Confirmation Dialog Component
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
   return (
     <Dialog open={open} onClose={onClose}>
@@ -46,65 +53,133 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
   );
 };
 
-const ContractorProfile = () => {
-  const [contractor, setContractor] = useState({
-    companyName: "",
-    contractorName: "",
-    email: "",
-    phone: "",
-    location: "",
-    availability: false,
-    profilePic: "",
-    projects: [],
-    gstNumber: "",
-    country: "",
-    state: "",
-    city: "",
-    address: "",
-    numberOfEmployees: 0,
-    description: "",
-  });
+const DynamicProfile = () => {
+  const navigate = useNavigate();
+  const { contractorId: paramContractorId } = useParams();
+  const currentContractor = useSelector((state) => state.contractor);
+  
+  // Determine view mode
+  const isOwnerView = !paramContractorId;
+  const profileContractorId = isOwnerView 
+    ? currentContractor?.contractor?._id 
+    : paramContractorId;
 
+  // State management
+  const [contractor, setContractor] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [jobTypes, setJobTypes] = useState([]);
+  const [showInterestDialog, setShowInterestDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    phoneNumber: "",
+    address: "",
+    expectedDate: "",
+    jobTypes: [],
+  });
+  const [errors, setErrors] = useState({});
   const [availability, setAvailability] = useState(false);
   const [profilePic, setProfilePic] = useState("");
-  const [projects, setProjects] = useState([]);
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const [newProjectImage, setNewProjectImage] = useState(null);
   const [newProjectDescription, setNewProjectDescription] = useState("");
-  const [selectedProject, setSelectedProject] = useState(null);
   const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [confirmEmployeesOpen, setConfirmEmployeesOpen] = useState(false);
   const [confirmAvailabilityOpen, setConfirmAvailabilityOpen] = useState(false);
-  const [tempNumberOfEmployees, setTempNumberOfEmployees] = useState(numberOfEmployees);
-  const [tempAvailability, setTempAvailability] = useState(availability);
-
-  const fetchContractorData = async () => {
-    
-    try {
-      setIsLoading(true);
-      const response = await axiosInstance.get("/contractor/profile");
-      setContractor(response.data);
-      setAvailability(response.data.availability);
-      setProfilePic(response.data.profilePicture);
-      setProjects(response.data.projects || []);
-      setNumberOfEmployees(response.data.numberOfEmployees);
-      setTempDescription(response.data.description || "");
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      toast.error("Failed to fetch contractor data");
-    }
-  };
+  const [tempNumberOfEmployees, setTempNumberOfEmployees] = useState(0);
+  const [tempAvailability, setTempAvailability] = useState(false);
 
   useEffect(() => {
+    const fetchContractorData = async () => {
+      if (!profileContractorId) return;
+
+      try {
+        setIsLoading(true);
+        const endpoint = isOwnerView 
+          ? "/contractor/profile" 
+          : `/user/contractors/${profileContractorId}`;
+        
+        const response = await axiosInstance.get(endpoint);
+        const data = response.data;
+        
+        setContractor(data);
+        setProjects(data.projects || []);
+        setJobTypes(data.jobTypes || []);
+        setAvailability(data.availability || false);
+        setProfilePic(data.profilePicture || "");
+        setNumberOfEmployees(data.numberOfEmployees || 0);
+        setTempDescription(data.description || "");
+      } catch (error) {
+        console.error("Failed to fetch contractor data:", error);
+        if (error.response?.status === 401) {
+          toast.error("You are not authorized to view this page.");
+          navigate("/");
+          return;
+        }
+        toast.error("Failed to fetch contractor data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchContractorData();
-  }, []);
+  }, [profileContractorId, isOwnerView, navigate]);
+
+  const handleJobTypesChange = (event) => {
+    const { value } = event.target;
+    setFormData({ ...formData, jobTypes: value });
+  };
+
+  const handleSubmitInterest = async (e) => {
+    e.preventDefault();
+    
+    // Validation logic
+    const newErrors = {};
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = "Invalid phone number format";
+    }      
+    if (!formData.address) newErrors.address = "Address is required";
+    if (!formData.expectedDate) newErrors.expectedDate = "Expected date is required";
+    if (formData.jobTypes.length === 0) newErrors.jobTypes = "At least one job type is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+
+    try {
+      setIsLoading(true);
+      await axiosInstance.post(`/user/contractor/interest/${profileContractorId}`, {
+        formData,
+        contractor
+      });
+      toast.success("Interest expressed successfully!");
+      setShowInterestDialog(false);
+      setFormData({
+        phoneNumber: "",
+        address: "",
+        expectedDate: "",
+        jobTypes: [],
+      });
+    } catch (error) {
+      if (error.response?.status === 403) {
+        return toast.error(error.response.data.msg);
+      }
+      console.error("Failed to express interest:", error);
+      toast.error("Failed to express interest");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEditDescription = () => {
     setTempDescription(contractor.description || "");
@@ -139,12 +214,11 @@ const ContractorProfile = () => {
       });
       setNumberOfEmployees(tempNumberOfEmployees);
       setIsEditingEmployees(false);
-      setIsLoading(false);
       toast.success("Number of employees updated successfully!");
     } catch (error) {
-      setIsLoading(false);
       toast.error("Failed to update number of employees");
     }
+    setIsLoading(false);
     setConfirmEmployeesOpen(false);
   };
 
@@ -155,15 +229,13 @@ const ContractorProfile = () => {
         availability: tempAvailability,
       });
       setAvailability(tempAvailability);
-      setIsLoading(false);
       toast.success(
         `Availability set to ${tempAvailability ? "Available" : "Not Available"}`
       );
-      fetchContractorData();
     } catch (error) {
-      setIsLoading(false);
       toast.error("Failed to update availability");
     }
+    setIsLoading(false);
     setConfirmAvailabilityOpen(false);
   };
 
@@ -182,23 +254,17 @@ const ContractorProfile = () => {
     formData.append("profilePic", file);
 
     try {
-      const response = await axiosInstance.put(
-        "/contractor/updateProfilePic",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      fetchContractorData();
-      setIsLoading(false);
+      await axiosInstance.put("/contractor/updateProfilePic", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const response = await axiosInstance.get("/contractor/profile");
+      setContractor(response.data);
       toast.success("Profile picture updated successfully!");
     } catch (error) {
-      setIsLoading(false);
       console.error("Error updating profile picture:", error);
       toast.error(error.response?.data?.msg || "Failed to update profile picture");
     }
+    setIsLoading(false);
   };
 
   const handleProjectImageUpload = (e) => {
@@ -218,69 +284,52 @@ const ContractorProfile = () => {
   };
 
   const handleAddProject = async () => {
-    if (newProjectImage && newProjectDescription) {
-      const formData = new FormData();
-      formData.append("image", newProjectImage);
-      formData.append("description", newProjectDescription);
-
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.post(
-          "/contractor/addprojects",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        setProjects([...projects, response.data.project]);
-        toast.success("Project added successfully!");
-        setOpenProjectDialog(false);
-        setNewProjectImage(null);
-        setNewProjectDescription("");
-        setIsLoading(false);
-      } catch (error) {
-        setIsLoading(false);
-        toast.error("Failed to add project");
-      }
-    } else {
+    if (!newProjectImage || !newProjectDescription) {
       toast.error("Please provide both an image and a description");
+      return;
     }
+
+    const formData = new FormData();
+    formData.append("image", newProjectImage);
+    formData.append("description", newProjectDescription);
+
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.post(
+        "/contractor/addprojects",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      setProjects([...projects, response.data.project]);
+      toast.success("Project added successfully!");
+      setOpenProjectDialog(false);
+      setNewProjectImage(null);
+      setNewProjectDescription("");
+    } catch (error) {
+      toast.error("Failed to add project");
+    }
+    setIsLoading(false);
   };
 
   const handleDeleteProject = async (projectId) => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.delete("/contractor/deleteproject", {
+      await axiosInstance.delete("/contractor/deleteproject", {
         data: { projectId },
       });
-      setProjects((prevProjects) =>
-        prevProjects.filter((project) => project._id !== projectId)
-      );
-      setIsLoading(false);
+      setProjects(prev => prev.filter(project => project._id !== projectId));
       toast.success("Project deleted successfully!");
+      setSelectedProject(null);
     } catch (error) {
-      setIsLoading(false);
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project");
     }
+    setIsLoading(false);
   };
 
   const openDeleteConfirmation = (projectId) => {
     setProjectToDelete(projectId);
     setDeleteConfirmationOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (projectToDelete) {
-      handleDeleteProject(projectToDelete);
-      setSelectedProject(null);
-    } else {
-      console.error("No project ID found for deletion");
-      toast.error("No project selected for deletion");
-    }
-    setDeleteConfirmationOpen(false);
   };
 
   if (isLoading) {
@@ -291,39 +340,48 @@ const ContractorProfile = () => {
     );
   }
 
+  if (!contractor) {
+    return <div>No contractor data found.</div>;
+  }
+
   return (
-    <div className="p-6 mt-5 max-h-fit min-h-screen max-w-4xl mx-auto shadow-lg rounded-2xl">
+    <>
+    {!isOwnerView && <Navbar />}
+    
+    <div className={`p-6 max-h-fit min-h-screen max-w-4xl mx-auto shadow-lg rounded-2xl ${!isOwnerView && "mt-20"}  `}>
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Profile Picture Section */}
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">
             <Avatar
               sx={{ width: 128, height: 128 }}
               className="rounded-full border-4 border-gray-200"
-              src={profilePic || contractor.profilePicture}
+              src={profilePic || contractor.profilePicture || "../../public/avatar.png"}
             />
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-1 right-1 bg-gray-800 p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
-            >
-              <Camera className="w-5 h-5 text-white" />
-              <input
-                type="file"
-                id="avatar-upload"
-                name="profilePic"
-                className="hidden"
-                accept="image/*"
-                onChange={handleProfilePicUpload}
-              />
-            </label>
+            {isOwnerView && (
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-1 right-1 bg-gray-800 p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
+              >
+                <Camera className="w-5 h-5 text-white" />
+                <input
+                  type="file"
+                  id="avatar-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfilePicUpload}
+                />
+              </label>
+            )}
           </div>
           <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
           <h4 className="font-semibold text-gray-600">
             {contractor.contractorName}
           </h4>
           
-          {/* Description Section with Edit Option */}
+          {/* Description Section */}
           <div className="w-full mt-2">
-            {isEditingDescription ? (
+            {isOwnerView && isEditingDescription ? (
               <div className="space-y-2">
                 <TextField
                   multiline
@@ -331,7 +389,7 @@ const ContractorProfile = () => {
                   fullWidth
                   value={tempDescription}
                   onChange={(e) => setTempDescription(e.target.value)}
-                  placeholder="Tell us about your company, expertise, and experience..."
+                  placeholder="Tell us about your company..."
                   variant="outlined"
                   className="bg-gray-50 rounded-lg"
                   autoFocus
@@ -356,11 +414,13 @@ const ContractorProfile = () => {
               </div>
             ) : (
               <div 
-                onClick={handleEditDescription}
+                onClick={isOwnerView ? handleEditDescription : undefined}
                 className={`p-4 rounded-lg transition-all ${
                   contractor.description 
-                    ? "border border-gray-200 hover:border-blue-300 bg-white cursor-text"
-                    : "border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50 cursor-pointer"
+                    ? "border border-gray-200 hover:border-blue-300 bg-white" +
+                      (isOwnerView ? " cursor-text" : "")
+                    : "border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50" +
+                      (isOwnerView ? " cursor-pointer" : "")
                 }`}
               >
                 <p className={`text-center ${
@@ -368,13 +428,15 @@ const ContractorProfile = () => {
                     ? "text-gray-700" 
                     : "text-gray-500 italic"
                 }`}>
-                  {contractor.description || "Click here to add a description about your company..."}
+                  {contractor.description || 
+                    (isOwnerView ? "Click here to add a description..." : "No description provided")}
                 </p>
               </div>
             )}
           </div>
         </div>
 
+        {/* Contractor Details Section */}
         <div className="w-full md:w-2/3 space-y-4">
           <p className="text-gray-600">
             <strong>Email:</strong> {contractor.email}
@@ -382,16 +444,25 @@ const ContractorProfile = () => {
           <p className="text-gray-600">
             <strong>GST:</strong> {contractor.gstNumber}
           </p>
-          <p className="text-gray-600">
-            <strong>phone:</strong> {contractor.phone}
-          </p>
+          {contractor.phone && (
+            <p className="text-gray-600">
+              <strong>Phone:</strong> {contractor.phone}
+            </p>
+          )}
           <p className="text-gray-600">
             <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}
             {contractor.state}, {contractor.country}
           </p>
+          {jobTypes.length > 0 && (
+            <p className="text-gray-600">
+              <strong>Job Types:</strong> {jobTypes.join(", ")}
+            </p>
+          )}
+
+          {/* Number of Employees */}
           <div className="flex items-center gap-2">
             <strong>Number of Employees:</strong>
-            {isEditingEmployees ? (
+            {isOwnerView && isEditingEmployees ? (
               <div className="flex items-center gap-2">
                 <TextField
                   type="number"
@@ -410,37 +481,67 @@ const ContractorProfile = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <span>{numberOfEmployees}</span>
-                <IconButton
-                  onClick={handleEditEmployees}
-                  className="hover:bg-black"
-                >
-                  <Pencil size={15} />
-                </IconButton>
+                {isOwnerView && (
+                  <IconButton
+                    onClick={handleEditEmployees}
+                    className="hover:bg-black"
+                  >
+                    <Pencil size={15} />
+                  </IconButton>
+                )}
               </div>
             )}
           </div>
+
+          {/* Availability Section */}
           <div className="flex items-center gap-2 mt-3">
-            <Switch
-              checked={contractor.availability}
-              onCheckedChange={(checked) => {
-                setTempAvailability(checked);
-                setConfirmAvailabilityOpen(true);
-              }}
-            />
-            <span className={contractor.availability ? "text-green-600" : "text-red-600"}>
-              {contractor.availability ? "Available" : "Not Available"}
-            </span>
+            {isOwnerView ? (
+              <>
+                <Switch
+                  checked={availability}
+                  onCheckedChange={(checked) => {
+                    setTempAvailability(checked);
+                    setConfirmAvailabilityOpen(true);
+                  }}
+                />
+                <span className={availability ? "text-green-600" : "text-red-600"}>
+                  {availability ? "Available" : "Not Available"}
+                </span>
+              </>
+            ) : (
+              <span className={contractor.availability ? "text-green-600" : "text-red-600"}>
+                {contractor.availability ? "Available" : "Not Available"}
+              </span>
+            )}
           </div>
+
+          {/* Interest Button - Only show for user view */}
+          {!isOwnerView && (
+            <button 
+              onClick={() => setShowInterestDialog(true)}
+              className={`bg-red-700 text-white px-4 w-1/2 h-8 rounded-md mt-4 ${
+                contractor.availability ? "" : "opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!contractor.availability}
+            >
+              Interested
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Project List */}
       <hr className="my-6 border-gray-200" />
-      <Button
-        onClick={() => setOpenProjectDialog(true)}
-        className="flex items-center gap-2 text-sm font-semibold hover:text-gray-800 transition-colors"
-      >
-        <CirclePlus size={18} /> Add Project
-      </Button>
+      
+      {/* Add Project Button - Only for owner view */}
+      {isOwnerView && (
+        <Button
+          onClick={() => setOpenProjectDialog(true)}
+          className="flex items-center gap-2 text-sm font-semibold hover:text-gray-800 transition-colors"
+        >
+          <CirclePlus size={18} /> Add Project
+        </Button>
+      )}
 
       <Grid container spacing={3} className="mt-6">
         {projects.map((project, index) => (
@@ -453,7 +554,7 @@ const ContractorProfile = () => {
                 <CardMedia
                   component="img"
                   className="w-full h-full object-cover"
-                  image={project.image}
+                  image={project.image || "/default-project.png"}
                   alt={`Project ${index + 1}`}
                 />
               </div>
@@ -467,45 +568,7 @@ const ContractorProfile = () => {
         ))}
       </Grid>
 
-      <Dialog
-        open={openProjectDialog}
-        onClose={() => setOpenProjectDialog(false)}
-      >
-        <DialogTitle>Add New Project</DialogTitle>
-        <DialogContent>
-          {newProjectImage && (
-            <img
-              src={newProjectImage}
-              alt="Preview"
-              className="w-full h-40 object-cover rounded-lg mb-4"
-            />
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleProjectImageUpload}
-            className="mb-4"
-          />
-          <TextField
-            label="Project Description"
-            fullWidth
-            multiline
-            rows={2}
-            value={newProjectDescription}
-            onChange={(e) => setNewProjectDescription(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleAddProject}
-            className="b text-white"
-          >
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-
+      {/* Full-Screen Project View */}
       <Dialog
         open={!!selectedProject}
         onClose={() => setSelectedProject(null)}
@@ -522,7 +585,7 @@ const ContractorProfile = () => {
         <DialogContent>
           <div className="flex flex-col items-center">
             <img
-              src={selectedProject?.image}
+              src={selectedProject?.image || "/default-project.png"}
               alt="Selected Project"
               className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
             />
@@ -530,48 +593,215 @@ const ContractorProfile = () => {
               {selectedProject?.description}
             </p>
             <p className="text-center text-sm text-gray-500 mt-2">
-              Added on: {new Date(selectedProject?.createdAt).toLocaleString()}
+              Added on:{" "}
+              {new Date(selectedProject?.createdAt).toLocaleString()}
             </p>
           </div>
         </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              openDeleteConfirmation(selectedProject?._id);
-            }}
-            color="error"
-          >
-            <Trash2 size={24} /> Delete
-          </Button>
-        </DialogActions>
+        {/* Delete button only for owner view */}
+        {isOwnerView && (
+          <DialogActions>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                openDeleteConfirmation(selectedProject?._id);
+              }}
+              color="error"
+            >
+              <Trash2 size={24} /> Delete
+            </Button>
+          </DialogActions>
+        )}
       </Dialog>
 
-      <ConfirmationDialog
-        open={deleteConfirmationOpen}
-        onClose={() => setDeleteConfirmationOpen(false)}
-        onConfirm={confirmDelete}
-        title="Delete Project"
-        message="Are you sure you want to delete this project?"
-      />
+      {/* Add Project Dialog - Owner only */}
+      {isOwnerView && (
+        <Dialog
+          open={openProjectDialog}
+          onClose={() => setOpenProjectDialog(false)}
+        >
+          <DialogTitle>Add New Project</DialogTitle>
+          <DialogContent>
+            {newProjectImage && (
+              <img
+                src={newProjectImage}
+                alt="Preview"
+                className="w-full h-40 object-cover rounded-lg mb-4"
+              />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProjectImageUpload}
+              className="mb-4"
+            />
+            <TextField
+              label="Project Description"
+              fullWidth
+              multiline
+              rows={2}
+              value={newProjectDescription}
+              onChange={(e) => setNewProjectDescription(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenProjectDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleAddProject}
+              className="b text-white"
+            >
+              Add
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
-      <ConfirmationDialog
-        open={confirmEmployeesOpen}
-        onClose={() => setConfirmEmployeesOpen(false)}
-        onConfirm={handleConfirmEmployees}
-        title="Update Number of Employees"
-        message="Are you sure you want to update the number of employees?"
-      />
+      {/* Interest Dialog - For users expressing interest */}
+      <Dialog
+        open={showInterestDialog}
+        onClose={() => setShowInterestDialog(false)}
+        fullWidth
+      >
+        <DialogTitle>Express Interest</DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleSubmitInterest}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={formData.phoneNumber}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phoneNumber: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                />
+                {errors.phoneNumber && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                    {errors.phoneNumber}
+                  </Typography>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Address
+                </label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  className="mt-1 w-full border border-gray-300 rounded-md shadow-sm h-24 p-2 resize-none"
+                />
+                {errors.address && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                    {errors.address}
+                  </Typography>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Expected Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.expectedDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, expectedDate: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                />
+                {errors.expectedDate && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                    {errors.expectedDate}
+                  </Typography>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Job Type
+                </label>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <Select
+                    labelId="jobTypes-label"
+                    name="jobTypes"
+                    value={formData.jobTypes}
+                    onChange={handleJobTypesChange}
+                    multiple
+                    fullWidth
+                    variant="outlined"
+                    error={!!errors.jobTypes}
+                    sx={{ borderRadius: "8px" }}
+                  >
+                    {jobTypes.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.jobTypes && (
+                    <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                      {errors.jobTypes}
+                    </Typography>
+                  )}
+                </FormControl>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowInterestDialog(false)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                >
+                  Submit Interest
+                </button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmationDialog
-        open={confirmAvailabilityOpen}
-        onClose={() => setConfirmAvailabilityOpen(false)}
-        onConfirm={handleConfirmAvailability}
-        title="Update Availability"
-        message="Are you sure you want to update your availability?"
-      />
+      {/* Confirmation Dialogs - Owner only */}
+      {isOwnerView && (
+        <>
+          <ConfirmationDialog
+            open={deleteConfirmationOpen}
+            onClose={() => setDeleteConfirmationOpen(false)}
+            onConfirm={() => {
+              handleDeleteProject(projectToDelete);
+              setDeleteConfirmationOpen(false);
+            }}
+            title="Delete Project"
+            message="Are you sure you want to delete this project?"
+          />
+
+          <ConfirmationDialog
+            open={confirmEmployeesOpen}
+            onClose={() => setConfirmEmployeesOpen(false)}
+            onConfirm={handleConfirmEmployees}
+            title="Update Number of Employees"
+            message="Are you sure you want to update the number of employees?"
+          />
+
+          <ConfirmationDialog
+            open={confirmAvailabilityOpen}
+            onClose={() => setConfirmAvailabilityOpen(false)}
+            onConfirm={handleConfirmAvailability}
+            title="Update Availability"
+            message="Are you sure you want to update your availability?"
+          />
+        </>
+      )}
     </div>
+    </>
   );
 };
 
-export default ContractorProfile;
+export default DynamicProfile;  

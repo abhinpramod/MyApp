@@ -25,7 +25,6 @@ import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import useAuthCheckstore from "./hooks/usecheakAuthstore";
 
-import ContractorProfileforuser from "./pages/user.pages/ContractorProfileforuser";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
 import UserProfile from "./pages/user.pages/Userprofile";
 import InterestSentHistory from "./pages/user.pages/Interesthistory"
@@ -127,7 +126,7 @@ function App() {
           <Route
             path="/contractor/contractorprofileforuser/:contractorId"
             element={
-              user && user ? <ContractorProfileforuser /> : <Loginuser />
+              user && user ? <ContractorProfile /> : <Loginuser />
             }
           />
 
