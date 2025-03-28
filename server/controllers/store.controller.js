@@ -156,6 +156,10 @@ const login = async (req, res) => {
       return res.status(400).json({ msg: "Invalid password" });
     }
 
+    if (store.isBlocked) {
+      return res.status(403).json({ msg: "your account is blocked" });
+    }
+
     generateTokenstore(store._id, res);
 
     res.status(200).json({ msg: "Login successful" });

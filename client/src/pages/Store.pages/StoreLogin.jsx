@@ -64,6 +64,12 @@ const storeLoginPage = () => {
           dispatch(loginstore(res.data));
           setLoading(false);
         }
+
+        if (res.status === 403) {
+          toast.error(res.data.msg);
+        
+        
+        }
         setLoading(false);
       } catch (error) {
         setLoading(false);
