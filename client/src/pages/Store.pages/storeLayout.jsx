@@ -3,27 +3,17 @@ import { useState, useEffect } from "react";
 import {
   Menu,
   X,
-  Bell,
+  BellRing,
   User,
   Home,
-  Briefcase,
+  PackagePlus,
+  ShoppingCart,
+  History,
   Settings,
   LogOut,
   LayoutDashboard,
-  Users,
-  MapPin,
-  ArrowLeft,
-  Loader,
-  Upload,
-  BellRing ,
-  BriefcaseBusiness
 } from "lucide-react";
 import Button from "@/components/ui/button";
-import useAuthCheck from "../../hooks/usecheakAuthcontractor";
-import { useSelector, useDispatch } from "react-redux";
-import { logoutcontractor } from "../../redux/contractorslice";
-import { toast } from "react-hot-toast";
-import axiosInstance from "../../lib/axios";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -34,186 +24,166 @@ import {
 } from "@mui/material";
 
 const StoreDashboard = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to manage sidebar visibility
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // State to track mobile view
-  const [open, setOpen] = useState(false); // State to manage dialog visibility
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  const { loading } = useAuthCheck();
-
-  // Function to toggle sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Function to open the logout confirmation dialog
   const handleOpenDialog = () => {
     setOpen(true);
   };
 
-  // Function to close the logout confirmation dialog
   const handleCloseDialog = () => {
     setOpen(false);
   };
 
-  // Function to handle logout
-  const handleLogout = async () => {
-    try {
-      await axiosInstance.post("/contractor/logout");
-      dispatch(logoutcontractor());
-      navigate("/");
-      toast.success("Logged out successfully");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      toast.error("Failed to log out");
-    } finally {
-      handleCloseDialog(); // Close the dialog after logout attempt
-    }
+  const handleLogout = () => {
+    // Add your logout logic here
+    console.log("Logging out...");
+    handleCloseDialog();
+    navigate("/");
   };
 
-  // Effect to handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth >= 768) {
-        setIsSidebarOpen(true); // Always show sidebar on larger screens
+        setIsSidebarOpen(true);
       } else {
-        setIsSidebarOpen(false); // Hide sidebar by default on mobile
+        setIsSidebarOpen(false);
       }
     };
-
     window.addEventListener("resize", handleResize);
-    handleResize(); // Call once to set initial state
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <>
       <div className="flex h-screen">
-        {/* Sticky Sidebar */}
+        {/* Sidebar - matches contractor layout exactly */}
         <aside
           className={`bg-gray-900 text-white h-screen fixed top-0 left-0 flex flex-col p-4 transition-all duration-300 ${
             isSidebarOpen ? "w-64" : "w-20"
-          } ${isMobile ? "z-50" : ""}`} // Add z-50 for mobile to ensure sidebar is above content
+          } ${isMobile ? "z-50" : ""}`}
         >
-          {/* Toggle Button */}
           <button
             onClick={toggleSidebar}
             className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 focus:outline-none self-end"
           >
-            {isSidebarOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-
-          {/* Navigation Links */}
+          
           <nav className="space-y-4 mt-4 flex-1">
             <Link
-              to="/contractor/dashboard"
+              to="/store/storeDashboard"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <LayoutDashboard />{" "}
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                Dashboard
-              </span>
+              <LayoutDashboard />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Dashboard</span>
             </Link>
             <Link
-              to="/contractor/ContractorProfile"
+              to="/store/storeProfile"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <User className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                Profile
-              </span>
+              <User />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Profile</span>
             </Link>
             <Link
-              to="/contractor/notifications"
+              to="/store/addProduct"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <BellRing className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                notification
-              </span>
+              <PackagePlus />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Add Product</span>
             </Link>
             <Link
-              to="/contractor/project"
+              to="/store/orders"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <BriefcaseBusiness className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                projects
-              </span>
+              <ShoppingCart />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Orders</span>
             </Link>
             <Link
-              to="/contractor/settings"
+              to="/store/orderhistory"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <Settings className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                Settings
-              </span>
+              <History />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Order History</span>
+            </Link>
+            <Link
+              to="/store/storesettings"
+              className={`flex items-center p-3 rounded-lg transition-colors ${
+                isSidebarOpen ? "justify-start" : "justify-center"
+              } hover:bg-gray-800`}
+            >
+              <Settings />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Settings</span>
             </Link>
           </nav>
-
-          {/* Logout Button at the Bottom */}
-          <div className="mt-auto">
-            <Button
-              onClick={handleOpenDialog} // Open the dialog on button click
-              variant="ghost"
-              className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+          
+          <div className="mt-auto space-y-2">
+            {/* <Button 
+              onClick={() => navigate("/")} 
+              className={`w-full flex items-center p-3 rounded-lg hover:bg-gray-800 ${
                 isSidebarOpen ? "justify-start" : "justify-center"
-              } hover:bg-gray-800 text-red-400 hover:text-red-300`}
+              }`}
             >
-              <LogOut className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
-                Logout
-              </span>
+              <Home />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Home</span>
+            </Button> */}
+            <Button
+              onClick={handleOpenDialog}
+              className={`w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-red-400 hover:text-red-300 ${
+                isSidebarOpen ? "justify-start" : "justify-center"
+              }`}
+            >
+              <LogOut />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Logout</span>
             </Button>
           </div>
         </aside>
 
-        {/* Main Section */}
+        {/* Main Content Area - matches contractor layout */}
         <div className="flex flex-col flex-1">
-          {/* Sticky Navbar */}
+          {/* Navbar - fixed position with proper left spacing */}
           <header
-            className={`bg-white shadow-md w-full fixed top-0 h-16 flex items-center px-6 justify-between z-50 transition-all duration-300 ${
+            className={`bg-white shadow-md w-full fixed top-0 h-16 flex items-center px-6 justify-between z-40 transition-all duration-300 ${
               isSidebarOpen ? "left-64" : "left-20"
             }`}
           >
-            {/* Title */}
-            <h1 className="text-lg font-semibold text-gray-800">
-              Contractor Dashboard
-            </h1>
-            <button className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
+            <h1 className="text-lg font-semibold text-gray-800">Store Dashboard</h1>
+            <button 
+              className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
                 isSidebarOpen ? "mr-60" : "mr-20"
-            }`} onClick={() => navigate("/")}>              <Home className="w-5 h-5 text-gray-800" />
-</button>
-              
-            
-            
+              }`} 
+              onClick={() => navigate("/")}
+            >
+              <Home className="w-5 h-5 text-gray-800" />
+            </button>
           </header>
-
-          {/* Dynamic Main Content */}
+          
+          {/* Content Area with proper margin */}
           <main
             className={`p-6 overflow-auto flex-1 bg-gray-100 transition-all duration-300 ${
               isSidebarOpen ? "ml-64" : "ml-20"
             }`}
-            style={{ paddingTop: "4rem" }} // Add padding-top to account for Navbar height
+            style={{ paddingTop: "4rem" }}
           >
-            <Outlet /> {/* Render nested routes here */}
+            <Outlet />
           </main>
         </div>
       </div>
@@ -239,4 +209,4 @@ const StoreDashboard = () => {
   );
 };
 
-export default StoreDashboard;  
+export default StoreDashboard;

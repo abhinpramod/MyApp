@@ -28,7 +28,13 @@ import UserProfile from "./pages/user.pages/Userprofile";
 import InterestSentHistory from "./pages/user.pages/Interesthistory";
 import StoreRegistration from "./pages/Store.pages/Storeregistration";
 import StoreLoginPage from "./pages/Store.pages/StoreLogin";
-import StoreDashboard from "./pages/Store.pages/storeLayout";
+import StoreLayout from "./pages/Store.pages/storeLayout";
+import StoreDashboard from "./pages/Store.pages/storedashboard";
+import AddProduct from "./pages/Store.pages/addproduct";
+import StoreProfile from "./pages/Store.pages/storeprofile";
+import Storesettings from "./pages/Store.pages/storesettings";
+import Order from "./pages/Store.pages/order";
+import Orderhistory from "./pages/Store.pages/orderhistory";
 import { useSelector } from "react-redux";
 
 function App() {
@@ -75,7 +81,13 @@ function App() {
             <Route path="notifications" element={contractor?.verified ? <ContractorNotifications /> : <Logincontractors />} />
           </Route>
 
-          <Route path="/store" element={ <StoreDashboard /> }>
+          <Route path="/store" element={ <StoreLayout /> }>
+            <Route path="storeDashboard" element={ <StoreDashboard /> } />
+            <Route path="addProduct" element={ <AddProduct /> } />
+            <Route path="storeProfile" element={ <StoreProfile /> } />
+            <Route path="storesettings" element={ <Storesettings /> } />
+            <Route path="orders" element={ <Order /> } />
+            <Route path="orderhistory" element={ <Orderhistory /> } />
 
           </Route>
           
