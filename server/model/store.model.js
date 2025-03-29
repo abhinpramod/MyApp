@@ -51,9 +51,9 @@ const storeSchema = new mongoose.Schema(
       type: String, // URL to store license document stored in Cloudinary
       required: false,
     },
-    approved: {
-      type: Boolean,
-      default: false,
+    approvelstatus: {
+      type: String ,enum :["Pending", "Approved", "Rejected"],
+      default: "Pending",
     },
     isBlocked: {
       type: Boolean,

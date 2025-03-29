@@ -15,5 +15,6 @@ router.post("/verify-otp",  verifyOtp);
   ]), registerStore);
 
   router.post("/login", login);
-  router.post("/check",protectRoutestore, checkstore);
+  router.get("/check",protectRoutestore, checkstore);
+  
 module.exports = router;

@@ -44,6 +44,11 @@ function App() {
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
   const { store } = useSelector((state) => state.store);
+  console.log(user, contractor, store);
+
+  if (loading || loadingstore || loadinguser) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -58,41 +63,41 @@ function App() {
           {/* User Routes */}
           <Route path="/userprofile" element={user ? <UserProfile /> : <Loginuser />} />
           <Route path="/InterestSentHistory" element={user ? <InterestSentHistory /> : <Loginuser />} />
-          <Route path="/loginuser" element={user ? <UserProfile /> : <Loginuser />} />
+          <Route path="/loginuser" element={user ? <Navigate to="/userprofile" /> : <Loginuser />} />
           <Route path="/registeruser" element={user ? <Navigate to="/" /> : <Registeruser />} />
           <Route path="/contractors" element={user ? <Contractors /> : <Loginuser />} />
           
           {/* Store Routes */}
-          <Route path="/storeregistration" element={store ? <Navigate to="/" /> : <StoreRegistration />} />
-          <Route path="/storeLogin" element={store ? <Navigate to="/" /> : <StoreLoginPage />} />
+          <Route path="/storeregistration" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreRegistration />} />
+          <Route path="/storeLogin" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreLoginPage />} />
           
           {/* Contractor Auth Routes */}
-          <Route path="/contractor/registercontractorstep2" element={contractor?.verified ? <Contractordashboard /> : <ContractorregisterStep2 />} />
-          <Route path="/contractor/registercontractorstep1" element={contractor?.verified ? <Contractordashboard /> : <RegisterContractorStep1 />} />
+          <Route path="/contractor/registercontractorstep2" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <ContractorregisterStep2 />} />
+          <Route path="/contractor/registercontractorstep1" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <RegisterContractorStep1 />} />
           <Route path="/contractor/Logincontractors" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <Logincontractors />} />
           <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           
           {/* Contractor Dashboard Routes */}
-          <Route path="/contractor" element={contractor?.verified ? <Contractordashboard /> : <Logincontractors />}>
-            <Route path="ContractorProfile" element={contractor?.verified ? <ContractorProfile /> : <Logincontractors />} />
-            <Route path="project" element={contractor?.verified ? <ContractorProject /> : <Logincontractors />} />
-            <Route path="settings" element={contractor?.verified ? <ContractorSettings /> : <Logincontractors />} />
-            <Route path="dashboard" element={contractor?.verified ? <Dashboard /> : <Logincontractors />} />
-            <Route path="notifications" element={contractor?.verified ? <ContractorNotifications /> : <Logincontractors />} />
+          <Route path="/contractor" element={contractor?.verified ? <Contractordashboard /> : <Navigate to="/contractor/Logincontractors" />}>
+            <Route path="ContractorProfile" element={<ContractorProfile />} />
+            <Route path="project" element={<ContractorProject />} />
+            <Route path="settings" element={<ContractorSettings />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="notifications" element={<ContractorNotifications />} />
           </Route>
 
-          <Route path="/store" element={ <StoreLayout /> }>
-            <Route path="storeDashboard" element={ <StoreDashboard /> } />
-            <Route path="addProduct" element={ <AddProduct /> } />
-            <Route path="storeProfile" element={ <StoreProfile /> } />
-            <Route path="storesettings" element={ <Storesettings /> } />
-            <Route path="orders" element={ <Order /> } />
-            <Route path="orderhistory" element={ <Orderhistory /> } />
-
+          {/* Store Dashboard Routes */}
+          <Route path="/store" element={store ? <StoreLayout /> : <Navigate to="/storeLogin" />}>
+            <Route path="storeDashboard" element={<StoreDashboard />} />
+            <Route path="addproduct" element={<AddProduct />} />
+            <Route path="storeprofile" element={<StoreProfile />} />
+            <Route path="storesettings" element={<Storesettings />} />
+            <Route path="orders" element={<Order />} />
+            <Route path="orderhistory" element={<Orderhistory />} />
           </Route>
           
           {/* Fallback Route */}
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </div>

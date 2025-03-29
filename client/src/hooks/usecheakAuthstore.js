@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import axiosInstance from "../lib/axios"; // Ensure the correct path
+import axiosInstance from "../lib/axios"; 
 import { loginstore, logoutstore } from "../redux/storeslice";
 import toast from "react-hot-toast";
 
 const useAuthCheckstore = () => {
+  console.log("useAuthCheck");
   const [loadingstore, setLoadingstore] = useState(true);
   const dispatch = useDispatch();
 
@@ -20,6 +21,7 @@ const useAuthCheckstore = () => {
           dispatch(logoutstore());
           // axiosInstance.post("/store/logout");
         }
+        console.log("store", res.data);
       } catch (error) {
 
 

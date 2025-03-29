@@ -104,9 +104,9 @@ const StoreDashboard = () => {
               } hover:bg-gray-800`}
             >
               <PackagePlus />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Add Product</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Manage Products</span>
             </Link>
-            <Link
+            <Link 
               to="/store/orders"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"

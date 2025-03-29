@@ -9,6 +9,7 @@ import { Country, State, City } from 'country-state-city';
 import { useNavigate } from 'react-router-dom';
 import OTPModal from '@/components/Register/Otpmodal'; 
 import Navbar from '@/components/Register/Registernav';
+import { Loader } from 'lucide-react';
 
 const StoreRegistration = () => {
   const [step, setStep] = useState(1);
@@ -173,7 +174,7 @@ const StoreRegistration = () => {
   };
 
   if (isLoading) {
-    return <Loader className="mt-10 " />;
+    return <div className='flex justify-center items-center'><Loader className="size-10 mt-60 animate-spin" /></div>;
   }
 
   return (

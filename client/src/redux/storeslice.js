@@ -9,7 +9,7 @@ const storeSlice = createSlice({
   initialState,
   reducers: {
     loginstore: (state, action) => {
-      console.log("contractor Data Received in Redux:", action.payload); 
+      console.log("store Data Received in Redux:", action.payload); 
       state.store = action.payload;
     },
     logoutstore: (state) => {

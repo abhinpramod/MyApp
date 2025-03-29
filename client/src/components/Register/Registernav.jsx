@@ -39,7 +39,7 @@ const Navbar = ({ type, login }) => {
   };
 
   return (
-    <nav className="flex items-center justify-between p-4 shadow-md">
+    <nav className="flex items-center justify-between sticky top-0 bg-white p-4 shadow-md">
       {/* Back Button */}
       <div className="flex items-center">
         <IconButton onClick={() => window.history.back()}>

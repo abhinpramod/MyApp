@@ -124,7 +124,7 @@ const registerStore = async (req, res) => {
       gstNumber,
       gstDocument: gstDocUrl,
       storeLicense: licenseDocUrl,
-      approved: false,
+      approvelstatus: "Pending",
       blocked: false,
       password: hashPassword,
     });
@@ -156,6 +156,12 @@ const login = async (req, res) => {
       return res.status(400).json({ msg: "Invalid password" });
     }
 
+    if (store.approvelstatus === "Pending") {
+      return res
+        .status(403)
+        .json({ msg: "Your store registration is awaiting admin approval  " });
+    }
+
     if (store.isBlocked) {
       return res.status(403).json({ msg: "your account is blocked" });
     }
@@ -171,8 +177,8 @@ const login = async (req, res) => {
 
 const checkstore = (req, res) => {
   try {
-    console.log("controll", req.contractor);
-    res.status(200).json(req.contractor);
+    console.log("controll", req.store);
+    res.status(200).json(req.store);
   } catch (error) {
     console.log("error from checkAuth", error.message);
     res.status(500).json({ msg: error.message });
