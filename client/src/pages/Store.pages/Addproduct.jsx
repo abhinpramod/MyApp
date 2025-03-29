@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Tabs, Tab, Box, Typography, Button, CircularProgress, Paper,
-  TextField, FormControl, InputLabel, Select, MenuItem, Switch,
-  FormControlLabel, Avatar, Grid, IconButton, Table, TableBody,
+  TextField, FormControl, InputLabel, Select, MenuItem,
+  Avatar, Grid, IconButton, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Chip, Dialog,
   DialogTitle, DialogContent, DialogActions, Alert, Snackbar,
   Pagination, InputAdornment, useMediaQuery, useTheme
 } from '@mui/material';
-import { Camera, Plus, Trash2, PenSquare, Search } from 'lucide-react';
+import { Camera, Plus, Trash2, PenSquare, Search, Check, X } from 'lucide-react';
 import axiosInstance from '../../lib/axios';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const ProductManagement = () => {
   const theme = useTheme();
@@ -27,17 +27,27 @@ const ProductManagement = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+  // const [productCategories, setProductCategories] = useState([]);
+  const productCategories =[ 'Cement',
+    'Steel',
+    'Wood',
+    'Bricks',
+    'Aggregates',
+    'Paints',
+    'Tiles',
+    'Sanitaryware',
+    'Electrical',
+    'Plumbing',
+    'Other']
 
   // State for add/edit form
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'Cement',
+    category: '',
     grade: '',
     weightPerUnit: '',
     unit: 'kg',
@@ -47,19 +57,20 @@ const ProductManagement = () => {
     bulkPricing: [],
     stock: '',
     specifications: '',
-    isActive: true,
     image: null
   });
+  
   const [newBulkPricing, setNewBulkPricing] = useState({
     minQuantity: '',
     price: ''
   });
+  
   const [imagePreview, setImagePreview] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  // Fetch products
+  // Fetch products and categories
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
@@ -67,7 +78,6 @@ const ProductManagement = () => {
         params: {
           page,
           search: searchTerm,
-          filter,
           limit: 10
         },
         withCredentials: true
@@ -77,14 +87,28 @@ const ProductManagement = () => {
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch products');
+      toast.error(err.response?.data?.message || 'Failed to fetch products');
     } finally {
       setLoadingProducts(false);
     }
   };
 
+  const fetchProductCategories = async () => {
+    try {
+      const response = await axiosInstance.get('/product-categories', {
+        withCredentials: true
+      });
+      // setProductCategories(response.data);
+    } catch (err) {
+      console.error('Failed to fetch product categories', err);
+      toast.error('Failed to fetch product categories');
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
-  }, [page, searchTerm, filter]);
+    // fetchProductCategories();
+  }, [page, searchTerm]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -99,7 +123,7 @@ const ProductManagement = () => {
     setFormData({
       name: '',
       description: '',
-      category: 'Cement',
+      category: '',
       grade: '',
       weightPerUnit: '',
       unit: 'kg',
@@ -109,7 +133,6 @@ const ProductManagement = () => {
       bulkPricing: [],
       stock: '',
       specifications: '',
-      isActive: true,
       image: null
     });
     setNewBulkPricing({
@@ -133,10 +156,9 @@ const ProductManagement = () => {
       manufacturerName: product.manufacturer.name,
       manufacturerCountry: product.manufacturer.country || '',
       basePrice: product.basePrice,
-      bulkPricing: product.bulkPricing,
+      bulkPricing: product.bulkPricing || [],
       stock: product.stock,
       specifications: product.specifications || '',
-      isActive: product.isActive,
       image: null
     });
     setImagePreview(product.image);
@@ -147,10 +169,10 @@ const ProductManagement = () => {
 
   // Form field handlers
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
@@ -193,80 +215,88 @@ const ProductManagement = () => {
     }
   };
 
-  // Form submission
-  const handleSubmit = async (e) => {
+  // Handle form submission confirmation
+  const handleSubmitConfirmation = (e) => {
     e.preventDefault();
-    setLoadingSubmit(true);
-    setError('');
-
-    // Validate required fields
-    const requiredFields = [
-      'name', 'grade', 'weightPerUnit', 
-      'manufacturerName', 'basePrice', 'stock'
-    ];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-
-    if (missingFields.length > 0) {
-      setError('Please fill all required fields');
-      setLoadingSubmit(false);
-      return;
-    }
-
-    if (!isEditing && !formData.image) {
-      setError('Please upload an image');
-      setLoadingSubmit(false);
-      return;
-    }
-
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('category', formData.category);
-      formDataToSend.append('grade', formData.grade);
-      formDataToSend.append('weightPerUnit', formData.weightPerUnit);
-      formDataToSend.append('unit', formData.unit);
-      formDataToSend.append('manufacturerName', formData.manufacturerName);
-      formDataToSend.append('manufacturerCountry', formData.manufacturerCountry);
-      formDataToSend.append('basePrice', formData.basePrice);
-      formDataToSend.append('bulkPricing', JSON.stringify(formData.bulkPricing));
-      formDataToSend.append('stock', formData.stock);
-      formDataToSend.append('specifications', formData.specifications);
-      formDataToSend.append('isActive', formData.isActive);
-      
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
-      }
-
-      if (isEditing) {
-        await axiosInstance.put(`/products/${currentProductId}`, formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          withCredentials: true
-        });
-        setSnackbarMessage('Product updated successfully');
-      } else {
-        await axiosInstance.post('/products', formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          withCredentials: true
-        });
-        setSnackbarMessage('Product added successfully');
-      }
-
-      setSnackbarOpen(true);
-      fetchProducts();
-      resetForm();
-      setTabValue(0);
-    } catch (err) {
-      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'add'} product`);
-    } finally {
-      setLoadingSubmit(false);
-    }
+    setUpdateConfirmOpen(true);
   };
 
+  // Form submission
+  // In your handleSubmit function:
+const handleSubmit = async () => {
+  setUpdateConfirmOpen(false);
+  setLoadingSubmit(true);
+  setError('');
+
+  // Validate required fields
+  const requiredFields = [
+    'name', 'description', 'category', 'grade', 
+    'weightPerUnit', 'unit', 'manufacturerName', 
+    'basePrice', 'stock'
+  ];
+  const missingFields = requiredFields.filter(field => !formData[field]);
+
+  if (missingFields.length > 0) {
+    const errorMsg = 'Please fill all required fields';
+    setError(errorMsg);
+    toast.error(errorMsg);
+    setLoadingSubmit(false);
+    return;
+  }
+
+  if (!isEditing && !formData.image) {
+    const errorMsg = 'Please upload an image';
+    setError(errorMsg);
+    toast.error(errorMsg);
+    setLoadingSubmit(false);
+    return;
+  }
+
+  try {
+    const formDataToSend = new FormData();
+    
+    // Append all fields
+    Object.keys(formData).forEach(key => {
+      if (key !== 'image') {
+        if (key === 'bulkPricing') {
+          // Stringify bulk pricing array
+          formDataToSend.append(key, JSON.stringify(formData[key]));
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
+      }
+    });
+    
+    // Append image only for new products
+    if (!isEditing && formData.image) {
+      formDataToSend.append('image', formData.image);
+    }
+
+    const endpoint = isEditing 
+      ? `/products/${currentProductId}`
+      : '/products';
+    const method = isEditing ? 'put' : 'post';
+
+    const response = await axiosInstance[method](endpoint, formDataToSend, {
+      headers: {
+        'Content-Type': isEditing ? 'application/json' : 'multipart/form-data'
+      },
+      withCredentials: true
+    });
+
+    toast.success(`Product ${isEditing ? 'updated' : 'added'} successfully`);
+    fetchProducts();
+    resetForm();
+    setTabValue(0);
+  } catch (err) {
+    console.error('Submission error:', err);
+    const errorMsg = err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'add'} product`;
+    setError(errorMsg);
+    toast.error(errorMsg);
+  } finally {
+    setLoadingSubmit(false);
+  }
+};
   // Product deletion
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
@@ -278,11 +308,12 @@ const ProductManagement = () => {
       await axiosInstance.delete(`/products/${productToDelete._id}`, {
         withCredentials: true
       });
-      setSnackbarMessage('Product deleted successfully');
-      setSnackbarOpen(true);
+      toast.success('Product deleted successfully');
       fetchProducts();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete product');
+      const errorMsg = err.response?.data?.message || 'Failed to delete product';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setDeleteConfirmOpen(false);
     }
@@ -327,29 +358,12 @@ const ProductManagement = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <Search className="w-4 h-4" />
                   </InputAdornment>
                 ),
               }}
               sx={{ width: isMobile ? '100%' : 300 }}
             />
-            
-            <FormControl sx={{ minWidth: isMobile ? '100%' : 180 }} size="small">
-              <InputLabel>Filter</InputLabel>
-              <Select
-                value={filter}
-                onChange={(e) => {
-                  setFilter(e.target.value);
-                  setPage(1);
-                }}
-                label="Filter"
-                sx={{ width: isMobile ? '100%' : 180 }}
-              >
-                <MenuItem value="all">All Materials</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-              </Select>
-            </FormControl>
           </Box>
 
           {error && (
@@ -368,20 +382,19 @@ const ProductManagement = () => {
                   {!isMobile && <TableCell>Category</TableCell>}
                   <TableCell>Price</TableCell>
                   <TableCell>Stock</TableCell>
-                  {!isMobile && <TableCell>Status</TableCell>}
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loadingProducts ? (
                   <TableRow>
-                    <TableCell colSpan={isMobile ? 4 : 8} align="center">
+                    <TableCell colSpan={isMobile ? 4 : 7} align="center">
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : products?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isMobile ? 4 : 8} align="center">
+                    <TableCell colSpan={isMobile ? 4 : 7} align="center">
                       No building materials found
                     </TableCell>
                   </TableRow>
@@ -423,7 +436,7 @@ const ProductManagement = () => {
                       {!isMobile && (
                         <TableCell>
                           ${product.basePrice.toFixed(2)} / {product.unit}
-                          {product.bulkPricing.length > 0 && (
+                          {product.bulkPricing?.length > 0 && (
                             <Typography variant="caption" display="block">
                               + {product.bulkPricing.length} bulk options
                             </Typography>
@@ -433,31 +446,23 @@ const ProductManagement = () => {
                       <TableCell>
                         <Chip 
                           label={product.stock} 
-                          color={product.stock > 0 ? 'success' : 'error'} 
+                          color={product.stock < 20 ? 'error' : 'success'} 
                           size={isMobile ? 'small' : 'medium'}
                         />
                       </TableCell>
-                      {!isMobile && (
-                        <TableCell>
-                          <Chip 
-                            label={product.isActive ? 'Active' : 'Inactive'} 
-                            color={product.isActive ? 'success' : 'default'} 
-                          />
-                        </TableCell>
-                      )}
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <IconButton 
                             onClick={() => loadProductForEdit(product)}
                             size={isMobile ? 'small' : 'medium'}
                           >
-                            <PenSquare className="w-4 h-4 text-primary" />
+                            <PenSquare className="w-4 h-4" />
                           </IconButton>
                           <IconButton 
                             onClick={() => handleDeleteClick(product)}
                             size={isMobile ? 'small' : 'medium'}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-4 h-4" />
                           </IconButton>
                         </Box>
                       </TableCell>
@@ -492,7 +497,7 @@ const ProductManagement = () => {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmitConfirmation}>
             <Grid container spacing={isMobile ? 1 : 3}>
               <Grid item xs={12} md={4}>
                 <Box sx={{ mb: 2 }}>
@@ -546,7 +551,7 @@ const ProductManagement = () => {
                       mx: isMobile ? 'auto' : 0
                     }}>
                       <Typography className='text-center font-semibold' color="textSecondary">
-                        {isEditing ? 'Existing image' : 'No image selected '}
+                        {isEditing ? 'Existing image' : 'No image selected'}
                       </Typography>
                     </Box>
                   )}
@@ -581,19 +586,20 @@ const ProductManagement = () => {
                   
                   <Grid item xs={12}>
                     <TextField
-                      label="Description"
+                      label="Description *"
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
                       fullWidth
                       multiline
                       rows={isMobile ? 2 : 3}
+                      required
                       size={isMobile ? 'small' : 'medium'}
                     />
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
+                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'} required>
                       <InputLabel>Category *</InputLabel>
                       <Select
                         name="category"
@@ -602,17 +608,14 @@ const ProductManagement = () => {
                         label="Category *"
                         required
                       >
-                        <MenuItem value="Cement">Cement</MenuItem>
-                        <MenuItem value="Steel">Steel</MenuItem>
-                        <MenuItem value="Wood">Wood</MenuItem>
-                        <MenuItem value="Bricks">Bricks</MenuItem>
-                        <MenuItem value="Aggregates">Aggregates</MenuItem>
-                        <MenuItem value="Other">Other</MenuItem>
+                        {productCategories.map((type) => (
+                          <MenuItem key={type} value={type}>{type}</MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
+                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'} required>
                       <InputLabel>Unit *</InputLabel>
                       <Select
                         name="unit"
@@ -692,7 +695,7 @@ const ProductManagement = () => {
 
                   <Grid item xs={12}>
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      Bulk Pricing Options
+                      Bulk Pricing Options (Optional)
                     </Typography>
                     <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
                       <Grid item xs={5}>
@@ -752,7 +755,7 @@ const ProductManagement = () => {
                               size="small" 
                               onClick={() => removeBulkPricing(index)}
                             >
-                              <Trash2 className="w-4 h-4 text-destructive" />
+                              <Trash2 className="w-4 h-4" />
                             </IconButton>
                           </Box>
                         ))}
@@ -784,21 +787,6 @@ const ProductManagement = () => {
                       size={isMobile ? 'small' : 'medium'}
                     />
                   </Grid>
-
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          name="isActive"
-                          checked={formData.isActive}
-                          onChange={handleChange}
-                          color="primary"
-                          size={isMobile ? 'small' : 'medium'}
-                        />
-                      }
-                      label="Active Product"
-                    />
-                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
@@ -818,6 +806,7 @@ const ProductManagement = () => {
                 }}
                 fullWidth={isMobile}
                 size={isMobile ? 'small' : 'medium'}
+                startIcon={<X className="w-4 h-4" />}
               >
                 Cancel
               </Button>
@@ -832,6 +821,7 @@ const ProductManagement = () => {
                 }}
                 size={isMobile ? 'small' : 'large'}
                 disabled={loadingSubmit}
+                startIcon={loadingSubmit ? null : <Check className="w-4 h-4" />}
               >
                 {loadingSubmit ? (
                   <CircularProgress size={24} />
@@ -860,6 +850,8 @@ const ProductManagement = () => {
           <Button 
             onClick={() => setDeleteConfirmOpen(false)}
             size={isMobile ? 'small' : 'medium'}
+            variant="outlined"
+            startIcon={<X className="w-4 h-4" />}
           >
             Cancel
           </Button>
@@ -868,30 +860,43 @@ const ProductManagement = () => {
             color="error" 
             variant="contained"
             size={isMobile ? 'small' : 'medium'}
+            startIcon={<Trash2 className="w-4 h-4" />}
           >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{
-          vertical: isMobile ? 'bottom' : 'top',
-          horizontal: 'right'
-        }}
+      {/* Update Confirmation Dialog */}
+      <Dialog 
+        open={updateConfirmOpen} 
+        onClose={() => setUpdateConfirmOpen(false)}
+        fullScreen={isMobile}
       >
-        <Alert 
-          onClose={() => setSnackbarOpen(false)} 
-          severity="success"
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        <DialogTitle>Confirm {isEditing ? 'Update' : 'Add'}</DialogTitle>
+        <DialogContent>
+          Are you sure you want to {isEditing ? 'update' : 'add'} this product?
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setUpdateConfirmOpen(false)}
+            size={isMobile ? 'small' : 'medium'}
+            variant="outlined"
+            startIcon={<X className="w-4 h-4" />}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            color="primary" 
+            variant="contained"
+            size={isMobile ? 'small' : 'medium'}
+            startIcon={<Check className="w-4 h-4" />}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

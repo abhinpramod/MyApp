@@ -6,31 +6,48 @@ const { protectRoutestore } = require('../middleware/authmiddleware');
 exports.addProduct = async (req, res) => {
   try {
     const store = req.store;
-    const { 
-      name, description, category, grade, 
-      weightPerUnit, unit, basePrice, stock,
-      specifications, isActive 
-    } = req.body;
-
-    // Parse manufacturer and bulk pricing
-    const manufacturer = {
-      name: req.body.manufacturerName,
-      country: req.body.manufacturerCountry
-    };
-
+    
+    // Parse bulk pricing from FormData
     let bulkPricing = [];
     if (req.body.bulkPricing) {
       try {
-        bulkPricing = JSON.parse(req.body.bulkPricing);
+        bulkPricing = Array.isArray(req.body.bulkPricing) 
+          ? req.body.bulkPricing 
+          : JSON.parse(req.body.bulkPricing);
+        
+        // Validate bulk pricing structure
+        if (!Array.isArray(bulkPricing)) {
+          return res.status(400).json({ error: 'Bulk pricing must be an array' });
+        }
+        
+        // Convert string numbers to actual numbers
+        bulkPricing = bulkPricing.map(bp => ({
+          minQuantity: Number(bp.minQuantity),
+          price: Number(bp.price)
+        }));
       } catch (err) {
+        console.error('Bulk pricing parse error:', err);
         return res.status(400).json({ error: 'Invalid bulk pricing format' });
       }
     }
 
     // Validate required fields
-    if (!req.file || !name || !description || !category || !grade || 
-        !weightPerUnit || !unit || !basePrice || !stock || !manufacturer.name) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const requiredFields = [
+      'name', 'description', 'category', 'grade',
+      'weightPerUnit', 'unit', 'manufacturerName',
+      'basePrice', 'stock'
+    ];
+    
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        missingFields
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Product image is required' });
     }
 
     // Upload image to Cloudinary
@@ -42,18 +59,20 @@ exports.addProduct = async (req, res) => {
     // Create new product
     const product = new Product({
       storeId: store._id,
-      name,
-      description,
-      category,
-      grade,
-      weightPerUnit,
-      unit,
-      manufacturer,
-      basePrice,
-      bulkPricing,
-      stock,
-      specifications,
-      isActive,
+      name: req.body.name,
+      description: req.body.description,
+      category: req.body.category,
+      grade: req.body.grade,
+      weightPerUnit: req.body.weightPerUnit,
+      unit: req.body.unit,
+      manufacturer: {
+        name: req.body.manufacturerName,
+        country: req.body.manufacturerCountry || ''
+      },
+      basePrice: req.body.basePrice,
+      bulkPricing: bulkPricing,
+      stock: req.body.stock,
+      specifications: req.body.specifications || '',
       image: result.secure_url
     });
 
@@ -69,6 +88,89 @@ exports.addProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error adding product',
+      error: error.message
+    });
+  }
+};
+
+// Update product
+exports.updateProduct = async (req, res) => {
+  try {
+    const store = req.store;
+    const productId = req.params.id;
+
+    // Parse bulk pricing from FormData
+    let bulkPricing;
+    if (req.body.bulkPricing) {
+      try {
+        bulkPricing = Array.isArray(req.body.bulkPricing)
+          ? req.body.bulkPricing
+          : JSON.parse(req.body.bulkPricing);
+        
+        // Validate bulk pricing structure
+        if (!Array.isArray(bulkPricing)) {
+          return res.status(400).json({ error: 'Bulk pricing must be an array' });
+        }
+        
+        // Convert string numbers to actual numbers
+        bulkPricing = bulkPricing.map(bp => ({
+          minQuantity: Number(bp.minQuantity),
+          price: Number(bp.price)
+        }));
+      } catch (err) {
+        console.error('Bulk pricing parse error:', err);
+        return res.status(400).json({ error: 'Invalid bulk pricing format' });
+      }
+    }
+
+    // Prepare updates
+    const updates = {};
+    
+    // Allow all fields to be updated except image (handled separately)
+    const updatableFields = [
+      'description', 'category', 'grade', 'weightPerUnit',
+      'unit', 'basePrice', 'stock', 'specifications'
+    ];
+    
+    updatableFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+    
+    // Handle manufacturer updates
+    if (req.body.manufacturerName || req.body.manufacturerCountry) {
+      updates.manufacturer = {
+        name: req.body.manufacturerName || '',
+        country: req.body.manufacturerCountry || ''
+      };
+    }
+    
+    // Handle bulk pricing updates
+    if (bulkPricing) {
+      updates.bulkPricing = bulkPricing;
+    }
+
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, storeId: store._id },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating product',
       error: error.message
     });
   }
@@ -90,12 +192,6 @@ exports.getStoreProducts = async (req, res) => {
       ];
     }
     
-    if (filter === 'active') {
-      query.isActive = true;
-    } else if (filter === 'inactive') {
-      query.isActive = false;
-    }
-
     const products = await Product.find(query)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -115,62 +211,6 @@ exports.getStoreProducts = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching products',
-      error: error.message
-    });
-  }
-};
-
-// Update product (except name and image)
-exports.updateProduct = async (req, res) => {
-  try {
-    const store = req.store;
-    const productId = req.params.id;
-    const updates = req.body;
-
-    // Don't allow name or image updates
-    if (updates.name || updates.image) {
-      return res.status(400).json({ error: 'Product name and image cannot be updated' });
-    }
-
-    // Parse bulk pricing if provided
-    if (updates.bulkPricing) {
-      try {
-        updates.bulkPricing = JSON.parse(updates.bulkPricing);
-      } catch (err) {
-        return res.status(400).json({ error: 'Invalid bulk pricing format' });
-      }
-    }
-
-    // Parse manufacturer if provided
-    if (updates.manufacturerName || updates.manufacturerCountry) {
-      updates.manufacturer = {
-        name: updates.manufacturerName,
-        country: updates.manufacturerCountry
-      };
-      delete updates.manufacturerName;
-      delete updates.manufacturerCountry;
-    }
-
-    const product = await Product.findOneAndUpdate(
-      { _id: productId, storeId: store._id },
-      updates,
-      { new: true, runValidators: true }
-    );
-
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Product updated successfully',
-      product
-    });
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating product',
       error: error.message
     });
   }

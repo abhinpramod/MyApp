@@ -4,6 +4,7 @@ const sendEmail = require("../lib/nodemailer");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 const { generateTokenstore } = require("../lib/utils");
+const Product = require("../model/products.model");
 
 const {generateOTP} = require("../lib/otpgenarator");
 // Send OTP
@@ -176,13 +177,96 @@ const login = async (req, res) => {
 };
 
 const checkstore = (req, res) => {
+  console.log("checkAuth middleware triggered");
   try {
     console.log("controll", req.store);
     res.status(200).json(req.store);
+    console.log(req.store);
   } catch (error) {
     console.log("error from checkAuth", error.message);
     res.status(500).json({ msg: error.message });
   }
 };
 
-module.exports = { sendOtp, verifyOtp, registerStore, login, checkstore };
+const getStoreProfile = async (req, res) => {
+  try {
+    const store = await Store.findById(req.store._id);
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    res.status(200).json(store);
+  } catch (error) {
+    console.error('Error fetching store profile:', error);
+    res.status(500).json({ error: 'Failed to fetch store profile' });
+  }
+};
+
+// Get store by ID (public)
+const getStoreById = async (req, res) => {
+  console.log(req.params.storeId,'storeid');
+  try {
+    const store = await Store.findById(req.params.storeId);
+    console.log(store);
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    res.status(200).json(store);
+  } catch (error) {
+    console.error('Error fetching store from getStoreById:', error);
+    res.status(500).json({ error: 'Failed to fetch store' });
+  }
+};
+
+// Update store profile picture
+const updateProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      { folder: 'store-profiles' }
+    );
+
+    // Update store
+    const store = await Store.findByIdAndUpdate(
+      req.store._id,
+      { profilePicture: result.secure_url },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: 'Profile picture updated successfully',
+      imageUrl: result.secure_url
+    });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ error: 'Failed to update profile picture' });
+  }
+};
+
+// Get store's products (owner view)
+const getStoreProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ storeId: req.store._id });
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error('Error fetching store products:', error);
+    res.status(500).json({ error: 'Failed to fetch store products' });
+  }
+};
+
+// Get store's products (public view)
+const getPublicStoreProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ storeId: req.params.storeId });
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error('Error fetching store products:', error);
+    res.status(500).json({ error: 'Failed to fetch store products' });
+  }
+};
+
+module.exports = { sendOtp, verifyOtp, registerStore, login, checkstore, getStoreProfile, getStoreById, getStoreProducts, getPublicStoreProducts, updateProfilePicture };

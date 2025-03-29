@@ -72,7 +72,7 @@ console.log(decoded.Id);
   }
 };
 const protectRoutestore = async (req, res, next) => {
-  console.log("protectRoute middleware triggered user ");
+  console.log("protectRoute middleware triggered store ... ");
 
   try {
     const token = req.cookies?.jwt; // Ensure token is read properly

@@ -36,7 +36,6 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Cement', 'Steel', 'Wood', 'Bricks', 'Aggregates', 'Other']
   },
   grade: {
     type: String,
@@ -51,7 +50,6 @@ const productSchema = new mongoose.Schema({
   unit: {
     type: String,
     required: true,
-    enum: ['kg', 'ton', 'piece', 'bag', 'cubic meter', 'square meter']
   },
   manufacturer: {
     name: {
@@ -79,23 +77,9 @@ const productSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  
+ 
+}, { timestamps: true });
 
-productSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
 
 module.exports = mongoose.model('Product', productSchema);

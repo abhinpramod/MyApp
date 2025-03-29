@@ -23,6 +23,7 @@ router.get(
 router.put(
   '/:id', 
   protectRoutestore,
+  upload.none(), // Important: Use upload.none() for PUT requests
   productController.updateProduct
 );
 

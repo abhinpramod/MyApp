@@ -36,6 +36,7 @@ import Storesettings from "./pages/Store.pages/storesettings";
 import Order from "./pages/Store.pages/order";
 import Orderhistory from "./pages/Store.pages/orderhistory";
 import { useSelector } from "react-redux";
+import { Loader } from "lucide-react";
 
 function App() {
   const { loading } = useAuthCheckcontractor();
@@ -47,7 +48,7 @@ function App() {
   console.log(user, contractor, store);
 
   if (loading || loadingstore || loadinguser) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-screen"><Loader className="animate-spin" /></div>;
   }
 
   return (
