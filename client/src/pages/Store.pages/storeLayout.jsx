@@ -22,12 +22,16 @@ import {
   DialogTitle,
   DialogContentText,
 } from "@mui/material";
+import axiosInstance from "../../lib/axios";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutstore } from "../../redux/storeslice";
 
 const StoreDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -42,10 +46,14 @@ const StoreDashboard = () => {
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
-    console.log("Logging out...");
+    console.log("Logout clicked");  
+    
+  
+    axiosInstance.post("/store/logout");
     handleCloseDialog();
     navigate("/");
+    dispatch(logoutstore());
+    
   };
 
   useEffect(() => {
@@ -136,15 +144,7 @@ const StoreDashboard = () => {
           </nav>
           
           <div className="mt-auto space-y-2">
-            {/* <Button 
-              onClick={() => navigate("/")} 
-              className={`w-full flex items-center p-3 rounded-lg hover:bg-gray-800 ${
-                isSidebarOpen ? "justify-start" : "justify-center"
-              }`}
-            >
-              <Home />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Home</span>
-            </Button> */}
+      
             <Button
               onClick={handleOpenDialog}
               className={`w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-red-400 hover:text-red-300 ${

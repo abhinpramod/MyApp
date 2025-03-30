@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {  sendOtp, verifyOtp, registerStore, login,checkstore, getStoreProfile, getStoreById, getStoreProducts, getPublicStoreProducts, updateProfilePicture  } = require('../controllers/store.controller');
+const {  sendOtp, verifyOtp, registerStore, login,checkstore, getStoreProfile,logout, getStoreById, getStoreProducts, getPublicStoreProducts, updateProfilePicture,updateDescription  } = require('../controllers/store.controller');
 const upload = require('../middleware/Multermiddleware');
 const {protectRoutestore}= require('../middleware/authmiddleware');
 
@@ -30,5 +30,25 @@ router.get('/products', protectRoutestore, getStoreProducts);
 
   router.post("/login", login);
   router.get("/check",protectRoutestore, checkstore);
+  
+  router.put(
+    '/profile/image',
+  
+    protectRoutestore,
+  
+    upload.single('image'), // 'image' should match the field name in your frontend
+  updateProfilePicture
+  );
+  
+  // Update description
+  router.put(
+    '/profile/description',
+  
+    protectRoutestore,
+  
+    updateDescription
+  );
+
+  router.post("/logout",logout);
   
 module.exports = router;

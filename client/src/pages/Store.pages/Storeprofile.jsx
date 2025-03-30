@@ -18,13 +18,14 @@ import {
   TextField,
   CircularProgress,
 } from "@mui/material";
-import { Camera, X, ShoppingCart } from "lucide-react";
+import { Camera, X, ShoppingCart, Edit, Save } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import axiosInstance from "../../lib/axios";
 import { toast } from "react-hot-toast";
 
 const StoreProfile = () => {
   const { storeId: paramStoreId } = useParams();
+  
   const isOwnerView = !paramStoreId;
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -33,6 +34,9 @@ const StoreProfile = () => {
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [description, setDescription] = useState("");
+  
 
   // Fetch store data and products
   useEffect(() => {
@@ -47,6 +51,7 @@ const StoreProfile = () => {
         );
         setStoreData(storeResponse.data);
         setProfileImagePreview(storeResponse.data.profilePicture);
+        setDescription(storeResponse.data.description);
 
         // Fetch products
         const productsResponse = await axiosInstance.get(
@@ -89,6 +94,7 @@ const StoreProfile = () => {
 
   const updateProfilePicture = async () => {
     try {
+      setLoading(true);
       const formData = new FormData();
       if (profileImage) {
         formData.append('image', profileImage);
@@ -103,9 +109,30 @@ const StoreProfile = () => {
 
       setStoreData(prev => ({ ...prev, profilePicture: response.data.imageUrl }));
       setProfileImage(null);
+      setLoading(false);
       toast.success('Profile picture updated successfully');
     } catch (error) {
+      setLoading(false);
       toast.error(error.response?.data?.message || 'Failed to update profile picture');
+    }
+  };
+
+  const updateDescription = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.put('/store/profile/description', {
+        description
+      }, {
+        withCredentials: true,
+      });
+
+      setStoreData(prev => ({ ...prev, description }));
+      setIsEditingDescription(false);
+      toast.success('Description updated successfully');
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.response?.data?.message || 'Failed to update description');
     }
   };
 
@@ -131,7 +158,6 @@ const StoreProfile = () => {
   if (!storeData) {
     return <Typography>Store not found</Typography>;
   }
-  console.log(products);
 
   return (
     <>
@@ -169,8 +195,9 @@ const StoreProfile = () => {
                       size="small"
                       onClick={updateProfilePicture}
                       className="mt-2"
+                      color="dark"
                     >
-                      Save Image
+                      Save 
                     </Button>
                   )}
                 </>
@@ -191,10 +218,48 @@ const StoreProfile = () => {
               sx={{ fontWeight: 500, borderRadius: 1 }}
             />
             
-            <Box className="w-full mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <Typography variant="body1" className="text-gray-700">
-                {storeData.description}
-              </Typography>
+            <Box className="w-full mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative">
+              {isOwnerView && !isEditingDescription ? (
+                <IconButton
+                  onClick={() => setIsEditingDescription(true)}
+                  className="absolute top-2 right-2"
+                  size="small"
+                >
+                  <Edit size={16} />
+                </IconButton>
+              ) : null}
+              
+              {isEditingDescription ? (
+                <Box>
+                  <TextField
+                    multiline
+                    fullWidth
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    variant="outlined"
+                  />
+                  <Box className="flex justify-end gap-2 mt-2">
+                    <Button
+                      variant="outlined"
+                      onClick={() => setIsEditingDescription(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={updateDescription}
+                      startIcon={<Save size={16} />}
+                    >
+                      Save
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography variant="body1" className="text-gray-700">
+                  {storeData.description}
+                </Typography>
+              )}
             </Box>
           </Box>
 
@@ -241,7 +306,7 @@ const StoreProfile = () => {
         </Box>
       </Box>
 
-      {/* Product Detail Dialog with Add to Cart */}
+      {/* Product Detail Dialog */}
       <Dialog
         open={!!selectedProduct}
         onClose={() => {
@@ -254,147 +319,149 @@ const StoreProfile = () => {
       >
         {selectedProduct && (
           <>
-  <DialogTitle className="flex justify-between items-center border-b">
-    <Typography variant="h6" className="font-bold">
-      {selectedProduct.name}
-    </Typography>
-    <IconButton onClick={() => setSelectedProduct(null)}>
-      <X size={24} />
-    </IconButton>
-  </DialogTitle>
-  <DialogContent className="py-4">
-    <Box className="flex flex-col md:flex-row gap-6">
-      {/* Product Image Section */}
-      <Box className="w-full md:w-1/2">
-        <img
-          src={selectedProduct.image}
-          alt={selectedProduct.name}
-          className="w-full h-auto max-h-[60vh] object-contain rounded-lg border border-gray-200"
-        />
-      </Box>
-
-      {/* Product Details Section */}
-      <Box className="w-full md:w-1/2 space-y-4">
-        {/* Price and Stock */}
-        <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <Typography variant="h5" className="font-bold text-gray-900">
-            ₹{selectedProduct.basePrice.toLocaleString()}
-            {selectedProduct.unit && <span className="text-sm ml-1">/{selectedProduct.unit}</span>}
-          </Typography>
-          <Box className="flex items-center gap-2 mt-2">
-            <Chip 
-              label={selectedProduct.stock > 0 ? 'In Stock' : 'Out of Stock'} 
-              color={selectedProduct.stock > 0 ? 'success' : 'error'} 
-              size="small"
-            />
-            <Typography variant="body2" color="text.secondary">
-              {selectedProduct.stock} units available
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Product Description */}
-        <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <Typography variant="subtitle2" className="font-semibold mb-2">
-            Description
-          </Typography>
-          <Typography variant="body1" className="text-gray-700">
-            {selectedProduct.description}
-          </Typography>
-        </Box>
-
-        {/* Product Specifications */}
-        <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <Typography variant="subtitle2" className="font-semibold mb-2">
-            Specifications
-          </Typography>
-          <Box className="space-y-2">
-            <DetailRow label="Category" value={selectedProduct.category} />
-            <DetailRow label="Grade/Quality" value={selectedProduct.grade} />
-            <DetailRow 
-              label="Weight/Dimensions" 
-              value={`${selectedProduct.weightPerUnit} ${selectedProduct.unit}`} 
-            />
-            <DetailRow 
-              label="Manufacturer" 
-              value={selectedProduct.manufacturer?.name || 'N/A'} 
-            />
-            {selectedProduct.specifications && (
-              <DetailRow 
-                label="Additional Specs" 
-                value={selectedProduct.specifications} 
-              />
-            )}
-          </Box>
-        </Box>
-
-        {/* Bulk Pricing (if available) */}
-        {selectedProduct.bulkPricing?.length > 0 && (
-          <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <Typography variant="subtitle2" className="font-semibold mb-2">
-              Bulk Pricing
-            </Typography>
-            <Box className="space-y-2">
-              {selectedProduct.bulkPricing.map((bp, index) => (
-                <Box key={index} className="flex justify-between">
-                  <Typography variant="body2">
-                    {bp.minQuantity}+ units:
-                  </Typography>
-                  <Typography variant="body2" className="font-medium">
-                    ₹{bp.price.toLocaleString()} each
-                  </Typography>
+            <DialogTitle className="flex justify-between items-center border-b">
+              <Typography variant="h6" className="font-bold">
+                {selectedProduct.name}
+              </Typography>
+              <IconButton onClick={() => setSelectedProduct(null)}>
+                <X size={24} />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent className="py-4">
+              <Box className="flex flex-col md:flex-row gap-6">
+                {/* Product Image Section */}
+                <Box className="w-full md:w-1/2">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-auto max-h-[60vh] object-contain rounded-lg border border-gray-200"
+                  />
                 </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
 
-        {/* Add to Cart Section */}
-        <Box className="pt-4 border-t">
-          <Typography variant="subtitle2" className="font-semibold mb-2">
-            Order Quantity
-          </Typography>
-          <Box className="flex items-center gap-4">
-            <TextField
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              inputProps={{ 
-                min: 1,
-                max: selectedProduct.stock
-              }}
-              size="small"
-              className="w-24"
-              variant="outlined"
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ShoppingCart size={18} />}
-              onClick={handleAddToCart}
-              className="bg-blue-600 hover:bg-blue-700"
-              disabled={selectedProduct.stock <= 0}
-              fullWidth
-            >
-              Add to Cart
-            </Button>
-          </Box>
-          {selectedProduct.stock > 0 && (
-            <Typography variant="caption" className="text-gray-500 block mt-2">
-              Maximum {selectedProduct.stock} units available
-            </Typography>
-          )}
-        </Box>
-      </Box>
-    </Box>
-  </DialogContent>
-</>        )}
+                {/* Product Details Section */}
+                <Box className="w-full md:w-1/2 space-y-4">
+                  {/* Price and Stock */}
+                  <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <Typography variant="h5" className="font-bold text-gray-900">
+                      ₹{selectedProduct.basePrice.toLocaleString()}
+                      {selectedProduct.unit && <span className="text-sm ml-1">/{selectedProduct.unit}</span>}
+                    </Typography>
+                    <Box className="flex items-center gap-2 mt-2">
+                      <Chip 
+                        label={selectedProduct.stock > 0 ? 'In Stock' : 'Out of Stock'} 
+                        color={selectedProduct.stock > 0 ? 'success' : 'error'} 
+                        size="small"
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedProduct.stock} units available
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Product Description */}
+                  <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <Typography variant="subtitle2" className="font-semibold mb-2">
+                      Description
+                    </Typography>
+                    <Typography variant="body1" className="text-gray-700">
+                      {selectedProduct.description}
+                    </Typography>
+                  </Box>
+
+                  {/* Product Specifications */}
+                  <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <Typography variant="subtitle2" className="font-semibold mb-2">
+                      Specifications
+                    </Typography>
+                    <Box className="space-y-2">
+                      <DetailRow label="Category" value={selectedProduct.category} />
+                      <DetailRow label="Grade/Quality" value={selectedProduct.grade} />
+                      <DetailRow 
+                        label="Weight/Dimensions" 
+                        value={`${selectedProduct.weightPerUnit} ${selectedProduct.unit}`} 
+                      />
+                      <DetailRow 
+                        label="Manufacturer" 
+                        value={selectedProduct.manufacturer?.name || 'N/A'} 
+                      />
+                      {selectedProduct.specifications && (
+                        <DetailRow 
+                          label="Additional Specs" 
+                          value={selectedProduct.specifications} 
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Bulk Pricing (if available) */}
+                  {selectedProduct.bulkPricing?.length > 0 && (
+                    <Box className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <Typography variant="subtitle2" className="font-semibold mb-2">
+                        Bulk Pricing
+                      </Typography>
+                      <Box className="space-y-2">
+                        {selectedProduct.bulkPricing.map((bp, index) => (
+                          <Box key={index} className="flex justify-between">
+                            <Typography variant="body2">
+                              {bp.minQuantity}+ units:
+                            </Typography>
+                            <Typography variant="body2" className="font-medium">
+                              ₹{bp.price.toLocaleString()} each
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Add to Cart Section - Only show for non-owner view */}
+                  {!isOwnerView && (
+                    <Box className="pt-4 border-t">
+                      <Typography variant="subtitle2" className="font-semibold mb-2">
+                        Order Quantity
+                      </Typography>
+                      <Box className="flex items-center gap-4">
+                        <TextField
+                          type="number"
+                          value={quantity}
+                          onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                          inputProps={{ 
+                            min: 1,
+                            max: selectedProduct.stock
+                          }}
+                          size="small"
+                          className="w-24"
+                          variant="outlined"
+                        />
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={<ShoppingCart size={18} />}
+                          onClick={handleAddToCart}
+                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={selectedProduct.stock <= 0}
+                          fullWidth
+                        >
+                          Add to Cart
+                        </Button>
+                      </Box>
+                      {selectedProduct.stock > 0 && (
+                        <Typography variant="caption" className="text-gray-500 block mt-2">
+                          Maximum {selectedProduct.stock} units available
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            </DialogContent>
+          </>
+        )}
       </Dialog>
     </>
   );
 };
 
-// Reusable Components (same as before)
 const DetailItem = ({ label, value }) => (
   <Box>
     <Typography variant="subtitle2" className="font-medium text-gray-500">
@@ -432,8 +499,7 @@ const ProductCard = ({ product, onClick }) => (
       </Typography>
       <Box className="mt-2 flex justify-between items-center">
         <Typography variant="body1" className="font-bold text-gray-900">
-          ₹{product. 
-basePrice?.toLocaleString()}
+          ₹{product.basePrice?.toLocaleString()}
           {product.unit && <span className="text-xs ml-1">/{product.unit}</span>}
         </Typography>
         <Chip 
@@ -446,4 +512,4 @@ basePrice?.toLocaleString()}
   </Card>
 );
 
-export default StoreProfile;
+export default StoreProfile; 

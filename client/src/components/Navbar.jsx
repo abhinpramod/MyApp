@@ -68,7 +68,7 @@ const Navbar = (isOwnerView) => {
             {/* Show Store Registration Button if no user or contractor is logged in */}
             {!user && !contractor && (
               <Link
-                to="/store"
+                to="/store/storeprofile"
                 className="py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
                 <Briefcase size={20} />

@@ -224,6 +224,7 @@ const ProductManagement = () => {
   // Form submission
   // In your handleSubmit function:
 const handleSubmit = async () => {
+  
   setUpdateConfirmOpen(false);
   setLoadingSubmit(true);
   setError('');
