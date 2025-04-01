@@ -1,6 +1,6 @@
 const Product = require('../model/products.model');
 const cloudinary = require('cloudinary').v2;
-const { protectRoutestore } = require('../middleware/authmiddleware');
+const store = require('../model/store.model');
 
 // Add new product
 exports.addProduct = async (req, res) => {
@@ -250,3 +250,148 @@ exports.deleteProduct = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+exports.fetchAllProducts = async (req, res) => {
+  try {
+    const { 
+      search = '',
+      priceRange = '',
+      availability,
+      categories = [],
+      page = 1,
+      limit = 8
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build match stage (same as your query)
+    const matchStage = {};
+    
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      matchStage.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex }
+      ];
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split('-').map(Number);
+      matchStage.price = { $gte: min };
+      if (max !== Infinity) matchStage.price.$lte = max;
+    }
+
+    if (availability !== undefined) {
+      matchStage.stock = availability === 'true' ? { $gt: 0 } : { $lte: 0 };
+    }
+
+    if (categories.length > 0) {
+      matchStage.category = Array.isArray(categories) 
+        ? { $in: categories } 
+        : categories;
+    }
+
+    // First get the total count
+    const total = await Product.countDocuments(matchStage);
+
+    // Then get the paginated results with store details
+    const products = await Product.aggregate([
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'stores', // Make sure this matches the collection name of the Store model (use lowercase 'stores' if necessary)
+          localField: 'storeId', // Replace with the actual field name in Product that references Store
+          foreignField: '_id', // The _id field of the Store collection
+          as: 'store'
+        }
+      },
+      { $unwind: '$store' }, // Converts the store array to an object
+      { $skip: skip },
+      { $limit: limitNum },
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          // Include all product fields you need
+          name: 1,
+          description: 1,
+          category: 1,
+          stock: 1,
+          image: 1,
+          createdAt: 1,
+          weightPerUnit: 1,
+          grade: 1,
+          unit: 1,
+          manufacturerName: 1,
+          manufacturerCountry: 1,
+          basePrice: 1,
+          bulkPricing: 1,
+          specifications: 1,
+          stock: 1,
+          storeId: 1,
+        
+          // Include specific store fields
+          'store.storeName': 1,
+          'store.profilePicture': 1,
+          'store.city': 1,
+          'store.address': 1
+
+        }
+      }
+    ]);
+
+    console.log('products', products); // Log the products
+
+    res.status(200).json({
+      products,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      hasMore: skip + products.length < total
+    });
+
+  } catch (error) {
+    console.error("Error in fetchAllProducts:", error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error while fetching products',
+      error: error.message 
+    });
+  }
+};
+
+
+
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('store', 'name logo location');
+    
+    if (!product) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Product not found'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      product
+    });
+
+  } catch (error) {
+    console.error("Error in getProductById:", error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error while fetching product',
+      error: error.message 
+    });
+  }
+};
+

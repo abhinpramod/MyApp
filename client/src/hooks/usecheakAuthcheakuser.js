@@ -13,7 +13,7 @@ const useAuthCheckuser = () => {
       try {
         const res = await axiosInstance.get("/user/check");
         console.log(res);
-        if (res.status === 200) {
+        if (res?.status === 200) {
           dispatch(loginuser(res.data));
         } else {
           
@@ -25,7 +25,7 @@ const useAuthCheckuser = () => {
 
         console.error("Authentication error:", error);
 
-        if(error.response.status===403){
+        if(error.response?.status===403){
           toast.error(error.response.data.msg);
         axiosInstance.post("/contractor/logout");
 

@@ -28,7 +28,7 @@ const useAuthCheckstore = () => {
 
         console.error("Authentication error:", error);
 
-        if(error.response.status===403){
+        if(error.response?.status===403){
           toast.error(error.response.data.msg);
                   axiosInstance.post("/contractor/logout");
           

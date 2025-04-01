@@ -7,7 +7,7 @@ import {
 import React from "react";
 import Home from "./pages/Home";
 import Contractors from "./pages/user.pages/Contractors";
-import Stores from "./pages/Stores";
+import Stores from "./pages/user.pages/Stores";
 import About from "./pages/About";
 import Loginuser from "./pages/user.pages/Loginuser";
 import Registeruser from "./pages/user.pages/Registeruser";
@@ -58,15 +58,17 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/stores" element={<Stores />} />
           <Route path="/about" element={<About />} />
           
           {/* User Routes */}
           <Route path="/userprofile" element={user ? <UserProfile /> : <Loginuser />} />
           <Route path="/InterestSentHistory" element={user ? <InterestSentHistory /> : <Loginuser />} />
+          <Route path="/stores" element={<Stores />} />
           <Route path="/loginuser" element={user ? <Navigate to="/userprofile" /> : <Loginuser />} />
           <Route path="/registeruser" element={user ? <Navigate to="/" /> : <Registeruser />} />
           <Route path="/contractors" element={user ? <Contractors /> : <Loginuser />} />
+          <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
+          <Route path="/store/:storeId" element={<StoreProfile/>} />
           
           {/* Store Routes */}
           <Route path="/storeregistration" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreRegistration />} />
@@ -76,7 +78,6 @@ function App() {
           <Route path="/contractor/registercontractorstep2" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <ContractorregisterStep2 />} />
           <Route path="/contractor/registercontractorstep1" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <RegisterContractorStep1 />} />
           <Route path="/contractor/Logincontractors" element={contractor?.verified ? <Navigate to="/contractor/dashboard" /> : <Logincontractors />} />
-          <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           
           {/* Contractor Dashboard Routes */}
           <Route path="/contractor" element={contractor?.verified ? <Contractordashboard /> : <Navigate to="/contractor/Logincontractors" />}>

@@ -6,7 +6,7 @@ const { protectRoutestore } = require('../middleware/authmiddleware');
 
 // Add new product
 router.post(
-  '/', 
+  '/store', 
   protectRoutestore,
   upload.single('image'),
   productController.addProduct
@@ -14,14 +14,20 @@ router.post(
 
 // Get store products
 router.get(
-  '/', 
+  '/store', 
   protectRoutestore,
   productController.getStoreProducts
 );
 
+
+// GET /api/products - Get all products with filters
+router.get('/', productController.fetchAllProducts);
+
+// GET /api/products/:id - Get single product
+router.get('/:id', productController.getProductById);
 // Update product
 router.put(
-  '/:id', 
+  '/store/:id', 
   protectRoutestore,
   upload.none(), // Important: Use upload.none() for PUT requests
   productController.updateProduct
@@ -29,7 +35,7 @@ router.put(
 
 // Delete product
 router.delete(
-  '/:id', 
+  '/store/:id', 
   protectRoutestore,
   productController.deleteProduct
 );

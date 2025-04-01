@@ -144,7 +144,7 @@ const StoreProfile = () => {
       
       <Box 
         className={`p-4 md:p-6 min-h-screen max-w-6xl mx-auto shadow-lg rounded-2xl bg-white ${
-          !isOwnerView ? "mt-10 md:mt-10" : ""
+          !isOwnerView ? "mt-10 md:mt-20" : ""
         }`}
       >
         {/* Store Header Section */}

@@ -274,8 +274,8 @@ const handleSubmit = async () => {
     }
 
     const endpoint = isEditing 
-      ? `/products/${currentProductId}`
-      : '/products';
+      ? `/products/store/${currentProductId}`
+      : '/products/store';
     const method = isEditing ? 'put' : 'post';
 
     const response = await axiosInstance[method](endpoint, formDataToSend, {
@@ -306,7 +306,7 @@ const handleSubmit = async () => {
 
   const confirmDelete = async () => {
     try {
-      await axiosInstance.delete(`/products/${productToDelete._id}`, {
+      await axiosInstance.delete(`/products/store/${productToDelete._id}`, {
         withCredentials: true
       });
       toast.success('Product deleted successfully');
