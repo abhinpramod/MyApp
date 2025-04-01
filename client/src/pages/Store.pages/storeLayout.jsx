@@ -49,9 +49,9 @@ const StoreDashboard = () => {
     console.log("Logout clicked");  
     
   
+    navigate("/");
     axiosInstance.post("/store/logout");
     handleCloseDialog();
-    navigate("/");
     dispatch(logoutstore());
     
   };

@@ -88,7 +88,7 @@ function App() {
           </Route>
 
           {/* Store Dashboard Routes */}
-          <Route path="/store" element={store ? <StoreLayout /> : <Navigate to="/storeLogin" />}>
+          <Route path="/store" element={store ? <StoreLayout /> : <StoreLoginPage />}>
             <Route path="storeDashboard" element={<StoreDashboard />} />
             <Route path="addproduct" element={<AddProduct />} />
             <Route path="storeprofile" element={<StoreProfile />} />
