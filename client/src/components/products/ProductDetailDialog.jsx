@@ -201,43 +201,54 @@ const BulkPricingSection = ({ bulkPricing }) => (
 );
 
 // Add to Cart Section
-const AddToCartSection = ({ product, quantity, onQuantityChange, onAddToCart }) => (
-  <Box className="pt-4 border-t">
-    <Typography variant="subtitle2" className="font-semibold mb-2">
-      Order Quantity
-    </Typography>
-    <Box className="flex items-center gap-4">
-      <TextField
-        type="number"
-        value={quantity}
-        onChange={(e) => onQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
-        inputProps={{ 
-          min: 1,
-          max: product.stock
-        }}
-        size="small"
-        className="w-24"
-        variant="outlined"
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<ShoppingCart size={18} />}
-        onClick={onAddToCart}
-        className="bg-blue-600 hover:bg-blue-700"
-        disabled={product.stock <= 0}
-        fullWidth
-      >
-        Add to Cart
-      </Button>
-    </Box>
-    {product.stock > 0 && (
-      <Typography variant="caption" className="text-gray-500 block mt-2">
-        Maximum {product.stock} units available
+// Add to Cart Section
+const AddToCartSection = ({ product, quantity, onQuantityChange, onAddToCart }) => {
+  const handleAddToCart = () => {
+    onAddToCart({
+      productId: product._id,
+      storeId: product.storeId,
+      quantity: quantity
+    });
+  };
+
+  return (
+    <Box className="pt-4 border-t">
+      <Typography variant="subtitle2" className="font-semibold mb-2">
+        Order Quantity
       </Typography>
-    )}
-  </Box>
-);
+      <Box className="flex items-center gap-4">
+        <TextField
+          type="number"
+          value={quantity}
+          onChange={(e) => onQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
+          inputProps={{ 
+            min: 1,
+            max: product.stock
+          }}
+          size="small"
+          className="w-24"
+          variant="outlined"
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<ShoppingCart size={18} />}
+          onClick={handleAddToCart}
+          className="bg-blue-600 hover:bg-blue-700"
+          disabled={product.stock <= 0}
+          fullWidth
+        >
+          Add to Cart
+        </Button>
+      </Box>
+      {product.stock > 0 && (
+        <Typography variant="caption" className="text-gray-500 block mt-2">
+          Maximum {product.stock} units available
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 // Detail Row for Specifications
 const DetailRow = ({ label, value }) => (
