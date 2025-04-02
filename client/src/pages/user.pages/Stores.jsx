@@ -139,14 +139,16 @@ const ProductsPage = () => {
    const { productId, storeId,quantity } = cartItem;
     // setIsAddingToCart(true);
     try {
-      await axiosInstance.post("/cart/add", {
+      await axiosInstance.post("/cart/add-to-cart", {
         productId, storeId,quantity
       });
-      // Show a success message (you can integrate React Hot Toast here)
+
+      toast.success("Product added to cart successfully");
     } catch (error) {
       console.error("Failed to add product to cart", error);
+      toast.error("Failed to add product to cart");
     } finally {
-      setIsAddingToCart(false);
+      // setIsAddingToCart(false);
     }
   };
 
