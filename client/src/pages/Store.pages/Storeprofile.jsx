@@ -60,19 +60,27 @@ const StoreProfile = () => {
     fetchData();
   }, [paramStoreId, isOwnerView]);
 
-  const handleAddToCart = async () => {
-    try {
-      await axiosInstance.post('/cart/add', {
-        productId: selectedProduct._id,
-        quantity,
-      }, { withCredentials: true });
-      
-      toast.success(`${quantity} ${selectedProduct.name} added to cart`);
-      setSelectedProduct(null);
-      setQuantity(1);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add to cart');
-    }
+  const handleAddToCart = async (cartItem) => {
+      console.log("Adding to cart:", cartItem);
+      const { product, storeId,quantity } = cartItem;
+      const productId = product._id;
+      const productname = product.name;
+
+       // setIsAddingToCart(true);
+       try {
+         await axiosInstance.post("/cart/add-to-cart", {
+           productId, storeId,quantity
+         });
+   
+         toast.success(`${quantity} ${productname} added to cart successfully`);
+    setSelectedProduct(null);
+   
+       } catch (error) {
+         console.error("Failed to add product to cart", error);
+         toast.error("Failed to add product to cart");
+       } finally {
+         // setIsAddingToCart(false);
+       }
   };
 
   const handleImageChange = (e) => {

@@ -205,7 +205,7 @@ const BulkPricingSection = ({ bulkPricing }) => (
 const AddToCartSection = ({ product, quantity, onQuantityChange, onAddToCart }) => {
   const handleAddToCart = () => {
     onAddToCart({
-      productId: product._id,
+      product: product,
       storeId: product.storeId,
       quantity: quantity
     });
