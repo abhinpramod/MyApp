@@ -1,7 +1,7 @@
 const Product = require('../model/products.model');
 const cloudinary = require('cloudinary').v2;
 const store = require('../model/store.model');
-
+const productType = require('../model/productType');
 // Add new product
 exports.addProduct = async (req, res) => {
   try {
@@ -251,6 +251,27 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
+exports.fetchProductCategories = async (req, res) => {
+  try {
+    const categories = await productType.find();
+
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({ message: 'No product categories found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product categories fetched successfully',
+      data: categories,
+    });
+  } catch (err) {
+    console.error('Failed to fetch product categories', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch product categories',
+    });
+  }
+};
 
 
 
@@ -270,94 +291,96 @@ exports.fetchAllProducts = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Build match stage (same as your query)
-    const matchStage = {};
+    // Build the query filter
+    const filter = {};
     
+    // Search filter
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      matchStage.$or = [
+      filter.$or = [
         { name: searchRegex },
         { description: searchRegex },
         { category: searchRegex }
       ];
     }
 
+    // Price range filter
     if (priceRange) {
       const [min, max] = priceRange.split('-').map(Number);
-      matchStage.price = { $gte: min };
-      if (max !== Infinity) matchStage.price.$lte = max;
+      filter.basePrice = { $gte: min };
+      if (!isNaN(max)) filter.basePrice.$lte = max;
     }
 
+    // Availability filter
     if (availability !== undefined) {
-      matchStage.stock = availability === 'true' ? { $gt: 0 } : { $lte: 0 };
+      filter.stock = availability === 'true' ? { $gt: 0 } : { $lte: 0 };
     }
 
+    // Categories filter
     if (categories.length > 0) {
-      matchStage.category = Array.isArray(categories) 
+      filter.category = Array.isArray(categories) 
         ? { $in: categories } 
         : categories;
     }
 
-    // First get the total count
-    const total = await Product.countDocuments(matchStage);
+    // Get total count for pagination
+    const total = await Product.countDocuments(filter);
 
-    // Then get the paginated results with store details
+    // Fetch products with store information
     const products = await Product.aggregate([
-      { $match: matchStage },
+      { $match: filter },
       {
         $lookup: {
-          from: 'stores', // Make sure this matches the collection name of the Store model (use lowercase 'stores' if necessary)
-          localField: 'storeId', // Replace with the actual field name in Product that references Store
-          foreignField: '_id', // The _id field of the Store collection
+          from: 'stores',
+          localField: 'storeId',
+          foreignField: '_id',
           as: 'store'
         }
       },
-      { $unwind: '$store' }, // Converts the store array to an object
+      { $unwind: '$store' },
       { $skip: skip },
       { $limit: limitNum },
       { $sort: { createdAt: -1 } },
       {
         $project: {
-          // Include all product fields you need
           name: 1,
           description: 1,
-          category: 1,
-          stock: 1,
           image: 1,
-          createdAt: 1,
-          weightPerUnit: 1,
+          category: 1,
           grade: 1,
+          weightPerUnit: 1,
           unit: 1,
-          manufacturerName: 1,
-          manufacturerCountry: 1,
           basePrice: 1,
-          bulkPricing: 1,
+          bulkPricing: 1, // Explicitly include bulkPricing
           specifications: 1,
           stock: 1,
           storeId: 1,
-        
-          // Include specific store fields
+          createdAt: 1,
           'store.storeName': 1,
           'store.profilePicture': 1,
           'store.city': 1,
           'store.address': 1
-
         }
       }
     ]);
 
-    console.log('products', products); // Log the products
+    // Debugging: Check if bulkPricing exists in the first product
+    if (products.length > 0 && !products[0].bulkPricing) {
+      console.warn('First product missing bulkPricing:', products[0]._id);
+    }
 
     res.status(200).json({
+      success: true,
       products,
       total,
       page: pageNum,
       pages: Math.ceil(total / limitNum),
       hasMore: skip + products.length < total
     });
+    console.log("products", products[2].bulkPricing);
 
   } catch (error) {
-    console.error("Error in fetchAllProducts:", error);
+    console.error("Error fetching products:", error);
     res.status(500).json({ 
       success: false,
       message: 'Server error while fetching products',
@@ -365,6 +388,8 @@ exports.fetchAllProducts = async (req, res) => {
     });
   }
 };
+
+
 
 
 

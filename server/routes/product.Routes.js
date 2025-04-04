@@ -24,7 +24,7 @@ router.get(
 router.get('/', productController.fetchAllProducts);
 
 // GET /api/products/:id - Get single product
-router.get('/:id', productController.getProductById);
+// router.get('/:id', productController.getProductById);
 // Update product
 router.put(
   '/store/:id', 
@@ -32,6 +32,7 @@ router.put(
   upload.none(), // Important: Use upload.none() for PUT requests
   productController.updateProduct
 );
+router.get('/product-categories', productController.fetchProductCategories);
 
 // Delete product
 router.delete(

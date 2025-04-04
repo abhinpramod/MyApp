@@ -30,18 +30,18 @@ const ProductManagement = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  // const [productCategories, setProductCategories] = useState([]);
-  const productCategories =[ 'Cement',
-    'Steel',
-    'Wood',
-    'Bricks',
-    'Aggregates',
-    'Paints',
-    'Tiles',
-    'Sanitaryware',
-    'Electrical',
-    'Plumbing',
-    'Other']
+  const [productCategories, setProductCategories] = useState([]);
+  // const productCategories =[ 'Cement',
+    // 'Steel',
+    // 'Wood',
+    // 'Bricks',
+    // 'Aggregates',
+    // 'Paints',
+    // 'Tiles',
+    // 'Sanitaryware',
+    // 'Electrical',
+    // 'Plumbing',
+    // // 'Other']
 
   // State for add/edit form
   const [formData, setFormData] = useState({
@@ -71,6 +71,18 @@ const ProductManagement = () => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   // Fetch products and categories
+  const fetchProductCategories = async () => {
+    try {
+      const response = await axiosInstance.get('/products/product-categories', {
+        withCredentials: true
+      });
+      console.log(response.data.data);
+      setProductCategories(response.data.data);
+    } catch (err) {
+      console.error('Failed to fetch product categories', err);
+      toast.error('Failed to fetch product categories');
+    }
+  }
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
@@ -93,20 +105,10 @@ const ProductManagement = () => {
     }
   };
 
-  const fetchProductCategories = async () => {
-    try {
-      const response = await axiosInstance.get('/product-categories', {
-        withCredentials: true
-      });
-      // setProductCategories(response.data);
-    } catch (err) {
-      console.error('Failed to fetch product categories', err);
-      toast.error('Failed to fetch product categories');
-    }
-  };
 
   useEffect(() => {
     fetchProducts();
+    fetchProductCategories()
     // fetchProductCategories();
   }, [page, searchTerm]);
 
@@ -609,8 +611,8 @@ const handleSubmit = async () => {
                         label="Category *"
                         required
                       >
-                        {productCategories.map((type) => (
-                          <MenuItem key={type} value={type}>{type}</MenuItem>
+                        {productCategories?.map((type) => (
+                          <MenuItem key={type._id} value={type.name}>{type.name}</MenuItem>
                         ))}
                       </Select>
                     </FormControl>
