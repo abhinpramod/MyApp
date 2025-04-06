@@ -35,6 +35,7 @@ import StoreProfile from "./pages/Store.pages/Storeprofile";
 import Storesettings from "./pages/Store.pages/storesettings";
 import Order from "./pages/Store.pages/Order";
 import Orderhistory from "./pages/Store.pages/Orderhistory";
+import Cart from "./pages/user.pages/cart";
 import { useSelector } from "react-redux";
 import { Loader } from "lucide-react";
 
@@ -69,6 +70,7 @@ function App() {
           <Route path="/contractors" element={user ? <Contractors /> : <Loginuser />} />
           <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           <Route path="/store/:storeId" element={user ? <StoreProfile/>: <Loginuser />} />
+          <Route path="/cart" element={user ? <Cart/>: <Cart />} /> 
           
           {/* Store Routes */}
           <Route path="/storeregistration" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreRegistration />} />

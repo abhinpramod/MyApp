@@ -365,7 +365,7 @@ exports.fetchAllProducts = async (req, res) => {
     ]);
 
     // Debugging: Check if bulkPricing exists in the first product
-    if (products.length > 0 && !products[0].bulkPricing) {
+    if (products.length > 0 && !products[0]?.bulkPricing) {
       console.warn('First product missing bulkPricing:', products[0]._id);
     }
 
