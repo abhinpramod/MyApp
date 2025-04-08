@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import  Card from '@/components/ui/card';
+import Card from '@/components/ui/card';
 import CardContent from '@/components/ui/card-content';
-import  Button  from '@/components/ui/button';
+import Button from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dailog";
 import { useNavigate } from 'react-router-dom';
+import ProductDetailDialog from '@/components/products/ProductDetailDialog';
 
 // Mock data based on your database structure
 const mockStores = [
@@ -33,7 +34,8 @@ const mockStores = [
     city: "Aroor",
     state: "Kerala",
     description: "We are providing building materials for the last 15 years",
-    profilePicture: "https://via.placeholder.com/80?text=KK+Steels"
+    profilePicture: "https://via.placeholder.com/80?text=KK+Steels",
+    storeImage: "https://via.placeholder.com/80?text=KK+Steels"
   },
   {
     _id: "67e8d701b014eb8e7bc2244d",
@@ -41,7 +43,8 @@ const mockStores = [
     city: "Kochi",
     state: "Kerala",
     description: "Premium cement and construction materials",
-    profilePicture: "https://via.placeholder.com/80?text=Cement+World"
+    profilePicture: "https://via.placeholder.com/80?text=Cement+World",
+    storeImage: "https://via.placeholder.com/80?text=Cement+World"
   }
 ];
 
@@ -57,7 +60,8 @@ const mockProducts = [
     weightPerUnit: 50,
     unit: "kg",
     basePrice: 600,
-    stock: 200
+    stock: 200,
+    specifications: "IS 12269 compliant, 28-day compressive strength ≥ 53 MPa"
   },
   {
     _id: "67e9901eedb0dfe7aa14350b",
@@ -70,7 +74,8 @@ const mockProducts = [
     weightPerUnit: 12,
     unit: "meter",
     basePrice: 850,
-    stock: 150
+    stock: 150,
+    specifications: "IS 1786 compliant, Yield strength ≥ 500 MPa"
   },
   {
     _id: "67e99123edb0dfe7aa1434da",
@@ -83,7 +88,8 @@ const mockProducts = [
     weightPerUnit: 5,
     unit: "kg",
     basePrice: 120,
-    stock: 300
+    stock: 300,
+    specifications: "IS 8042 compliant, Whiteness ≥ 85%"
   }
 ];
 
@@ -113,6 +119,7 @@ const ShoppingCartUI = () => {
   const [selectedStore, setSelectedStore] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
 
   // Get all stores present in cart
@@ -173,6 +180,20 @@ const ShoppingCartUI = () => {
       console.log("Proceeding to checkout all items");
     }
     setIsCheckoutOpen(true);
+  };
+
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedProduct(null);
+  };
+
+  const handleDialogQuantityChange = (newQuantity) => {
+    if (selectedProduct) {
+      handleQuantityChange(selectedProduct._id, newQuantity);
+    }
   };
 
   return (
@@ -266,11 +287,12 @@ const ShoppingCartUI = () => {
               {filteredItems.map(item => (
                 <div 
                   key={item.productId} 
-                  className="flex items-center p-4 border-b last:border-b-0"
+                  className="flex items-center p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleProductClick(item.productDetails)}
                 >
                   <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                     <img 
-                      src={item.productDetails.image} 
+                      src={item.productDetails.image}
                       alt={item.productDetails.name} 
                       className="w-full h-full object-cover"
                     />
@@ -295,15 +317,22 @@ const ShoppingCartUI = () => {
                         <Button 
                           variant="outline" 
                           size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                          className="h-8 w-8 items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuantityChange(item.productId, item.quantity - 1);
+                          }}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
                         <Input
                           type="number"
                           value={item.quantity}
-                          onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value) || 1)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleQuantityChange(item.productId, parseInt(e.target.value) || 1);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="w-16 text-center"
                           min="1"
                         />
@@ -311,7 +340,10 @@ const ShoppingCartUI = () => {
                           variant="outline" 
                           size="icon" 
                           className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuantityChange(item.productId, item.quantity + 1);
+                          }}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -319,13 +351,19 @@ const ShoppingCartUI = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleRemoveProduct(item.productId)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveProduct(item.productId);
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-right">
+                      <div 
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <p className="font-medium">
                           ₹{(item.basePrice * item.quantity).toFixed(2)}
                         </p>
@@ -362,14 +400,12 @@ const ShoppingCartUI = () => {
       {/* Cart Summary */}
       {filteredItems.length > 0 && (
         <Card className="mt-6">
-        
-            <h1 className='text-2xl font-bold'>
+          <CardContent>
+            <h1 className='text-2xl font-bold mb-4'>
               {selectedStore 
                 ? `Order Summary (${mockStores.find(s => s._id === selectedStore)?.storeName})`
                 : "Order Summary (All Stores)"}
             </h1>
-        
-          <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
@@ -434,6 +470,24 @@ const ShoppingCartUI = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Product Detail Dialog */}
+      {selectedProduct && (
+        <ProductDetailDialog
+          product={{
+            ...selectedProduct,
+            store: mockStores.find(s => s._id === selectedProduct.storeId),
+            storeId: selectedProduct.storeId
+          }}
+          onClose={handleCloseDialog}
+          quantity={
+            cart.items.find(item => item.productId === selectedProduct._id)?.quantity || 1
+          }
+          onQuantityChange={handleDialogQuantityChange}
+          onAddToCart={() => {}} // Empty function since we're already in cart
+          isOwnerView={false}
+        />
       )}
     </div>
   );
