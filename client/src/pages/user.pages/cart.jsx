@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import Card from '@/components/ui/card';
-import CardContent from '@/components/ui/card-content';
-import Button from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import {
   ShoppingCart, 
   Trash2, 
   Edit2, 
@@ -14,8 +12,16 @@ import {
   Check,
   ArrowLeft,
   HardHat,
-  Warehouse
+  Warehouse,
+  Loader2
 } from 'lucide-react';
+
+// Import your actual UI components
+import Card from '@/components/ui/card';
+import CardContent from '@/components/ui/card-content';
+import Button from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -23,119 +29,117 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dailog";
-import { useNavigate } from 'react-router-dom';
 import ProductDetailDialog from '@/components/products/ProductDetailDialog';
 
-// Mock data based on your database structure
-const mockStores = [
-  {
-    _id: "67e7c601b014eb8e7bc2243c",
-    storeName: "KK Steels",
-    city: "Aroor",
-    state: "Kerala",
-    description: "We are providing building materials for the last 15 years",
-    profilePicture: "https://via.placeholder.com/80?text=KK+Steels",
-    storeImage: "https://via.placeholder.com/80?text=KK+Steels"
-  },
-  {
-    _id: "67e8d701b014eb8e7bc2244d",
-    storeName: "Cement World",
-    city: "Kochi",
-    state: "Kerala",
-    description: "Premium cement and construction materials",
-    profilePicture: "https://via.placeholder.com/80?text=Cement+World",
-    storeImage: "https://via.placeholder.com/80?text=Cement+World"
-  }
-];
-
-const mockProducts = [
-  {
-    _id: "67e7eaa4a78f848009b740da",
-    storeId: "67e7c601b014eb8e7bc2243c",
-    name: "UltraTech Cement",
-    description: "Best quality cement for all types of works",
-    image: "https://via.placeholder.com/80?text=Cement",
-    category: "Cement",
-    grade: "53 Grade",
-    weightPerUnit: 50,
-    unit: "kg",
-    basePrice: 600,
-    stock: 200,
-    specifications: "IS 12269 compliant, 28-day compressive strength ≥ 53 MPa"
-  },
-  {
-    _id: "67e9901eedb0dfe7aa14350b",
-    storeId: "67e7c601b014eb8e7bc2243c",
-    name: "TMT Steel Bars",
-    description: "Fe 500 grade steel rods",
-    image: "https://via.placeholder.com/80?text=Steel+Bars",
-    category: "Steel",
-    grade: "Fe 500",
-    weightPerUnit: 12,
-    unit: "meter",
-    basePrice: 850,
-    stock: 150,
-    specifications: "IS 1786 compliant, Yield strength ≥ 500 MPa"
-  },
-  {
-    _id: "67e99123edb0dfe7aa1434da",
-    storeId: "67e8d701b014eb8e7bc2244d",
-    name: "Birla White Cement",
-    description: "Premium white cement for finishing",
-    image: "https://via.placeholder.com/80?text=White+Cement",
-    category: "Cement",
-    grade: "Premium",
-    weightPerUnit: 5,
-    unit: "kg",
-    basePrice: 120,
-    stock: 300,
-    specifications: "IS 8042 compliant, Whiteness ≥ 85%"
-  }
-];
-
-const mockCart = {
-  _id: "67ed416d66425309a57f2335",
-  userId: "67dd42255f609c8c69a2d890",
-  storeId: "67e7c601b014eb8e7bc2243c",
-  items: [
-    {
-      productId: "67e7eaa4a78f848009b740da",
-      quantity: 56,
-      basePrice: 600,
-      productDetails: mockProducts.find(p => p._id === "67e7eaa4a78f848009b740da")
-    },
-    {
-      productId: "67e9901eedb0dfe7aa14350b",
-      quantity: 2,
-      basePrice: 850,
-      productDetails: mockProducts.find(p => p._id === "67e9901eedb0dfe7aa14350b")
-    }
-  ],
-  totalPrice: 600*56 + 850*2
-};
-
 const ShoppingCartUI = () => {
-  const [cart, setCart] = useState(mockCart);
+  const navigate = useNavigate();
+  const [cart, setCart] = useState({ items: [], totalPrice: 0 });
+  const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
 
-  // Get all stores present in cart
-  const storesInCart = mockStores.filter(store => 
-    cart.items.some(item => item.productDetails.storeId === store._id)
-  );
+  // Fetch cart data
+  useEffect(() => {
+    const fetchCartData = async () => {
+      try {
+        setIsLoading(true);
+        const { data } = await axios.get('/api/cart');
+        setCart(data.cart || { items: [], totalPrice: 0 });
+        
+        if (data.cart?.items?.length > 0) {
+          const storesRes = await axios.get('/api/cart/stores');
+          setStores(storesRes.data.stores || []);
+        }
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+        toast.error("Failed to load cart data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCartData();
+  }, []);
+
+  // Update item quantity
+  const handleQuantityChange = async (productId, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    try {
+      setIsMutating(true);
+      const { data } = await axios.put('/api/cart/update', {
+        cartId: cart._id,
+        productId,
+        quantity: newQuantity
+      });
+      setCart(data.cart);
+      toast.success("Quantity updated successfully");
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast.error("Failed to update quantity");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  // Remove item from cart
+  const handleRemoveProduct = async (productId) => {
+    try {
+      setIsMutating(true);
+      const { data } = await axios.post('/api/cart/remove', {
+        cartId: cart._id,
+        productId
+      });
+      
+      if (data.cart) {
+        setCart(data.cart);
+        // Refresh stores list if needed
+        if (data.cart.items.length === 0) {
+          setStores([]);
+        }
+      } else {
+        setCart({ items: [], totalPrice: 0 });
+        setStores([]);
+      }
+      
+      toast.success("Item removed from cart");
+    } catch (error) {
+      console.error("Error removing item:", error);
+      toast.error("Failed to remove item");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  // Clear entire cart
+  const handleClearCart = async () => {
+    try {
+      setIsMutating(true);
+      await axios.delete('/api/cart/clear');
+      setCart({ items: [], totalPrice: 0 });
+      setStores([]);
+      toast.success("Cart cleared successfully");
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      toast.error("Failed to clear cart");
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
   // Filter items by store
   const filteredItems = selectedStore
-    ? cart.items.filter(item => item.productDetails.storeId === selectedStore)
+    ? cart.items.filter(item => item.productDetails?.storeId === selectedStore)
     : cart.items;
 
   // Calculate store-specific total
   const calculateStoreTotal = (storeId) => {
     return cart.items
-      .filter(item => item.productDetails.storeId === storeId)
+      .filter(item => item.productDetails?.storeId === storeId)
       .reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
   };
 
@@ -145,56 +149,31 @@ const ShoppingCartUI = () => {
     0
   );
 
-  const handleQuantityChange = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCart({
-      ...cart,
-      items: cart.items.map(item =>
-        item.productId === productId ? { ...item, quantity: newQuantity } : item
-      ),
-      totalPrice: cart.items.reduce((sum, item) => 
-        sum + (item.basePrice * (item.productId === productId ? newQuantity : item.quantity)), 0)
-    });
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
-  const handleRemoveProduct = (productId) => {
-    setCart({
-      ...cart,
-      items: cart.items.filter(item => item.productId !== productId),
-      totalPrice: cart.items
-        .filter(item => item.productId !== productId)
-        .reduce((sum, item) => sum + (item.basePrice * item.quantity), 0)
-    });
-  };
-
-  const toggleStore = (storeId) => {
-    setSelectedStore(selectedStore === storeId ? null : storeId);
-  };
-
-  const handleCheckout = () => {
-    if (selectedStore) {
-      // Checkout only from selected store
-      console.log("Proceeding to checkout from store:", selectedStore);
-    } else {
-      // Checkout all items
-      console.log("Proceeding to checkout all items");
-    }
-    setIsCheckoutOpen(true);
-  };
-
-  const handleProductClick = (product) => {
-    setSelectedProduct(product);
-  };
-
-  const handleCloseDialog = () => {
-    setSelectedProduct(null);
-  };
-
-  const handleDialogQuantityChange = (newQuantity) => {
-    if (selectedProduct) {
-      handleQuantityChange(selectedProduct._id, newQuantity);
-    }
-  };
+  // Error state (if cart is undefined due to error)
+  if (!cart) {
+    return (
+      <div className="container mx-auto p-4 max-w-6xl">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <HardHat className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">Error loading your cart</h3>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -209,77 +188,84 @@ const ShoppingCartUI = () => {
         </Button>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ShoppingCart className="w-6 h-6" />
-          Building Materials Cart
+          Shopping Cart
+          {cart.items.length > 0 && (
+            <Badge className="ml-2">
+              {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}
+            </Badge>
+          )}
         </h1>
       </div>
 
-      {/* Edit Button */}
-      <div className="flex justify-end mb-6">
+      {/* Edit Controls */}
+      <div className="flex justify-between mb-6">
+        <Button
+          variant="ghost"
+          onClick={handleClearCart}
+          disabled={!cart.items.length || isMutating}
+          className="gap-2"
+        >
+          {isMutating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
+          Clear Cart
+        </Button>
+        
         <Button 
           variant={isEditing ? 'default' : 'outline'} 
           onClick={() => setIsEditing(!isEditing)}
           className="gap-2"
+          disabled={!cart.items.length}
         >
-          {isEditing ? <Check className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-          {isEditing ? 'Done Editing' : 'Edit Cart'}
+          {isEditing ? (
+            <>
+              <Check className="w-4 h-4" />
+              Done Editing
+            </>
+          ) : (
+            <>
+              <Edit2 className="w-4 h-4" />
+              Edit Cart
+            </>
+          )}
         </Button>
       </div>
 
       {/* Store Filter */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <Button
-          variant={!selectedStore ? 'default' : 'outline'}
-          onClick={() => setSelectedStore(null)}
-          className="gap-2"
-        >
-          <Warehouse className="w-4 h-4" />
-          All Stores
-          <Badge className="ml-1">
-            {cart.items.length}
-          </Badge>
-        </Button>
-        
-        {storesInCart.map(store => (
+      {cart.items.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
           <Button
-            key={store._id}
-            variant={selectedStore === store._id ? 'default' : 'outline'}
-            onClick={() => toggleStore(store._id)}
+            variant={!selectedStore ? 'default' : 'outline'}
+            onClick={() => setSelectedStore(null)}
             className="gap-2"
           >
-            <Store className="w-4 h-4" />
-            {store.storeName}
+            <Warehouse className="w-4 h-4" />
+            All Stores
             <Badge className="ml-1">
-              {cart.items.filter(item => item.productDetails.storeId === store._id).length}
+              {cart.items.length}
             </Badge>
           </Button>
-        ))}
-      </div>
-
-      {/* Store Info when selected */}
-      {selectedStore && (
-        <Card className="mb-6">
-          <CardContent className="p-4 flex items-center gap-4">
-            <img 
-              src={mockStores.find(s => s._id === selectedStore)?.profilePicture} 
-              alt="Store" 
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h2 className="text-xl font-semibold">
-                {mockStores.find(s => s._id === selectedStore)?.storeName}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {mockStores.find(s => s._id === selectedStore)?.city}, {mockStores.find(s => s._id === selectedStore)?.state}
-              </p>
-              <p className="text-sm mt-1">
-                {mockStores.find(s => s._id === selectedStore)?.description}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          
+          {stores.map(store => (
+            <Button
+              key={store._id}
+              variant={selectedStore === store._id ? 'default' : 'outline'}
+              onClick={() => setSelectedStore(store._id)}
+              className="gap-2"
+            >
+              <Store className="w-4 h-4" />
+              {store.storeName}
+              <Badge className="ml-1">
+                {cart.items.filter(item => item.productDetails?.storeId === store._id).length}
+              </Badge>
+            </Button>
+          ))}
+        </div>
       )}
 
-      {/* Products List */}
+      {/* Cart Items */}
       <div className="space-y-6">
         {filteredItems.length > 0 ? (
           <Card>
@@ -288,7 +274,7 @@ const ShoppingCartUI = () => {
                 <div 
                   key={item.productId} 
                   className="flex items-center p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleProductClick(item.productDetails)}
+                  onClick={() => setSelectedProduct(item.productDetails)}
                 >
                   <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                     <img 
@@ -305,23 +291,18 @@ const ShoppingCartUI = () => {
                     <p className="text-sm text-muted-foreground">
                       {item.productDetails.weightPerUnit}{item.productDetails.unit} × ₹{item.basePrice}
                     </p>
-                    {!selectedStore && (
-                      <span className="inline-block mt-1 px-2 py-1 text-xs rounded-full bg-gray-100">
-                        {mockStores.find(s => s._id === item.productDetails.storeId)?.storeName}
-                      </span>
-                    )}
                   </div>
                   <div className="ml-4 flex items-center">
                     {isEditing ? (
                       <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
-                          size="icon" 
-                          className="h-8 w-8 items-center"
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuantityChange(item.productId, item.quantity - 1);
                           }}
+                          disabled={isMutating}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -335,35 +316,34 @@ const ShoppingCartUI = () => {
                           onClick={(e) => e.stopPropagation()}
                           className="w-16 text-center"
                           min="1"
+                          disabled={isMutating}
                         />
                         <Button 
                           variant="outline" 
-                          size="icon" 
-                          className="h-8 w-8"
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuantityChange(item.productId, item.quantity + 1);
                           }}
+                          disabled={isMutating}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveProduct(item.productId);
                           }}
+                          disabled={isMutating}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
-                      <div 
-                        className="text-right"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <div className="text-right">
                         <p className="font-medium">
                           ₹{(item.basePrice * item.quantity).toFixed(2)}
                         </p>
@@ -383,7 +363,7 @@ const ShoppingCartUI = () => {
               <HardHat className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">
                 {selectedStore 
-                  ? `No items from ${mockStores.find(s => s._id === selectedStore)?.storeName} in your cart`
+                  ? `No items from ${stores.find(s => s._id === selectedStore)?.storeName} in your cart`
                   : "Your cart is empty"}
               </h3>
               <Button 
@@ -397,14 +377,14 @@ const ShoppingCartUI = () => {
         )}
       </div>
 
-      {/* Cart Summary */}
+      {/* Order Summary */}
       {filteredItems.length > 0 && (
         <Card className="mt-6">
           <CardContent>
             <h1 className='text-2xl font-bold mb-4'>
               {selectedStore 
-                ? `Order Summary (${mockStores.find(s => s._id === selectedStore)?.storeName})`
-                : "Order Summary (All Stores)"}
+                ? `Order Summary (${stores.find(s => s._id === selectedStore)?.storeName})`
+                : "Order Summary"}
             </h1>
             <div className="space-y-4">
               <div className="flex justify-between">
@@ -414,10 +394,6 @@ const ShoppingCartUI = () => {
                     ? calculateStoreTotal(selectedStore).toFixed(2)
                     : grandTotal.toFixed(2)}
                 </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>To be calculated</span>
               </div>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
@@ -430,16 +406,12 @@ const ShoppingCartUI = () => {
               <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full mt-4" size="lg" onClick={handleCheckout}>
-                    {selectedStore ? 'Checkout from this store' : 'Checkout all items'}
+                    Proceed to Checkout
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>
-                      {selectedStore 
-                        ? `Checkout from ${mockStores.find(s => s._id === selectedStore)?.storeName}`
-                        : "Checkout All Items"}
-                    </DialogTitle>
+                    <DialogTitle>Confirm Order</DialogTitle>
                   </DialogHeader>
                   <div className="py-4">
                     <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -462,7 +434,7 @@ const ShoppingCartUI = () => {
                       </div>
                     </div>
                     <Button className="w-full" size="lg">
-                      Confirm Order
+                      Place Order
                     </Button>
                   </div>
                 </DialogContent>
@@ -477,20 +449,21 @@ const ShoppingCartUI = () => {
         <ProductDetailDialog
           product={{
             ...selectedProduct,
-            store: mockStores.find(s => s._id === selectedProduct.storeId),
+            store: stores.find(s => s._id === selectedProduct.storeId),
             storeId: selectedProduct.storeId
           }}
-          onClose={handleCloseDialog}
+          onClose={() => setSelectedProduct(null)}
           quantity={
             cart.items.find(item => item.productId === selectedProduct._id)?.quantity || 1
           }
-          onQuantityChange={handleDialogQuantityChange}
-          onAddToCart={() => {}} // Empty function since we're already in cart
+          onQuantityChange={(newQuantity) => {
+            handleQuantityChange(selectedProduct._id, newQuantity);
+          }}
           isOwnerView={false}
         />
       )}
     </div>
   );
-}
+};
 
 export default ShoppingCartUI;
