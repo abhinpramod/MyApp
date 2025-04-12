@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../lib/axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dailog";
+// const axiosInstance = require('../../lib/axios');
 import ProductDetailDialog from '@/components/products/ProductDetailDialog';
 
 const ShoppingCartUI = () => {
@@ -47,11 +48,11 @@ const ShoppingCartUI = () => {
     const fetchCartData = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axios.get('/api/cart');
+        const { data } = await axiosInstance.get('/cart');
         setCart(data.cart || { items: [], totalPrice: 0 });
         
         if (data.cart?.items?.length > 0) {
-          const storesRes = await axios.get('/api/cart/stores');
+          const storesRes = await axiosInstance.get('/cart/stores');
           setStores(storesRes.data.stores || []);
         }
       } catch (error) {
@@ -71,7 +72,7 @@ const ShoppingCartUI = () => {
     
     try {
       setIsMutating(true);
-      const { data } = await axios.put('/api/cart/update', {
+      const { data } = await axiosInstance.put('/cart/update', {
         cartId: cart._id,
         productId,
         quantity: newQuantity
@@ -90,7 +91,7 @@ const ShoppingCartUI = () => {
   const handleRemoveProduct = async (productId) => {
     try {
       setIsMutating(true);
-      const { data } = await axios.post('/api/cart/remove', {
+      const { data } = await axiosInstance.post('/cart/remove', {
         cartId: cart._id,
         productId
       });
@@ -119,7 +120,7 @@ const ShoppingCartUI = () => {
   const handleClearCart = async () => {
     try {
       setIsMutating(true);
-      await axios.delete('/api/cart/clear');
+      await axiosInstance.delete('/cart/clear');
       setCart({ items: [], totalPrice: 0 });
       setStores([]);
       toast.success("Cart cleared successfully");
