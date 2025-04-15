@@ -25,7 +25,6 @@ router.put(
 router.get('/store/:storeId', getStoreById);
 router.get('/:storeId/products', getPublicStoreProducts);
 
-// Store products (owner view)
 router.get('/products', protectRoutestore, getStoreProducts);
 
   router.post("/login", login);

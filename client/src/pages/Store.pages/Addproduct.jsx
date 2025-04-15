@@ -86,7 +86,7 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
-      const response = await axiosInstance.get('/products', {
+      const response = await axiosInstance.get('/store/products', {
         params: {
           page,
           search: searchTerm,

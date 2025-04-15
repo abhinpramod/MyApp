@@ -46,7 +46,7 @@ const StoreProfile = () => {
 
         // Fetch products
         const productsResponse = await axiosInstance.get(
-          isOwnerView ? '/products' : `/store/${paramStoreId}/products`,
+          isOwnerView ? '/store/products' : `/store/${paramStoreId}/products`,
           { withCredentials: true }
         );
         setProducts(productsResponse.data.products);

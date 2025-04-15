@@ -27,11 +27,10 @@ import {
   Filter as FilterIcon,
   ChevronDown as KeyboardArrowDown,
   ChevronUp as KeyboardArrowUp,
-  ShoppingCart,
+  // ShoppingCart,
   Search as SearchIcon,
   MapPin,
-  Store
-} from "lucide-react";
+ShoppingCart} from "lucide-react";
 import axiosInstance from "../../lib/axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-hot-toast";
@@ -190,10 +189,39 @@ const ProductsPage = () => {
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
             Discover Our Products
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Browse through our extensive collection of high-quality products
-          </Typography>
-        </Box>
+          <div style={{ position: 'relative', width: '100%' }}>
+      {/* Centered Subtitle */}
+      <Typography
+        variant="subtitle1"
+        color="text.secondary"
+        style={{ textAlign: 'center' }}
+      >
+        Browse through our extensive collection of high-quality products
+      </Typography>
+
+      {/* Cart Button to the Right */}
+      <button
+        onClick={() => navigate('/cart')}
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '6px 12px',
+          border: 'none',
+          backgroundColor: '#1976d2',
+          color: 'white',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        <ShoppingCart size={18} />
+        Cart
+      </button>
+    </div>        </Box>
 
         {/* Search and Filters Section */}
         <Box sx={{ mb: 4 }}>

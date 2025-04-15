@@ -178,6 +178,7 @@ exports.updateProduct = async (req, res) => {
 
 // Get all products for a store
 exports.getStoreProducts = async (req, res) => {
+  console.log(req.store ,'this from the ');
   try {
     const store = req.store;
     const { page = 1, limit = 10, search = '', filter = 'all' } = req.query;

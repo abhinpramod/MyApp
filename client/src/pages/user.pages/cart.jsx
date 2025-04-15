@@ -131,6 +131,19 @@ const ShoppingCartUI = () => {
       setIsMutating(false);
     }
   };
+  // Add this function to your component, ideally near your other handler functions
+const handleCheckout = async () => {
+  try {
+    setIsMutating(true);
+    console.log("Cart ID:", cart._id);
+    setIsCheckoutOpen(true);
+  } catch (error) {
+    console.error("Error during checkout:", error);
+    toast.error("Failed to proceed with checkout");
+  } finally {
+    setIsMutating(false);
+  }
+};
 
   // Filter items by store
   const filteredItems = selectedStore

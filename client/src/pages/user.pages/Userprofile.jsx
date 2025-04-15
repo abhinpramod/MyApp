@@ -107,6 +107,10 @@ const UserProfile = () => {
     navigate("/InterestSentHistory");
   };
 
+  const handleshowcart = () => {
+    navigate("/Cart");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -134,7 +138,7 @@ const UserProfile = () => {
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               >
                 <MenuItem onClick={handleAccountInfo}>History</MenuItem>
-                <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                <MenuItem onClick={handleshowcart}>cart</MenuItem>
                 <MenuItem onClick={handleOpenDialog}>Logout</MenuItem>
               </Menu>
             </div>
