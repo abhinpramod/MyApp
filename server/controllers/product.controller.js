@@ -378,7 +378,7 @@ exports.fetchAllProducts = async (req, res) => {
       pages: Math.ceil(total / limitNum),
       hasMore: skip + products.length < total
     });
-    console.log("products", products[2].bulkPricing);
+    console.log("products", products[2]?.bulkPricing);
 
   } catch (error) {
     console.error("Error fetching products:", error);

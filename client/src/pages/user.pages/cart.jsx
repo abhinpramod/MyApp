@@ -15,8 +15,6 @@ import {
   Warehouse,
   Loader2
 } from 'lucide-react';
-
-// Import your actual UI components
 import Card from '@/components/ui/card';
 import CardContent from '@/components/ui/card-content';
 import Button from '@/components/ui/button';
@@ -29,7 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dailog";
-// const axiosInstance = require('../../lib/axios');
 import ProductDetailDialog from '@/components/products/ProductDetailDialog';
 
 const ShoppingCartUI = () => {
@@ -73,15 +70,30 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.put('/cart/update', {
-        cartId: cart._id,
-        productId,
+        productId, // Only need productId now
         quantity: newQuantity
       });
-      setCart(data.cart);
+      
+      // Update local state optimistically
+      setCart(prev => ({
+        ...prev,
+        items: prev.items.map(item => 
+          item.productId === productId 
+            ? { ...item, quantity: newQuantity } 
+            : item
+        ),
+        totalPrice: data.cart?.totalPrice || prev.totalPrice
+      }));
+      
       toast.success("Quantity updated successfully");
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Failed to update quantity");
+      const message = error.response?.data?.message || "Failed to update quantity";
+      toast.error(message);
+      
+      // Revert optimistic update on error
+      const { data } = await axiosInstance.get('/cart');
+      setCart(data.cart || { items: [], totalPrice: 0 });
     } finally {
       setIsMutating(false);
     }
@@ -92,25 +104,27 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.post('/cart/remove', {
-        cartId: cart._id,
-        productId
+        productId // Only need productId now
       });
       
+      // Update local state
       if (data.cart) {
         setCart(data.cart);
         // Refresh stores list if needed
         if (data.cart.items.length === 0) {
           setStores([]);
+          setSelectedStore(null);
         }
       } else {
         setCart({ items: [], totalPrice: 0 });
         setStores([]);
+        setSelectedStore(null);
       }
       
       toast.success("Item removed from cart");
     } catch (error) {
       console.error("Error removing item:", error);
-      toast.error("Failed to remove item");
+      toast.error(error.response?.data?.message || "Failed to remove item");
     } finally {
       setIsMutating(false);
     }
@@ -123,6 +137,7 @@ const ShoppingCartUI = () => {
       await axiosInstance.delete('/cart/clear');
       setCart({ items: [], totalPrice: 0 });
       setStores([]);
+      setSelectedStore(null);
       toast.success("Cart cleared successfully");
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -131,29 +146,35 @@ const ShoppingCartUI = () => {
       setIsMutating(false);
     }
   };
-  // Add this function to your component, ideally near your other handler functions
-const handleCheckout = async () => {
-  try {
-    setIsMutating(true);
-    console.log("Cart ID:", cart._id);
-    setIsCheckoutOpen(true);
-  } catch (error) {
-    console.error("Error during checkout:", error);
-    toast.error("Failed to proceed with checkout");
-  } finally {
-    setIsMutating(false);
-  }
-};
 
-  // Filter items by store
-  const filteredItems = selectedStore
-    ? cart.items.filter(item => item.productDetails?.storeId === selectedStore)
-    : cart.items;
+  const handleCheckout = async () => {
+    try {
+      setIsMutating(true);
+      setIsCheckoutOpen(true);
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      toast.error("Failed to proceed with checkout");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  // Filter items by store and ensure productDetails exists
+  const filteredItems = (selectedStore
+    ? cart.items.filter(item => 
+        item.productDetails?.storeId === selectedStore || 
+        item.storeId === selectedStore
+      )
+    : cart.items
+  ).filter(item => item.productDetails); // Ensure productDetails exists
 
   // Calculate store-specific total
   const calculateStoreTotal = (storeId) => {
     return cart.items
-      .filter(item => item.productDetails?.storeId === storeId)
+      .filter(item => 
+        (item.productDetails?.storeId === storeId) || 
+        (item.storeId === storeId)
+      )
       .reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
   };
 
@@ -212,12 +233,12 @@ const handleCheckout = async () => {
       </div>
 
       {/* Edit Controls */}
-      <div className="flex justify-between mb-6">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
         <Button
           variant="ghost"
           onClick={handleClearCart}
           disabled={!cart.items.length || isMutating}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           {isMutating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -230,7 +251,7 @@ const handleCheckout = async () => {
         <Button 
           variant={isEditing ? 'default' : 'outline'} 
           onClick={() => setIsEditing(!isEditing)}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
           disabled={!cart.items.length}
         >
           {isEditing ? (
@@ -249,11 +270,11 @@ const handleCheckout = async () => {
 
       {/* Store Filter */}
       {cart.items.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
           <Button
             variant={!selectedStore ? 'default' : 'outline'}
             onClick={() => setSelectedStore(null)}
-            className="gap-2"
+            className="gap-2 whitespace-nowrap"
           >
             <Warehouse className="w-4 h-4" />
             All Stores
@@ -267,12 +288,15 @@ const handleCheckout = async () => {
               key={store._id}
               variant={selectedStore === store._id ? 'default' : 'outline'}
               onClick={() => setSelectedStore(store._id)}
-              className="gap-2"
+              className="gap-2 whitespace-nowrap"
             >
               <Store className="w-4 h-4" />
               {store.storeName}
               <Badge className="ml-1">
-                {cart.items.filter(item => item.productDetails?.storeId === store._id).length}
+                {cart.items.filter(item => 
+                  item.productDetails?.storeId === store._id || 
+                  item.storeId === store._id
+                ).length}
               </Badge>
             </Button>
           ))}
@@ -287,28 +311,28 @@ const handleCheckout = async () => {
               {filteredItems.map(item => (
                 <div 
                   key={item.productId} 
-                  className="flex items-center p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors gap-4"
                   onClick={() => setSelectedProduct(item.productDetails)}
                 >
-                  <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
+                  <div className="flex-shrink-0 w-full sm:w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                     <img 
-                      src={item.productDetails.image}
-                      alt={item.productDetails.name} 
+                      src={item.productDetails?.image || '/placeholder-product.jpg'}
+                      alt={item.productDetails?.name || 'Product'} 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="ml-4 flex-grow">
-                    <h3 className="font-medium">{item.productDetails.name}</h3>
+                  <div className="ml-0 sm:ml-4 flex-grow w-full">
+                    <h3 className="font-medium">{item.productDetails?.name || 'Unknown Product'}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {item.productDetails.grade} {item.productDetails.category}
+                      {item.productDetails?.grade} {item.productDetails?.category}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {item.productDetails.weightPerUnit}{item.productDetails.unit} × ₹{item.basePrice}
+                      {item.productDetails?.weightPerUnit}{item.productDetails?.unit} × ₹{item.basePrice}
                     </p>
                   </div>
-                  <div className="ml-4 flex items-center">
+                  <div className="ml-0 sm:ml-4 flex items-center w-full sm:w-auto justify-between sm:justify-normal">
                     {isEditing ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-normal">
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -317,6 +341,7 @@ const handleCheckout = async () => {
                             handleQuantityChange(item.productId, item.quantity - 1);
                           }}
                           disabled={isMutating}
+                          className="flex-shrink-0"
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -328,7 +353,7 @@ const handleCheckout = async () => {
                             handleQuantityChange(item.productId, parseInt(e.target.value) || 1);
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-16 text-center"
+                          className="w-16 text-center mx-2"
                           min="1"
                           disabled={isMutating}
                         />
@@ -340,13 +365,14 @@ const handleCheckout = async () => {
                             handleQuantityChange(item.productId, item.quantity + 1);
                           }}
                           disabled={isMutating}
+                          className="flex-shrink-0"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveProduct(item.productId);
@@ -423,7 +449,7 @@ const handleCheckout = async () => {
                     Proceed to Checkout
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Confirm Order</DialogTitle>
                   </DialogHeader>
@@ -432,8 +458,8 @@ const handleCheckout = async () => {
                       <h4 className="font-medium mb-2">Order Summary</h4>
                       {filteredItems.map(item => (
                         <div key={item.productId} className="flex justify-between py-2">
-                          <span>
-                            {item.productDetails.name} × {item.quantity}
+                          <span className="truncate max-w-[180px]">
+                            {item.productDetails?.name} × {item.quantity}
                           </span>
                           <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
                         </div>
