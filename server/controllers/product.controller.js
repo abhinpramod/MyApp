@@ -301,7 +301,9 @@ exports.fetchAllProducts = async (req, res) => {
       filter.$or = [
         { name: searchRegex },
         { description: searchRegex },
-        { category: searchRegex }
+        { category: searchRegex },
+        { grade: searchRegex },
+        { type: searchRegex },
       ];
     }
 

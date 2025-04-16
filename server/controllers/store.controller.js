@@ -157,7 +157,9 @@ const login = async (req, res) => {
     }
 
     if (store.approvelstatus === "Rejected") {
-      return res.status(403).json({ msg: "Your store registration is rejected" });
+      return res
+        .status(403)
+        .json({ msg: "Your store registration is rejected" });
     }
 
     if (store.isBlocked) {
@@ -189,64 +191,66 @@ const getStoreProfile = async (req, res) => {
   try {
     const store = await Store.findById(req.store._id);
     if (!store) {
-      return res.status(404).json({ error: 'Store not found' });
+      return res.status(404).json({ error: "Store not found" });
     }
     res.status(200).json(store);
   } catch (error) {
-    console.error('Error fetching store profile:', error);
-    res.status(500).json({ error: 'Failed to fetch store profile' });
+    console.error("Error fetching store profile:", error);
+    res.status(500).json({ error: "Failed to fetch store profile" });
   }
 };
 
 const getStoreById = async (req, res) => {
-  console.log(req.params.storeId,'storeid');
+  console.log(req.params.storeId, "storeid");
   try {
     const store = await Store.findById(req.params.storeId);
     console.log(store);
     if (!store) {
-      return res.status(404).json({ error: 'Store not found' });
+      return res.status(404).json({ error: "Store not found" });
     }
     res.status(200).json(store);
   } catch (error) {
-    console.error('Error fetching store from getStoreById:', error);
-    res.status(500).json({ error: 'Failed to fetch store' });
+    console.error("Error fetching store from getStoreById:", error);
+    res.status(500).json({ error: "Failed to fetch store" });
   }
 };
 
 const updateProfilePicture = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'No image file provided' 
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
       });
     }
 
     const store = await Store.findById(req.store._id);
     if (!store) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Store not found' 
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
       });
     }
 
     // Delete old image from Cloudinary if it exists
     if (store.profilePicture) {
       try {
-        const publicId = store.profilePicture.split('/').pop().split('.')[0];
+        const publicId = store.profilePicture.split("/").pop().split(".")[0];
         await cloudinary.uploader.destroy(`store_profile_pictures/${publicId}`);
       } catch (error) {
-        console.error('Error deleting old image from Cloudinary:', error);
+        console.error("Error deleting old image from Cloudinary:", error);
       }
     }
 
-    const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const dataUri = `data:${
+      req.file.mimetype
+    };base64,${req.file.buffer.toString("base64")}`;
     const result = await cloudinary.uploader.upload(dataUri, {
-      folder: 'store_profile_pictures',
+      folder: "store_profile_pictures",
       transformation: [
-        { width: 500, height: 500, crop: 'fill' },
-        { quality: 'auto:good' }
-      ]
+        { width: 500, height: 500, crop: "fill" },
+        { quality: "auto:good" },
+      ],
     });
 
     store.profilePicture = result.secure_url;
@@ -254,15 +258,14 @@ const updateProfilePicture = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Profile picture updated successfully',
-      imageUrl: result.secure_url
+      message: "Profile picture updated successfully",
+      imageUrl: result.secure_url,
     });
-
   } catch (error) {
-    console.error('Error updating profile picture:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message || 'Failed to update profile picture' 
+    console.error("Error updating profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update profile picture",
     });
   }
 };
@@ -272,16 +275,16 @@ const updateDescription = async (req, res) => {
     const { description } = req.body;
 
     if (!description || description.trim().length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Description cannot be empty' 
+      return res.status(400).json({
+        success: false,
+        message: "Description cannot be empty",
       });
     }
 
     if (description.length > 1000) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Description cannot exceed 1000 characters' 
+      return res.status(400).json({
+        success: false,
+        message: "Description cannot exceed 1000 characters",
       });
     }
 
@@ -292,23 +295,22 @@ const updateDescription = async (req, res) => {
     );
 
     if (!store) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Store not found' 
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Description updated successfully',
-      description: store.description
+      message: "Description updated successfully",
+      description: store.description,
     });
-
   } catch (error) {
-    console.error('Error updating description:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message || 'Failed to update description' 
+    console.error("Error updating description:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update description",
     });
   }
 };
@@ -318,8 +320,8 @@ const getStoreProducts = async (req, res) => {
     const products = await Product.find({ storeId: req.store._id });
     res.status(200).json({ products });
   } catch (error) {
-    console.error('Error fetching store products:', error);
-    res.status(500).json({ error: 'Failed to fetch store products' });
+    console.error("Error fetching store products:", error);
+    res.status(500).json({ error: "Failed to fetch store products" });
   }
 };
 
@@ -328,8 +330,8 @@ const getPublicStoreProducts = async (req, res) => {
     const products = await Product.find({ storeId: req.params.storeId });
     res.status(200).json({ products });
   } catch (error) {
-    console.error('Error fetching store products:', error);
-    res.status(500).json({ error: 'Failed to fetch store products' });
+    console.error("Error fetching store products:", error);
+    res.status(500).json({ error: "Failed to fetch store products" });
   }
 };
 
@@ -337,24 +339,24 @@ const logout = async (req, res) => {
   try {
     res.clearCookie("jwt");
 
-    res.status(200).json({ message: 'Logout successful' });
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error('Error logging out:', error);
-    res.status(500).json({ error: 'Failed to log out' });
+    console.error("Error logging out:", error);
+    res.status(500).json({ error: "Failed to log out" });
   }
 };
 
-module.exports = { 
-  sendOtp, 
-  verifyOtp, 
-  registerStore, 
-  login, 
-  checkstore, 
-  getStoreProfile, 
-  getStoreById, 
-  getStoreProducts, 
-  getPublicStoreProducts, 
-  updateProfilePicture, 
-  updateDescription ,
-  logout
+module.exports = {
+  sendOtp,
+  verifyOtp,
+  registerStore,
+  login,
+  checkstore,
+  getStoreProfile,
+  getStoreById,
+  getStoreProducts,
+  getPublicStoreProducts,
+  updateProfilePicture,
+  updateDescription,
+  logout,
 };
