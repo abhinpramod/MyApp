@@ -31,7 +31,8 @@ const Navbar = ({ type, login }) => {
     }
   };
 
-  const { registerPath, loginPath, registerLabel, loginLabel } = getNavbarDetails();
+  const { registerPath, loginPath, registerLabel, loginLabel } =
+    getNavbarDetails();
 
   // Handle navigation for Register/Login buttons
   const handleNavigation = (path) => {
@@ -39,7 +40,7 @@ const Navbar = ({ type, login }) => {
   };
 
   return (
-    <nav className="flex items-center justify-between sticky top-0 bg-white p-4 shadow-md">
+    <nav className="flex items-center justify-between sticky top-0 z-50 bg-white p-4 shadow-md">
       {/* Back Button */}
       <div className="flex items-center">
         <IconButton onClick={() => window.history.back()}>
@@ -49,10 +50,12 @@ const Navbar = ({ type, login }) => {
       </div>
 
       {/* Logo or Title */}
-      <button onClick={() => navigate("/")}> <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">
-        LocalFinder
-      </h1></button>
-     
+      <button onClick={() => navigate("/")}>
+        {" "}
+        <h1 className="text-slate-600 text-xl sm:text-5xl md:text-6xl lg:text-4xl font-bold text-center">
+          LocalFinder
+        </h1>
+      </button>
 
       {/* Conditional Buttons for Register/Login */}
       <div className="hidden sm:block">
@@ -67,7 +70,7 @@ const Navbar = ({ type, login }) => {
           <Button
             onClick={() => handleNavigation(loginPath)}
             className="text-black text-sm sm:text-base hover:underline"
-            sx={{color:"black"}}
+            sx={{ color: "black" }}
           >
             {loginLabel}
           </Button>

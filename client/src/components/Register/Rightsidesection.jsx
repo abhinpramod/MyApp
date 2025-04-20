@@ -37,10 +37,12 @@ const RightSection = () => {
         }}
       >
         <Typography variant="h3" component="h1">
-          Welcome 
+          Welcome
         </Typography>
         <Typography variant="body1">
-        Register now to connect with clients, showcase your skills, and find opportunities that align with your expertise, and grow your business.        </Typography>
+          Register now to connect with clients, showcase your skills, and find
+          opportunities that align with your expertise, and grow your business.{" "}
+        </Typography>
       </Box>
     </Box>
   );

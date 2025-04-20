@@ -15,8 +15,8 @@ import {
   ArrowLeft,
   Loader,
   Upload,
-  BellRing ,
-  BriefcaseBusiness
+  BellRing,
+  BriefcaseBusiness,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import useAuthCheck from "../../hooks/usecheakAuthcontractor";
@@ -197,13 +197,15 @@ const ContractorDashboard = () => {
             <h1 className="text-lg font-semibold text-gray-800">
               Contractor Dashboard
             </h1>
-            <button className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
+            <button
+              className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
                 isSidebarOpen ? "mr-60" : "mr-20"
-            }`} onClick={() => navigate("/")}>              <Home className="w-5 h-5 text-gray-800" />
-</button>
-              
-            
-            
+              }`}
+              onClick={() => navigate("/")}
+            >
+              {" "}
+              <Home className="w-5 h-5 text-gray-800" />
+            </button>
           </header>
 
           {/* Dynamic Main Content */}

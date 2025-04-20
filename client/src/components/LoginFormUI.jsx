@@ -1,9 +1,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import  Button  from "@/components/ui/button";
+import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {GalleryVerticalEnd} from "lucide-react";
+import { GalleryVerticalEnd } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const LoginFormUI = ({
@@ -15,7 +15,6 @@ const LoginFormUI = ({
   logoText = "LocalFinder", // Text for the logo
   welcomeMessage = "Enter your email below to login to your account", // Custom welcome message
 }) => {
-
   const navigate = useNavigate();
   return (
     <div className="flex flex-col gap-4 p-6 md:p-10">
