@@ -53,29 +53,26 @@ const LoginFormUI = ({
 
   return (
     <div className="flex flex-col gap-4 p-6 md:p-10">
-      <div className="flex justify-center gap-2 md:justify-start">
-        <div className="flex items-center gap-2 relative">
-          {/* Logo icon with dropdown toggle */}
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-          >
+      {/* Header with logo on left and dropdown on right */}
+      <div className="flex justify-between items-center">
+        {/* Logo on left */}
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center gap-2 font-medium hover:underline"
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <GalleryVerticalEnd className="size-4" />
-          </button>
+          </div>
+          <h1>{logoText}</h1>
+        </button>
 
-          {/* Logo text */}
-          <button
-            onClick={handleLogoClick}
-            className="font-medium hover:underline"
-          >
-            <h1>{logoText}</h1>
-          </button>
-
-          {/* Dropdown arrow */}
+        {/* Dropdown on right */}
+        <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center"
+            className="flex items-center gap-1 px-3 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
           >
+            <span className="text-sm">Switch Account</span>
             <ChevronDown
               className={`size-4 transition-transform ${
                 dropdownOpen ? "rotate-180" : ""
@@ -85,7 +82,7 @@ const LoginFormUI = ({
 
           {/* Dropdown menu */}
           {dropdownOpen && (
-            <div className="absolute left-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50">
+            <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50">
               {availableLogins.map((login) => (
                 <button
                   key={login.path}
@@ -103,6 +100,7 @@ const LoginFormUI = ({
         </div>
       </div>
 
+      {/* Login form */}
       <div className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-xs">
           <form className={cn("flex flex-col gap-6")} onSubmit={onSubmit}>
