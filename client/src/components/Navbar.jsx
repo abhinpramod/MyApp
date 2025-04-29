@@ -52,16 +52,14 @@ const Navbar = (isOwnerView) => {
                 to="/contractor/Logincontractors"
                 className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
-                {contractor?.verified ? (
+                {contractor?.verified && (
                   <img
                     src={contractor.profilePicture || "/avatar.png"}
                     alt="Contractor Profile"
                     className="w-10 h-10 rounded-full"
                   />
-                ) : (
-                  <Briefcase size={20} />
-                )}
-                {contractor?.verified ? "" : "Contractor"}
+                ) }
+              
               </Link>
             )}
 
@@ -71,8 +69,13 @@ const Navbar = (isOwnerView) => {
                 to="/store/storeprofile"
                 className="py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
               >
-                <Briefcase size={20} />
-                Store
+                {store && (
+                  <img
+                    src={store.profilePicture || "/avatar.png"}
+                    alt="Store Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                ) }
               </Link>
             )}
 

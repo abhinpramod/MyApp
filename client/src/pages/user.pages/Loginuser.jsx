@@ -89,6 +89,7 @@ const UserLoginPage = () => {
         logoText="LocalFinder"
         welcomeMessage="Login to find skilled labors and stores near you."
          currentUserType="user"
+         welcomehead = "User Login"
       />
       <div className="relative hidden bg-muted lg:block">
         <img

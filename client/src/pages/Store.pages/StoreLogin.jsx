@@ -112,6 +112,7 @@ const storeLoginPage = () => {
         logoText="LocalFinder"
         welcomeMessage="Login to LocalFinder and sell your products"
          currentUserType="store"
+         welcomehead="Store Login"
       />
       <div className="relative hidden bg-muted lg:block">
         <img

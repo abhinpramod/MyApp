@@ -97,6 +97,7 @@ const ContractorLoginPage = () => {
         logoText="LocalFinder"
         welcomeMessage="Login to manage your contractor account."
          currentUserType="contractor"
+         welcomehead="Contractor Login"
       />
       <div className="relative hidden bg-muted lg:block">
         <img
