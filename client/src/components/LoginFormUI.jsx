@@ -1,35 +1,108 @@
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GalleryVerticalEnd } from "lucide-react";
+import { GalleryVerticalEnd, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const LoginFormUI = ({
-  formData, // { email: string, password: string }
-  errors, // { email: string, password: string }
-  onSubmit, // Function to handle form submission
-  onChange, // Function to handle input changes
-  onNavigateRegister, // Function to handle navigation to registration
-  logoText = "LocalFinder", // Text for the logo
-  welcomeMessage = "Enter your email below to login to your account", // Custom welcome message
+  formData,
+  errors,
+  onSubmit,
+  onChange,
+  onNavigateRegister,
+  logoText = "LocalFinder",
+  welcomeMessage = "Enter your email below to login to your account",
+  currentUserType = "user", // 'user', 'contractor', or 'store'
 }) => {
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
+  const getAvailableLogins = () => {
+    switch (currentUserType) {
+      case "user":
+        return [
+          { label: "Contractor Login", path: "/contractor/Logincontractors" },
+          { label: "Store Login", path: "/storeLogin" },
+        ];
+      case "contractor":
+        return [
+          { label: "User Login", path: "/loginuser" },
+          { label: "Store Login", path: "/storeLogin" },
+        ];
+      case "store":
+        return [
+          { label: "User Login", path: "/loginuser" },
+          { label: "Contractor Login", path: "/contractor/Logincontractors" },
+        ];
+      default:
+        return [
+          { label: "User Login", path: "/loginuser" },
+          { label: "Contractor Login", path: "/contractor/Logincontractors" },
+          { label: "Store Login", path: "/storeLogin" },
+        ];
+    }
+  };
+
+  const availableLogins = getAvailableLogins();
+
   return (
     <div className="flex flex-col gap-4 p-6 md:p-10">
       <div className="flex justify-center gap-2 md:justify-start">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center bg-transparent gap-2 font-medium"
-        >
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+        <div className="flex items-center gap-2 relative">
+          {/* Logo icon with dropdown toggle */}
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             <GalleryVerticalEnd className="size-4" />
-          </div>
-          <button></button>
-          <h1>{logoText}</h1>
-        </button>
+          </button>
+
+          {/* Logo text */}
+          <button
+            onClick={handleLogoClick}
+            className="font-medium hover:underline"
+          >
+            <h1>{logoText}</h1>
+          </button>
+
+          {/* Dropdown arrow */}
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center"
+          >
+            <ChevronDown
+              className={`size-4 transition-transform ${
+                dropdownOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {/* Dropdown menu */}
+          {dropdownOpen && (
+            <div className="absolute left-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50">
+              {availableLogins.map((login) => (
+                <button
+                  key={login.path}
+                  onClick={() => {
+                    navigate(login.path);
+                    setDropdownOpen(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                >
+                  {login.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
       <div className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-xs">
           <form className={cn("flex flex-col gap-6")} onSubmit={onSubmit}>

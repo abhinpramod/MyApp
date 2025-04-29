@@ -111,6 +111,7 @@ const storeLoginPage = () => {
         onNavigateRegister={handleNavigateRegister}
         logoText="LocalFinder"
         welcomeMessage="Login to LocalFinder and sell your products"
+         currentUserType="store"
       />
       <div className="relative hidden bg-muted lg:block">
         <img

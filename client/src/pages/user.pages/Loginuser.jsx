@@ -88,6 +88,7 @@ const UserLoginPage = () => {
         onNavigateRegister={handleNavigateRegister}
         logoText="LocalFinder"
         welcomeMessage="Login to find skilled labors and stores near you."
+         currentUserType="user"
       />
       <div className="relative hidden bg-muted lg:block">
         <img
