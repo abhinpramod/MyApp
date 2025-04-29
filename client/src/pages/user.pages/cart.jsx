@@ -151,6 +151,7 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       setIsCheckoutOpen(true);
+      console.log("Checkout triggered");
     } catch (error) {
       console.error("Error during checkout:", error);
       toast.error("Failed to proceed with checkout");

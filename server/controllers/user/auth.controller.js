@@ -109,7 +109,7 @@ const verifyOTP = async (req, res) => {
        email,
         password:hashPassword,
          uniqueId,
-         phone
+         phoneNumber:phone
     });
     await newUser.save();
 

@@ -147,7 +147,7 @@ const UserProfile = () => {
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <img
-                  src={user?.profileImage || '/default-avatar.png'}
+                  src={user?.profileImage || '../../../public/avatar.png'}
                   alt="Profile"
                   className="size-32 rounded-full object-cover border-2 "
                 />
