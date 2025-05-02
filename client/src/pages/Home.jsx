@@ -91,7 +91,7 @@ export default function LandingPage() {
             />
             <div className="text-center md:text-left md:ml-8 flex flex-col justify-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">
-                Book Trusted Help for All  Tasks
+                Book Trusted Help for All Tasks
               </h1>
               <p className="text-gray-500 text-sm md:text-lg mb-4 text-center">
                 Your Vision, Our Commitment to Excellence
@@ -193,16 +193,11 @@ export default function LandingPage() {
             spaceBetween={30}
             slidesPerView={1}
             navigation
-            onClick={() => navigate("/contractors")}
             pagination={{ clickable: true }}
             autoplay={{ delay: 3000 }}
             breakpoints={{
-              640: {
-                slidesPerView: 2,
-              },
-              1024: {
-                slidesPerView: 3,
-              },
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
             }}
             className="w-full"
           >
@@ -212,7 +207,12 @@ export default function LandingPage() {
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.3 }}
-                    className="overflow-hidden bg-white shadow-lg rounded-lg "
+                    className="overflow-hidden bg-white shadow-lg rounded-lg cursor-pointer"
+                    onClick={() =>
+                      navigate(
+                        `/contractors/${encodeURIComponent(service.name)}`
+                      )
+                    }
                   >
                     <img
                       src={service.image}

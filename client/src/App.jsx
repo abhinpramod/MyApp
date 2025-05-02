@@ -67,7 +67,8 @@ function App() {
           <Route path="/stores" element={user ? <Stores /> : <Loginuser />} />
           <Route path="/loginuser" element={user ? <Navigate to="/userprofile" /> : <Loginuser />} />
           <Route path="/registeruser" element={user ? <Navigate to="/" /> : <Registeruser />} />
-          <Route path="/contractors" element={user ? <Contractors /> : <Loginuser />} />
+          <Route path="/contractors" element={<Contractors />} />
+          <Route path="/contractors/:JOBTYPE" element={ <Contractors /> } />
           <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           <Route path="/store/:storeId" element={user ? <StoreProfile/>: <Loginuser />} />
           <Route path="/cart" element={user ? <Cart/>: <Cart />} /> 
