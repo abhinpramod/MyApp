@@ -17,6 +17,10 @@ import {
   TextField,
   DialogActions,
   Button,
+  Chip,
+  Tabs,
+  Tab,
+  Box,
 } from "@mui/material";
 import {
   Camera,
@@ -26,6 +30,8 @@ import {
   Pencil,
   Save,
   Loader,
+  Video,
+  Image,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
@@ -50,6 +56,37 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => {
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+const MediaPreview = ({ media, onRemove, isOwnerView }) => {
+  return (
+    <div className="relative group">
+      {media.type === 'image' ? (
+        <img
+          src={media.url}
+          alt="Preview"
+          className="w-full h-32 object-cover rounded-lg"
+        />
+      ) : (
+        <video
+          src={media.url}
+          className="w-full h-32 object-cover rounded-lg"
+          controls={false}
+        />
+      )}
+      {isOwnerView && (
+        <button
+          onClick={() => onRemove(media.id)}
+          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <X size={16} />
+        </button>
+      )}
+      <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+        {media.type === 'image' ? 'Image' : 'Video'}
+      </div>
+    </div>
   );
 };
 
@@ -81,7 +118,7 @@ const DynamicProfile = () => {
   const [availability, setAvailability] = useState(false);
   const [profilePic, setProfilePic] = useState("");
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
-  const [newProjectImage, setNewProjectImage] = useState(null);
+  const [newProjectMedia, setNewProjectMedia] = useState([]);
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const [numberOfEmployees, setNumberOfEmployees] = useState(0);
   const [isEditingEmployees, setIsEditingEmployees] = useState(false);
@@ -93,6 +130,51 @@ const DynamicProfile = () => {
   const [confirmAvailabilityOpen, setConfirmAvailabilityOpen] = useState(false);
   const [tempNumberOfEmployees, setTempNumberOfEmployees] = useState(0);
   const [tempAvailability, setTempAvailability] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+
+  // Mock data for testing UI
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setContractor({
+        companyName: "Mock Construction Co.",
+        contractorName: "John Doe",
+        email: "john@mock.com",
+        gstNumber: "GST123456789",
+        phone: "9876543210",
+        address: "123 Mock Street, Mockville",
+        city: "Mockville",
+        state: "Mockstate",
+        country: "Mockland",
+        jobTypes: ["Plumbing", "Electrical", "Carpentry"],
+        description: "This is a mock contractor description for UI testing.",
+        availability: true,
+        numberOfEmployees: 5,
+        profilePicture: "https://randomuser.me/api/portraits/men/1.jpg",
+      });
+
+      setProjects([
+        {
+          _id: "1",
+          description: "Beautiful kitchen renovation",
+          media: [
+            { id: "1", type: "image", url: "https://source.unsplash.com/random/300x300?kitchen" },
+            { id: "2", type: "image", url: "https://source.unsplash.com/random/300x300?kitchen2" },
+            { id: "3", type: "video", url: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4" },
+          ],
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: "2",
+          description: "Bathroom remodeling project",
+          media: [
+            { id: "4", type: "image", url: "https://source.unsplash.com/random/300x300?bathroom" },
+            { id: "5", type: "video", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" },
+          ],
+          createdAt: new Date().toISOString()
+        }
+      ]);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchContractorData = async () => {
@@ -274,48 +356,67 @@ const DynamicProfile = () => {
     setIsLoading(false);
   };
 
-  const handleProjectImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+  const handleProjectMediaUpload = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length + newProjectMedia.length > 10) {
+      toast.error("You can upload a maximum of 10 files per project");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setNewProjectImage(reader.result);
-    };
-    reader.readAsDataURL(file);
+    files.forEach(file => {
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large (max 20MB)`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newMedia = {
+          id: Math.random().toString(36).substring(7),
+          type: file.type.startsWith('video') ? 'video' : 'image',
+          url: reader.result,
+          file // Keep the file reference for actual upload
+        };
+        setNewProjectMedia(prev => [...prev, newMedia]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveMedia = (id) => {
+    setNewProjectMedia(prev => prev.filter(media => media.id !== id));
   };
 
   const handleAddProject = async () => {
-    if (!newProjectImage || !newProjectDescription) {
-      toast.error("Please provide both an image and a description");
+    if (newProjectMedia.length === 0 || !newProjectDescription) {
+      toast.error("Please provide at least one media file and a description");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("image", newProjectImage);
-    formData.append("description", newProjectDescription);
+    // In a real implementation, you would upload the files here
+    console.log("Would upload:", {
+      media: newProjectMedia,
+      description: newProjectDescription
+    });
 
-    try {
-      setIsLoading(true);
-      const response = await axiosInstance.post(
-        "/contractor/addprojects",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      setProjects([...projects, response.data.project]);
-      toast.success("Project added successfully!");
-      setOpenProjectDialog(false);
-      setNewProjectImage(null);
-      setNewProjectDescription("");
-    } catch (error) {
-      toast.error("Failed to add project");
-    }
-    setIsLoading(false);
+    // Mock implementation for UI
+    const newProject = {
+      _id: Math.random().toString(36).substring(7),
+      description: newProjectDescription,
+      media: newProjectMedia.map(m => ({
+        id: m.id,
+        type: m.type,
+        url: m.url // In real app, this would be the uploaded URL
+      })),
+      createdAt: new Date().toISOString()
+    };
+
+    setProjects([...projects, newProject]);
+    toast.success("Project added successfully!");
+    setOpenProjectDialog(false);
+    setNewProjectMedia([]);
+    setNewProjectDescription("");
   };
 
   const handleDeleteProject = async (projectId) => {
@@ -563,8 +664,9 @@ const DynamicProfile = () => {
           <Button
             onClick={() => setOpenProjectDialog(true)}
             className="flex items-center gap-2 text-sm font-semibold hover:text-gray-800 transition-colors"
+            startIcon={<CirclePlus size={18} />}
           >
-            <CirclePlus size={18} /> Add Project
+            Add Project
           </Button>
         )}
 
@@ -575,13 +677,27 @@ const DynamicProfile = () => {
                 className="cursor-pointer hover:shadow-md transition-shadow mt-4 h-90 flex flex-col"
                 onClick={() => setSelectedProject(project)}
               >
-                <div className="h-40 w-full overflow-hidden">
-                  <CardMedia
-                    component="img"
-                    className="w-full h-full object-cover"
-                    image={project.image || "/default-project.png"}
-                    alt={`Project ${index + 1}`}
-                  />
+                <div className="h-40 w-full overflow-hidden relative">
+                  {project.media && project.media[0].type === 'video' ? (
+                    <video
+                      src={project.media[0].url}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay
+                    />
+                  ) : (
+                    <img
+                      src={project.media && project.media[0].url}
+                      className="w-full h-full object-cover"
+                      alt={`Project ${index + 1}`}
+                    />
+                  )}
+                  {project.media?.length > 1 && (
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                      +{project.media.length - 1} more
+                    </div>
+                  )}
                 </div>
                 <CardContent className="flex-grow flex items-center justify-center">
                   <p className="text-center text-sm font-semibold text-gray-600">
@@ -608,19 +724,81 @@ const DynamicProfile = () => {
             </div>
           </DialogTitle>
           <DialogContent>
-            <div className="flex flex-col items-center">
-              <img
-                src={selectedProject?.image || "/default-project.png"}
-                alt="Selected Project"
-                className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
-              />
-              <p className="text-center text-lg mt-4 text-gray-600">
+            <Tabs
+              value={tabValue}
+              onChange={(e, newValue) => setTabValue(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              {selectedProject?.media?.map((media, index) => (
+                <Tab
+                  key={index}
+                  icon={
+                    media.type === 'image' ? (
+                      <Image size={20} />
+                    ) : (
+                      <Video size={20} />
+                    )
+                  }
+                  label={`Media ${index + 1}`}
+                />
+              ))}
+            </Tabs>
+            <Box sx={{ p: 2 }}>
+              {selectedProject?.media?.[tabValue]?.type === 'video' ? (
+                <video
+                  src={selectedProject?.media[tabValue].url}
+                  className="w-full max-h-[70vh] object-contain rounded-lg"
+                  controls
+                  autoPlay
+                />
+              ) : (
+                <img
+                  src={selectedProject?.media?.[tabValue]?.url}
+                  alt="Selected Project"
+                  className="w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              )}
+            </Box>
+            <div className="mt-4">
+              <p className="text-center text-lg text-gray-600">
                 {selectedProject?.description}
               </p>
               <p className="text-center text-sm text-gray-500 mt-2">
                 Added on:{" "}
                 {new Date(selectedProject?.createdAt).toLocaleString()}
               </p>
+            </div>
+            
+            {/* Media thumbnails grid */}
+            <div className="mt-4">
+              <Typography variant="subtitle1" gutterBottom>
+                All Media ({selectedProject?.media?.length})
+              </Typography>
+              <Grid container spacing={1}>
+                {selectedProject?.media?.map((media, index) => (
+                  <Grid item xs={4} sm={3} md={2} key={index}>
+                    <div 
+                      className={`cursor-pointer border-2 rounded ${tabValue === index ? 'border-blue-500' : 'border-transparent'}`}
+                      onClick={() => setTabValue(index)}
+                    >
+                      {media.type === 'video' ? (
+                        <video
+                          src={media.url}
+                          className="w-full h-24 object-cover rounded"
+                          muted
+                        />
+                      ) : (
+                        <img
+                          src={media.url}
+                          className="w-full h-24 object-cover rounded"
+                          alt={`Thumbnail ${index + 1}`}
+                        />
+                      )}
+                    </div>
+                  </Grid>
+                ))}
+              </Grid>
             </div>
           </DialogContent>
           {/* Delete button only for owner view */}
@@ -632,8 +810,9 @@ const DynamicProfile = () => {
                   openDeleteConfirmation(selectedProject?._id);
                 }}
                 color="error"
+                startIcon={<Trash2 size={20} />}
               >
-                <Trash2 size={24} /> Delete
+                Delete
               </Button>
             </DialogActions>
           )}
@@ -643,38 +822,95 @@ const DynamicProfile = () => {
         {isOwnerView && (
           <Dialog
             open={openProjectDialog}
-            onClose={() => setOpenProjectDialog(false)}
+            onClose={() => {
+              setOpenProjectDialog(false);
+              setNewProjectMedia([]);
+            }}
+            fullWidth
+            maxWidth="md"
           >
             <DialogTitle>Add New Project</DialogTitle>
             <DialogContent>
-              {newProjectImage && (
-                <img
-                  src={newProjectImage}
-                  alt="Preview"
-                  className="w-full h-40 object-cover rounded-lg mb-4"
-                />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Media (Images or Videos)
+                </label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <CirclePlus className="w-8 h-8 text-gray-500" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Images (JPEG, PNG) and Videos (MP4) up to 20MB
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*,video/*"
+                      multiple
+                      onChange={handleProjectMediaUpload}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {newProjectMedia.length > 0 && (
+                <div className="mb-4">
+                  <Typography variant="subtitle2" gutterBottom>
+                    Media Preview ({newProjectMedia.length}/10)
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {newProjectMedia.map((media) => (
+                      <Grid item xs={6} sm={4} md={3} key={media.id}>
+                        <MediaPreview 
+                          media={media} 
+                          onRemove={handleRemoveMedia}
+                          isOwnerView={isOwnerView}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </div>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleProjectImageUpload}
-                className="mb-4"
-              />
+
               <TextField
                 label="Project Description"
                 fullWidth
                 multiline
-                rows={2}
+                rows={3}
                 value={newProjectDescription}
                 onChange={(e) => setNewProjectDescription(e.target.value)}
+                margin="normal"
               />
+
+              <div className="mt-2 text-xs text-gray-500">
+                <p>Tips for a great project post:</p>
+                <ul className="list-disc pl-5">
+                  <li>Upload high-quality photos and videos</li>
+                  <li>Include before/after shots if possible</li>
+                  <li>Describe the challenges and solutions</li>
+                  <li>Keep descriptions concise but informative</li>
+                </ul>
+              </div>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setOpenProjectDialog(false)}>
+              <Button 
+                onClick={() => {
+                  setOpenProjectDialog(false);
+                  setNewProjectMedia([]);
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddProject} className="b text-white">
-                Add
+              <Button 
+                onClick={handleAddProject} 
+                variant="contained"
+                disabled={newProjectMedia.length === 0 || !newProjectDescription}
+              >
+                Add Project
               </Button>
             </DialogActions>
           </Dialog>
