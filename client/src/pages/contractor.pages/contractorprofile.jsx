@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
-  CardMedia,
   Grid,
   Dialog,
   DialogContent,
@@ -17,10 +16,10 @@ import {
   TextField,
   DialogActions,
   Button,
-  Chip,
-  Tabs,
-  Tab,
   Box,
+  CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Camera,
@@ -29,9 +28,8 @@ import {
   X,
   Pencil,
   Save,
-  Loader,
-  Video,
-  Image,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
@@ -67,6 +65,7 @@ const MediaPreview = ({ media, onRemove, isOwnerView }) => {
           src={media.url}
           alt="Preview"
           className="w-full h-32 object-cover rounded-lg"
+          loading="lazy"
         />
       ) : (
         <video
@@ -94,6 +93,8 @@ const DynamicProfile = () => {
   const navigate = useNavigate();
   const { contractorId: paramContractorId } = useParams();
   const currentContractor = useSelector((state) => state.contractor);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Determine view mode
   const isOwnerView = !paramContractorId;
@@ -130,52 +131,11 @@ const DynamicProfile = () => {
   const [confirmAvailabilityOpen, setConfirmAvailabilityOpen] = useState(false);
   const [tempNumberOfEmployees, setTempNumberOfEmployees] = useState(0);
   const [tempAvailability, setTempAvailability] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [dragStartX, setDragStartX] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Mock data for testing UI
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setContractor({
-        companyName: "Mock Construction Co.",
-        contractorName: "John Doe",
-        email: "john@mock.com",
-        gstNumber: "GST123456789",
-        phone: "9876543210",
-        address: "123 Mock Street, Mockville",
-        city: "Mockville",
-        state: "Mockstate",
-        country: "Mockland",
-        jobTypes: ["Plumbing", "Electrical", "Carpentry"],
-        description: "This is a mock contractor description for UI testing.",
-        availability: true,
-        numberOfEmployees: 5,
-        profilePicture: "https://randomuser.me/api/portraits/men/1.jpg",
-      });
-
-      setProjects([
-        {
-          _id: "1",
-          description: "Beautiful kitchen renovation",
-          media: [
-            { id: "1", type: "image", url: "https://source.unsplash.com/random/300x300?kitchen" },
-            { id: "2", type: "image", url: "https://source.unsplash.com/random/300x300?kitchen2" },
-            { id: "3", type: "video", url: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4" },
-          ],
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: "2",
-          description: "Bathroom remodeling project",
-          media: [
-            { id: "4", type: "image", url: "https://source.unsplash.com/random/300x300?bathroom" },
-            { id: "5", type: "video", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" },
-          ],
-          createdAt: new Date().toISOString()
-        }
-      ]);
-    }
-  }, []);
-
+  // Fetch contractor data
   useEffect(() => {
     const fetchContractorData = async () => {
       if (!profileContractorId) return;
@@ -191,6 +151,7 @@ const DynamicProfile = () => {
 
         setContractor(data);
         setProjects(data.projects || []);
+        console.log(data.projects);
         setJobTypes(data.jobTypes || []);
         setAvailability(data.availability || false);
         setProfilePic(data.profilePicture || "");
@@ -212,43 +173,84 @@ const DynamicProfile = () => {
     fetchContractorData();
   }, [profileContractorId, isOwnerView, navigate]);
 
+  // Fetch projects
+  // const fetchProjects = useCallback(async () => {
+  //   try {
+  //     const response = await axiosInstance.get("/contractor/projects");
+  //     setProjects(response.data.projects || []);
+  //     console.log(response.data.projects);
+
+  //   } catch (error) {
+  //     console.error("Failed to fetch projects:", error);
+  //     toast.error("Failed to load projects");
+  //   }
+  // }, []);
+
+  // Handle profile picture upload
+  const handleProfilePicUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match('image.*')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profilePic', file);
+
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.put(
+        "/contractor/update-profile-pic",
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setProfilePic(response.data.profilePicture);
+      toast.success("Profile picture updated successfully");
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      toast.error("Failed to update profile picture");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle job types change for interest form
   const handleJobTypesChange = (event) => {
     const { value } = event.target;
     setFormData({ ...formData, jobTypes: value });
   };
 
+  // Handle submit interest
   const handleSubmitInterest = async (e) => {
     e.preventDefault();
-
-    // Validation logic
+    
+    // Validation
     const newErrors = {};
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "Phone number is required";
-    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Invalid phone number format";
-    }
+    if (!formData.phoneNumber) newErrors.phoneNumber = "Phone number is required";
     if (!formData.address) newErrors.address = "Address is required";
-    if (!formData.expectedDate)
-      newErrors.expectedDate = "Expected date is required";
-    if (formData.jobTypes.length === 0)
-      newErrors.jobTypes = "At least one job type is required";
+    if (!formData.expectedDate) newErrors.expectedDate = "Expected date is required";
+    if (formData.jobTypes.length === 0) newErrors.jobTypes = "At least one job type is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    setErrors({});
-
     try {
       setIsLoading(true);
-      await axiosInstance.post(
-        `/user/contractor/interest/${profileContractorId}`,
-        {
-          formData,
-          contractor,
-        }
-      );
+      await axiosInstance.post(`/user/contractor/interest/${profileContractorId}`, formData);
       toast.success("Interest expressed successfully!");
       setShowInterestDialog(false);
       setFormData({
@@ -258,109 +260,166 @@ const DynamicProfile = () => {
         jobTypes: [],
       });
     } catch (error) {
-      if (error.response?.status === 403) {
-        return toast.error(error.response.data.msg);
-      }
-      console.error("Failed to express interest:", error);
-      toast.error("Failed to express interest");
+      console.error("Error expressing interest:", error);
+      toast.error(error.response?.data?.message || "Failed to express interest");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Carousel navigation functions
+  const nextImage = useCallback(() => {
+    setCurrentImageIndex(prev => 
+      prev === selectedProject?.media?.length - 1 ? 0 : prev + 1
+    );
+  }, [selectedProject]);
+
+  const prevImage = useCallback(() => {
+    setCurrentImageIndex(prev => 
+      prev === 0 ? selectedProject?.media?.length - 1 : prev - 1
+    );
+  }, [selectedProject]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedProject) return;
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'Escape') {
+        setSelectedProject(null);
+        setCurrentImageIndex(0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedProject, nextImage, prevImage]);
+
+  // Touch event handlers
+  const handleTouchStart = useCallback((e) => {
+    setDragStartX(e.touches[0].clientX);
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (dragStartX === null) return;
+    
+    const dragEndX = e.touches[0].clientX;
+    const diff = dragStartX - dragEndX;
+
+    if (diff > 50) nextImage();
+    else if (diff < -50) prevImage();
+
+    setDragStartX(null);
+  }, [dragStartX, nextImage, prevImage]);
+
+  // Handle edit description
   const handleEditDescription = () => {
     setTempDescription(contractor.description || "");
     setIsEditingDescription(true);
   };
 
+  // Handle save description
   const handleSaveDescription = async () => {
-    setIsLoading(true);
-    try {
-      await axiosInstance.put("/contractor/updatedescription", {
-        description: tempDescription,
-      });
-      setContractor((prev) => ({ ...prev, description: tempDescription }));
-      setIsEditingDescription(false);
-      toast.success("Description updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update description");
+    if (!tempDescription.trim()) {
+      toast.error("Description cannot be empty");
+      return;
     }
-    setIsLoading(false);
+
+    try {
+      setIsLoading(true);
+      await axiosInstance.put("/contractor/update-description", {
+        description: tempDescription
+      });
+      setContractor(prev => ({ ...prev, description: tempDescription }));
+      setIsEditingDescription(false);
+      toast.success("Description updated successfully");
+    } catch (error) {
+      console.error("Error updating description:", error);
+      toast.error("Failed to update description");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Handle edit employees
   const handleEditEmployees = () => {
     setTempNumberOfEmployees(numberOfEmployees);
     setIsEditingEmployees(true);
   };
 
+  // Handle confirm employees change
   const handleConfirmEmployees = async () => {
-    setIsLoading(true);
     try {
-      await axiosInstance.put("/contractor/employeesnumber", {
-        numberOfEmployees: tempNumberOfEmployees,
+      setIsLoading(true);
+      await axiosInstance.put("/contractor/update-employees", {
+        numberOfEmployees: tempNumberOfEmployees
       });
       setNumberOfEmployees(tempNumberOfEmployees);
       setIsEditingEmployees(false);
-      toast.success("Number of employees updated successfully!");
+      setConfirmEmployeesOpen(false);
+      toast.success("Number of employees updated");
     } catch (error) {
-      toast.error("Failed to update number of employees");
+      console.error("Error updating employees:", error);
+      toast.error("Failed to update employees");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    setConfirmEmployeesOpen(false);
   };
 
+  // Handle confirm availability change
   const handleConfirmAvailability = async () => {
-    setIsLoading(true);
     try {
-      await axiosInstance.put("/contractor/availability", {
-        availability: tempAvailability,
+      setIsLoading(true);
+      await axiosInstance.put("/contractor/update-availability", {
+        availability: tempAvailability
       });
       setAvailability(tempAvailability);
-      toast.success(
-        `Availability set to ${tempAvailability ? "Available" : "Not Available"}`
-      );
+      setConfirmAvailabilityOpen(false);
+      toast.success(`Availability set to ${tempAvailability ? 'Available' : 'Not Available'}`);
     } catch (error) {
+      console.error("Error updating availability:", error);
       toast.error("Failed to update availability");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    setConfirmAvailabilityOpen(false);
   };
 
-  const handleProfilePicUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return toast.error("No file selected");
-    setIsLoading(true);
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
-      setIsLoading(false);
-      return;
-    }
-
+  // Upload project media
+  const uploadProjectMedia = async (files) => {
     const formData = new FormData();
-    formData.append("profilePic", file);
+    files.forEach(file => {
+      formData.append("media", file);
+    });
 
     try {
-      await axiosInstance.put("/contractor/updateProfilePic", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const response = await axiosInstance.post("/contractor/upload-media", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percentCompleted);
+        },
       });
-      const response = await axiosInstance.get("/contractor/profile");
-      setContractor(response.data);
-      toast.success("Profile picture updated successfully!");
+      return response.data.mediaUrls;
     } catch (error) {
-      console.error("Error updating profile picture:", error);
-      toast.error(
-        error.response?.data?.msg || "Failed to update profile picture"
-      );
+      console.error("Error uploading media:", error);
+      toast.error("Failed to upload media");
+      throw error;
+    } finally {
+      setUploadProgress(0);
     }
-    setIsLoading(false);
   };
 
+  // Handle project media upload
   const handleProjectMediaUpload = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files).slice(0, 3); // Limit to 3 files
     
-    if (files.length + newProjectMedia.length > 10) {
-      toast.error("You can upload a maximum of 10 files per project");
+    if (files.length + newProjectMedia.length > 3) {
+      toast.error("You can upload a maximum of 3 files per project");
       return;
     }
 
@@ -376,7 +435,7 @@ const DynamicProfile = () => {
           id: Math.random().toString(36).substring(7),
           type: file.type.startsWith('video') ? 'video' : 'image',
           url: reader.result,
-          file // Keep the file reference for actual upload
+          file
         };
         setNewProjectMedia(prev => [...prev, newMedia]);
       };
@@ -384,105 +443,102 @@ const DynamicProfile = () => {
     });
   };
 
+  // Remove media from new project
   const handleRemoveMedia = (id) => {
     setNewProjectMedia(prev => prev.filter(media => media.id !== id));
   };
 
+  // Handle add project
   const handleAddProject = async () => {
-    if (newProjectMedia.length === 0 || !newProjectDescription) {
+    if (newProjectMedia.length === 0 || !newProjectDescription.trim()) {
       toast.error("Please provide at least one media file and a description");
       return;
     }
 
-    // In a real implementation, you would upload the files here
-    console.log("Would upload:", {
-      media: newProjectMedia,
-      description: newProjectDescription
-    });
+    try {
+      setIsLoading(true);
+      
+      // Upload media files
+      const files = newProjectMedia.map(m => m.file);
+      const mediaUrls = await uploadProjectMedia(files);
 
-    // Mock implementation for UI
-    const newProject = {
-      _id: Math.random().toString(36).substring(7),
-      description: newProjectDescription,
-      media: newProjectMedia.map(m => ({
-        id: m.id,
-        type: m.type,
-        url: m.url // In real app, this would be the uploaded URL
-      })),
-      createdAt: new Date().toISOString()
-    };
-
-    setProjects([...projects, newProject]);
-    toast.success("Project added successfully!");
-    setOpenProjectDialog(false);
-    setNewProjectMedia([]);
-    setNewProjectDescription("");
+      // Create project
+      const response = await axiosInstance.post("/contractor/projects", {
+        description: newProjectDescription,
+        media: mediaUrls
+      });
+      
+      setProjects(prev => [response.data.project, ...prev]);
+      toast.success("Project added successfully!");
+      setOpenProjectDialog(false);
+      setNewProjectMedia([]);
+      setNewProjectDescription("");
+    } catch (error) {
+      console.error("Error adding project:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Handle delete project
   const handleDeleteProject = async (projectId) => {
     try {
       setIsLoading(true);
-      await axiosInstance.delete("/contractor/deleteproject", {
-        data: { projectId },
-      });
-      setProjects((prev) =>
-        prev.filter((project) => project._id !== projectId)
-      );
+      await axiosInstance.delete(`/contractor/projects/${projectId}`);
+      setProjects(prev => prev.filter(project => project._id !== projectId));
       toast.success("Project deleted successfully!");
       setSelectedProject(null);
     } catch (error) {
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project");
+    } finally {
+      setIsLoading(false);
+      setDeleteConfirmationOpen(false);
     }
-    setIsLoading(false);
   };
 
+  // Open delete confirmation
   const openDeleteConfirmation = (projectId) => {
     setProjectToDelete(projectId);
     setDeleteConfirmationOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading && !uploadProgress) {
     return (
-      <center>
-        <Loader className="size-10 mt-60 animate-spin" />
-      </center>
+      <div className="flex items-center justify-center h-screen">
+        <CircularProgress size={60} />
+      </div>
     );
   }
 
   if (!contractor) {
-    return <div>No contractor data found.</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Typography>No contractor data found.</Typography>
+      </div>
+    );
   }
 
   return (
     <>
       {!isOwnerView && <Navbar />}
 
-      <div
-        className={`p-6 max-h-fit min-h-screen max-w-4xl mx-auto shadow-lg rounded-2xl ${!isOwnerView && "mt-20"}  `}
-      >
+      <div className={`p-4 md:p-6 max-w-4xl mx-auto ${!isOwnerView && "mt-16 md:mt-20"}`}>
+        {/* Profile Section */}
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Profile Picture Section */}
-          <div className="flex flex-col items-center w-full md:w-1/3">
+          {/* Left Column - Profile Picture and Description */}
+          <div className="w-full md:w-1/3 flex flex-col items-center">
             <div className="relative">
               <Avatar
-                sx={{ width: 128, height: 128 }}
-                className="rounded-full border-4 border-gray-200"
-                src={
-                  profilePic ||
-                  contractor.profilePicture ||
-                  "../../public/avatar.png"
-                }
+                sx={{ width: 120, height: 120 }}
+                className="border-4 border-gray-200"
+                src={profilePic || contractor.profilePicture || "/avatar.png"}
               />
               {isOwnerView && (
-                <label
-                  htmlFor="avatar-upload"
-                  className="absolute bottom-1 right-1 bg-gray-800 p-3 rounded-full cursor-pointer hover:bg-gray-700 transition-colors"
-                >
+                <label className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors">
                   <Camera className="w-5 h-5 text-white" />
                   <input
                     type="file"
-                    id="avatar-upload"
                     className="hidden"
                     accept="image/*"
                     onChange={handleProfilePicUpload}
@@ -490,13 +546,12 @@ const DynamicProfile = () => {
                 </label>
               )}
             </div>
-            <h2 className="text-xl font-bold mt-4">{contractor.companyName}</h2>
-            <h4 className="font-semibold text-gray-600">
-              {contractor.contractorName}
-            </h4>
+            
+            <h2 className="text-xl font-bold mt-4 text-center">{contractor.companyName}</h2>
+            <h4 className="text-gray-600 text-center">{contractor.contractorName}</h4>
 
-            {/* Description Section */}
-            <div className="w-full mt-2">
+            {/* Description */}
+            <div className="w-full mt-4">
               {isOwnerView && isEditingDescription ? (
                 <div className="space-y-2">
                   <TextField
@@ -505,83 +560,50 @@ const DynamicProfile = () => {
                     fullWidth
                     value={tempDescription}
                     onChange={(e) => setTempDescription(e.target.value)}
-                    placeholder="Tell us about your company..."
                     variant="outlined"
-                    className="bg-gray-50 rounded-lg"
-                    autoFocus
                   />
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => setIsEditingDescription(false)}
-                    >
+                    <Button variant="outlined" onClick={() => setIsEditingDescription(false)}>
                       Cancel
                     </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleSaveDescription}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
+                    <Button variant="contained" onClick={handleSaveDescription}>
                       Save
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div
+                <div 
                   onClick={isOwnerView ? handleEditDescription : undefined}
-                  className={`p-4 rounded-lg transition-all ${
-                    contractor.description
-                      ? "border border-gray-200 hover:border-blue-300 bg-white" +
-                        (isOwnerView ? " cursor-text" : "")
-                      : "border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50" +
-                        (isOwnerView ? " cursor-pointer" : "")
-                  }`}
+                  className={`p-4 rounded-lg ${
+                    contractor.description 
+                      ? "border border-gray-200 bg-white" 
+                      : "border-2 border-dashed border-gray-300 bg-gray-50"
+                  } ${isOwnerView ? "cursor-pointer hover:border-blue-300" : ""}`}
                 >
-                  <p
-                    className={`text-center ${
-                      contractor.description
-                        ? "text-gray-700"
-                        : "text-gray-500 italic"
-                    }`}
-                  >
-                    {contractor.description ||
-                      (isOwnerView
-                        ? "Click here to add a description..."
-                        : "No description provided")}
+                  <p className={contractor.description ? "text-gray-700" : "text-gray-500 italic"}>
+                    {contractor.description || (isOwnerView ? "Click to add description..." : "No description")}
                   </p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Contractor Details Section */}
+          {/* Right Column - Details */}
           <div className="w-full md:w-2/3 space-y-4">
-            <p className="text-gray-600">
-              <strong>Email:</strong> {contractor.email}
-            </p>
-            <p className="text-gray-600">
-              <strong>GST:</strong> {contractor.gstNumber}
-            </p>
-            {contractor.phone && (
-              <p className="text-gray-600">
-                <strong>Phone:</strong> {contractor.phone}
-              </p>
-            )}
-            <p className="text-gray-600">
-              <strong>Address:</strong> {contractor.address}, {contractor.city},{" "}
-              {contractor.state}, {contractor.country}
-            </p>
+            <DetailItem label="Email" value={contractor.email} />
+            <DetailItem label="GST" value={contractor.gstNumber} />
+            {contractor.phone && <DetailItem label="Phone" value={contractor.phone} />}
+            <DetailItem 
+              label="Address" 
+              value={`${contractor.address}, ${contractor.city}, ${contractor.state}, ${contractor.country}`} 
+            />
             {jobTypes.length > 0 && (
-              <p className="text-gray-600">
-                <strong>Job Types:</strong> {jobTypes.join(", ")}
-              </p>
+              <DetailItem label="Job Types" value={jobTypes.join(", ")} />
             )}
 
             {/* Number of Employees */}
             <div className="flex items-center gap-2">
-              <strong>Number of Employees:</strong>
+              <span className="font-medium">Number of Employees:</span>
               {isOwnerView && isEditingEmployees ? (
                 <div className="flex items-center gap-2">
                   <TextField
@@ -589,236 +611,269 @@ const DynamicProfile = () => {
                     value={tempNumberOfEmployees}
                     onChange={(e) => setTempNumberOfEmployees(e.target.value)}
                     size="small"
-                    className="w-16"
+                    sx={{ width: 80 }}
                   />
-                  <IconButton
-                    onClick={() => setConfirmEmployeesOpen(true)}
-                    className="hover:dark text-white"
-                  >
-                    <Save size={15} />
+                  <IconButton onClick={() => setConfirmEmployeesOpen(true)}>
+                    <Save size={18} />
                   </IconButton>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <span>{numberOfEmployees}</span>
                   {isOwnerView && (
-                    <IconButton
-                      onClick={handleEditEmployees}
-                      className="hover:bg-black"
-                    >
-                      <Pencil size={15} />
+                    <IconButton onClick={handleEditEmployees} size="small">
+                      <Pencil size={16} />
                     </IconButton>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Availability Section */}
-            <div className="flex items-center gap-2 mt-3">
+            {/* Availability */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Availability:</span>
               {isOwnerView ? (
                 <>
                   <Switch
                     checked={availability}
-                    onCheckedChange={(checked) => {
-                      setTempAvailability(checked);
+                    onChange={(e) => {
+                      setTempAvailability(e.target.checked);
                       setConfirmAvailabilityOpen(true);
                     }}
                   />
-                  <span
-                    className={availability ? "text-green-600" : "text-red-600"}
-                  >
+                  <span className={availability ? "text-green-600" : "text-red-600"}>
                     {availability ? "Available" : "Not Available"}
                   </span>
                 </>
               ) : (
-                <span
-                  className={
-                    contractor.availability ? "text-green-600" : "text-red-600"
-                  }
-                >
+                <span className={contractor.availability ? "text-green-600" : "text-red-600"}>
                   {contractor.availability ? "Available" : "Not Available"}
                 </span>
               )}
             </div>
 
-            {/* Interest Button - Only show for user view */}
+            {/* Interest Button */}
             {!isOwnerView && (
               <button
                 onClick={() => setShowInterestDialog(true)}
-                className={`bg-red-700 text-white px-4 w-1/2 h-8 rounded-md mt-4 ${
+                className={`bg-red-600 text-white px-4 py-2 rounded-md w-full md:w-auto ${
                   contractor.availability ? "" : "opacity-50 cursor-not-allowed"
                 }`}
                 disabled={!contractor.availability}
               >
-                Interested
+                Express Interest
               </button>
             )}
           </div>
         </div>
 
-        {/* Project List */}
-        <hr className="my-6 border-gray-200" />
-
-        {/* Add Project Button - Only for owner view */}
-        {isOwnerView && (
-          <Button
-            onClick={() => setOpenProjectDialog(true)}
-            className="flex items-center gap-2 text-sm font-semibold hover:text-gray-800 transition-colors"
-            startIcon={<CirclePlus size={18} />}
-          >
-            Add Project
-          </Button>
-        )}
-
-        <Grid container spacing={3} className="mt-6">
-          {projects.map((project, index) => (
-            <Grid item key={index} xs={12} sm={6} md={4}>
-              <Card
-                className="cursor-pointer hover:shadow-md transition-shadow mt-4 h-90 flex flex-col"
-                onClick={() => setSelectedProject(project)}
+        {/* Projects Section */}
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">Projects</h3>
+            {isOwnerView && (
+              <Button
+                onClick={() => setOpenProjectDialog(true)}
+                startIcon={<CirclePlus size={18} />}
+                variant="contained"
               >
-                <div className="h-40 w-full overflow-hidden relative">
-                  {project.media && project.media[0].type === 'video' ? (
-                    <video
-                      src={project.media[0].url}
-                      className="w-full h-full object-cover"
-                      muted
-                      loop
-                      autoPlay
-                    />
-                  ) : (
-                    <img
-                      src={project.media && project.media[0].url}
-                      className="w-full h-full object-cover"
-                      alt={`Project ${index + 1}`}
-                    />
-                  )}
-                  {project.media?.length > 1 && (
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
-                      +{project.media.length - 1} more
-                    </div>
-                  )}
-                </div>
-                <CardContent className="flex-grow flex items-center justify-center">
-                  <p className="text-center text-sm font-semibold text-gray-600">
-                    {project.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                Add Project
+              </Button>
+            )}
+          </div>
 
-        {/* Full-Screen Project View */}
-        <Dialog
-          open={!!selectedProject}
-          onClose={() => setSelectedProject(null)}
-          fullScreen
-        >
-          <DialogTitle>
-            <div className="flex justify-between items-center">
-              <span>Project Details</span>
-              <IconButton onClick={() => setSelectedProject(null)}>
-                <X size={24} />
-              </IconButton>
+          {projects.length === 0 ? (
+            <div className="text-center py-8">
+              <Typography variant="body1" color="textSecondary">
+                No projects found
+              </Typography>
             </div>
-          </DialogTitle>
-          <DialogContent>
-            <Tabs
-              value={tabValue}
-              onChange={(e, newValue) => setTabValue(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-            >
-              {selectedProject?.media?.map((media, index) => (
-                <Tab
-                  key={index}
-                  icon={
-                    media.type === 'image' ? (
-                      <Image size={20} />
-                    ) : (
-                      <Video size={20} />
-                    )
-                  }
-                  label={`Media ${index + 1}`}
-                />
+          ) : (
+            <Grid container spacing={2}>
+              {projects.map((project) => (
+                <Grid item xs={12} sm={6} md={4} key={project._id}>
+                  <ProjectCard 
+                    project={project} 
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setCurrentImageIndex(0);
+                    }}
+                  />
+                </Grid>
               ))}
-            </Tabs>
-            <Box sx={{ p: 2 }}>
-              {selectedProject?.media?.[tabValue]?.type === 'video' ? (
-                <video
-                  src={selectedProject?.media[tabValue].url}
-                  className="w-full max-h-[70vh] object-contain rounded-lg"
-                  controls
-                  autoPlay
-                />
-              ) : (
-                <img
-                  src={selectedProject?.media?.[tabValue]?.url}
-                  alt="Selected Project"
-                  className="w-full max-h-[70vh] object-contain rounded-lg"
-                />
+            </Grid>
+          )}
+        </div>
+
+        {/* Project View Dialog */}
+        {selectedProject && (
+          <Dialog
+            open={!!selectedProject}
+            onClose={() => {
+              setSelectedProject(null);
+              setCurrentImageIndex(0);
+            }}
+            fullScreen
+            PaperProps={{
+              sx: {
+                bgcolor: 'black',
+                color: 'white'
+              }
+            }}
+          >
+            <DialogTitle sx={{ position: 'fixed', top: 0, width: '100%', zIndex: 1 }}>
+              <div className="flex justify-between items-center">
+                <span>Project {currentImageIndex + 1} of {selectedProject.media?.length}</span>
+                <IconButton 
+                  onClick={() => {
+                    setSelectedProject(null);
+                    setCurrentImageIndex(0);
+                  }}
+                  color="inherit"
+                >
+                  <X />
+                </IconButton>
+              </div>
+            </DialogTitle>
+            
+            <DialogContent 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                height: '100%',
+                p: 0
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+            >
+              {/* Left Arrow */}
+              {selectedProject.media.length > 1 && (
+                <IconButton
+                  onClick={prevImage}
+                  sx={{
+                    position: 'fixed',
+                    left: 16,
+                    color: 'white',
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                    zIndex: 1
+                  }}
+                  size="large"
+                >
+                  <ChevronLeft />
+                </IconButton>
+              )}
+
+              {/* Media Content */}
+              <div className="w-full h-full flex items-center justify-center">
+                {selectedProject.media[currentImageIndex]?.type === 'video' ? (
+                  <video
+                    src={selectedProject.media[currentImageIndex].url}
+                    className="max-w-full max-h-full"
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={selectedProject.media[currentImageIndex]?.url}
+                    alt={`Project media ${currentImageIndex + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    loading="eager"
+                  />
+                )}
+              </div>
+
+              {/* Right Arrow */}
+              {selectedProject.media.length > 1 && (
+                <IconButton
+                  onClick={nextImage}
+                  sx={{
+                    position: 'fixed',
+                    right: 16,
+                    color: 'white',
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                    zIndex: 1
+                  }}
+                  size="large"
+                >
+                  <ChevronRight />
+                </IconButton>
+              )}
+
+              {/* Dot Indicators */}
+              {selectedProject.media.length > 1 && (
+                <Box
+                  sx={{
+                    position: 'fixed',
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 1,
+                    zIndex: 1
+                  }}
+                >
+                  {selectedProject.media.map((_, index) => (
+                    <Box
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      sx={{
+                        width: index === currentImageIndex ? 24 : 8,
+                        height: 8,
+                        bgcolor: index === currentImageIndex ? 'primary.main' : 'grey.500',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </DialogContent>
+
+            {/* Project Info */}
+            <Box
+              sx={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                bgcolor: 'background.paper',
+                color: 'text.primary',
+                p: 2,
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+                zIndex: 1
+              }}
+            >
+              <Typography variant="body1" textAlign="center">
+                {selectedProject.description}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" textAlign="center" mt={1}>
+                Added on: {new Date(selectedProject.createdAt).toLocaleDateString()}
+              </Typography>
+
+              {/* Delete Button */}
+              {isOwnerView && (
+                <Box mt={2} display="flex" justifyContent="center">
+                  <Button
+                    onClick={() => openDeleteConfirmation(selectedProject._id)}
+                    color="error"
+                    startIcon={<Trash2 size={18} />}
+                  >
+                    Delete Project
+                  </Button>
+                </Box>
               )}
             </Box>
-            <div className="mt-4">
-              <p className="text-center text-lg text-gray-600">
-                {selectedProject?.description}
-              </p>
-              <p className="text-center text-sm text-gray-500 mt-2">
-                Added on:{" "}
-                {new Date(selectedProject?.createdAt).toLocaleString()}
-              </p>
-            </div>
-            
-            {/* Media thumbnails grid */}
-            <div className="mt-4">
-              <Typography variant="subtitle1" gutterBottom>
-                All Media ({selectedProject?.media?.length})
-              </Typography>
-              <Grid container spacing={1}>
-                {selectedProject?.media?.map((media, index) => (
-                  <Grid item xs={4} sm={3} md={2} key={index}>
-                    <div 
-                      className={`cursor-pointer border-2 rounded ${tabValue === index ? 'border-blue-500' : 'border-transparent'}`}
-                      onClick={() => setTabValue(index)}
-                    >
-                      {media.type === 'video' ? (
-                        <video
-                          src={media.url}
-                          className="w-full h-24 object-cover rounded"
-                          muted
-                        />
-                      ) : (
-                        <img
-                          src={media.url}
-                          className="w-full h-24 object-cover rounded"
-                          alt={`Thumbnail ${index + 1}`}
-                        />
-                      )}
-                    </div>
-                  </Grid>
-                ))}
-              </Grid>
-            </div>
-          </DialogContent>
-          {/* Delete button only for owner view */}
-          {isOwnerView && (
-            <DialogActions>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openDeleteConfirmation(selectedProject?._id);
-                }}
-                color="error"
-                startIcon={<Trash2 size={20} />}
-              >
-                Delete
-              </Button>
-            </DialogActions>
-          )}
-        </Dialog>
+          </Dialog>
+        )}
 
-        {/* Add Project Dialog - Owner only */}
+        {/* Add Project Dialog */}
         {isOwnerView && (
           <Dialog
             open={openProjectDialog}
@@ -827,74 +882,73 @@ const DynamicProfile = () => {
               setNewProjectMedia([]);
             }}
             fullWidth
-            maxWidth="md"
+            maxWidth="sm"
           >
             <DialogTitle>Add New Project</DialogTitle>
             <DialogContent>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Media (Images or Videos)
-                </label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <CirclePlus className="w-8 h-8 text-gray-500" />
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Images (JPEG, PNG) and Videos (MP4) up to 20MB
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*,video/*"
-                      multiple
-                      onChange={handleProjectMediaUpload}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {newProjectMedia.length > 0 && (
-                <div className="mb-4">
-                  <Typography variant="subtitle2" gutterBottom>
-                    Media Preview ({newProjectMedia.length}/10)
+              {uploadProgress > 0 && uploadProgress < 100 ? (
+                <Box display="flex" flexDirection="column" alignItems="center" py={4}>
+                  <CircularProgress variant="determinate" value={uploadProgress} size={60} />
+                  <Typography mt={2}>
+                    Uploading {uploadProgress}%
                   </Typography>
-                  <Grid container spacing={1}>
-                    {newProjectMedia.map((media) => (
-                      <Grid item xs={6} sm={4} md={3} key={media.id}>
-                        <MediaPreview 
-                          media={media} 
-                          onRemove={handleRemoveMedia}
-                          isOwnerView={isOwnerView}
-                        />
+                </Box>
+              ) : (
+                <>
+                  <Box mb={3}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Upload Media (1-3 files)
+                    </Typography>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
+                      <Box textAlign="center" py={3}>
+                        <CirclePlus className="mx-auto text-gray-400" size={32} />
+                        <Typography variant="body2" color="textSecondary">
+                          Click to upload or drag and drop
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          Images or videos (max 20MB each)
+                        </Typography>
+                      </Box>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,video/*"
+                        multiple
+                        onChange={handleProjectMediaUpload}
+                      />
+                    </label>
+                  </Box>
+
+                  {newProjectMedia.length > 0 && (
+                    <Box mb={3}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Selected Media ({newProjectMedia.length}/3)
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {newProjectMedia.map((media) => (
+                          <Grid item xs={6} sm={4} key={media.id}>
+                            <MediaPreview 
+                              media={media} 
+                              onRemove={handleRemoveMedia}
+                              isOwnerView={isOwnerView}
+                            />
+                          </Grid>
+                        ))}
                       </Grid>
-                    ))}
-                  </Grid>
-                </div>
+                    </Box>
+                  )}
+
+                  <TextField
+                    label="Project Description"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    value={newProjectDescription}
+                    onChange={(e) => setNewProjectDescription(e.target.value)}
+                    margin="normal"
+                  />
+                </>
               )}
-
-              <TextField
-                label="Project Description"
-                fullWidth
-                multiline
-                rows={3}
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                margin="normal"
-              />
-
-              <div className="mt-2 text-xs text-gray-500">
-                <p>Tips for a great project post:</p>
-                <ul className="list-disc pl-5">
-                  <li>Upload high-quality photos and videos</li>
-                  <li>Include before/after shots if possible</li>
-                  <li>Describe the challenges and solutions</li>
-                  <li>Keep descriptions concise but informative</li>
-                </ul>
-              </div>
             </DialogContent>
             <DialogActions>
               <Button 
@@ -902,170 +956,185 @@ const DynamicProfile = () => {
                   setOpenProjectDialog(false);
                   setNewProjectMedia([]);
                 }}
+                disabled={uploadProgress > 0}
               >
                 Cancel
               </Button>
-              <Button 
-                onClick={handleAddProject} 
+              <Button
+                onClick={handleAddProject}
                 variant="contained"
-                disabled={newProjectMedia.length === 0 || !newProjectDescription}
+                disabled={
+                  newProjectMedia.length === 0 || 
+                  !newProjectDescription ||
+                  uploadProgress > 0
+                }
               >
-                Add Project
+                {uploadProgress > 0 ? 'Uploading...' : 'Add Project'}
               </Button>
             </DialogActions>
           </Dialog>
         )}
 
-        {/* Interest Dialog - For users expressing interest */}
+        {/* Interest Dialog */}
         <Dialog
           open={showInterestDialog}
           onClose={() => setShowInterestDialog(false)}
           fullWidth
+          maxWidth="sm"
         >
           <DialogTitle>Express Interest</DialogTitle>
           <DialogContent>
             <form onSubmit={handleSubmitInterest}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.phoneNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phoneNumber: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  />
-                  {errors.phoneNumber && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-                      {errors.phoneNumber}
-                    </Typography>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Address
-                  </label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="mt-1 w-full border border-gray-300 rounded-md shadow-sm h-24 p-2 resize-none"
-                  />
-                  {errors.address && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-                      {errors.address}
-                    </Typography>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Expected Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.expectedDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expectedDate: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  />
-                  {errors.expectedDate && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-                      {errors.expectedDate}
-                    </Typography>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Job Type
-                  </label>
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                      labelId="jobTypes-label"
-                      name="jobTypes"
-                      value={formData.jobTypes}
-                      onChange={handleJobTypesChange}
-                      multiple
-                      fullWidth
-                      variant="outlined"
-                      error={!!errors.jobTypes}
-                      sx={{ borderRadius: "8px" }}
-                    >
-                      {jobTypes.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.jobTypes && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ mt: 1 }}
-                      >
-                        {errors.jobTypes}
-                      </Typography>
-                    )}
-                  </FormControl>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowInterestDialog(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2"
+              <Box mb={2}>
+                <TextField
+                  label="Phone Number"
+                  fullWidth
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                  error={!!errors.phoneNumber}
+                  helperText={errors.phoneNumber}
+                />
+              </Box>
+              <Box mb={2}>
+                <TextField
+                  label="Address"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  error={!!errors.address}
+                  helperText={errors.address}
+                />
+              </Box>
+              <Box mb={2}>
+                <TextField
+                  label="Expected Date"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.expectedDate}
+                  onChange={(e) => setFormData({...formData, expectedDate: e.target.value})}
+                  error={!!errors.expectedDate}
+                  helperText={errors.expectedDate}
+                />
+              </Box>
+              <Box mb={2}>
+                <FormControl fullWidth error={!!errors.jobTypes}>
+                  <InputLabel>Job Types</InputLabel>
+                  <Select
+                    multiple
+                    value={formData.jobTypes}
+                    onChange={handleJobTypesChange}
+                    renderValue={(selected) => selected.join(', ')}
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                  >
-                    Submit Interest
-                  </button>
-                </div>
-              </div>
+                    {jobTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.jobTypes && (
+                    <Typography variant="caption" color="error">
+                      {errors.jobTypes}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Box>
+              <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
+                <Button variant="outlined" onClick={() => setShowInterestDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="contained" color="primary">
+                  Submit
+                </Button>
+              </Box>
             </form>
           </DialogContent>
         </Dialog>
 
-        {/* Confirmation Dialogs - Owner only */}
-        {isOwnerView && (
-          <>
-            <ConfirmationDialog
-              open={deleteConfirmationOpen}
-              onClose={() => setDeleteConfirmationOpen(false)}
-              onConfirm={() => {
-                handleDeleteProject(projectToDelete);
-                setDeleteConfirmationOpen(false);
-              }}
-              title="Delete Project"
-              message="Are you sure you want to delete this project?"
-            />
+        {/* Confirmation Dialogs */}
+        <ConfirmationDialog
+          open={deleteConfirmationOpen}
+          onClose={() => setDeleteConfirmationOpen(false)}
+          onConfirm={() => handleDeleteProject(projectToDelete)}
+          title="Delete Project"
+          message="Are you sure you want to delete this project? This action cannot be undone."
+        />
 
-            <ConfirmationDialog
-              open={confirmEmployeesOpen}
-              onClose={() => setConfirmEmployeesOpen(false)}
-              onConfirm={handleConfirmEmployees}
-              title="Update Number of Employees"
-              message="Are you sure you want to update the number of employees?"
-            />
+        <ConfirmationDialog
+          open={confirmEmployeesOpen}
+          onClose={() => setConfirmEmployeesOpen(false)}
+          onConfirm={handleConfirmEmployees}
+          title="Update Employees"
+          message="Are you sure you want to update the number of employees?"
+        />
 
-            <ConfirmationDialog
-              open={confirmAvailabilityOpen}
-              onClose={() => setConfirmAvailabilityOpen(false)}
-              onConfirm={handleConfirmAvailability}
-              title="Update Availability"
-              message="Are you sure you want to update your availability?"
-            />
-          </>
-        )}
+        <ConfirmationDialog
+          open={confirmAvailabilityOpen}
+          onClose={() => setConfirmAvailabilityOpen(false)}
+          onConfirm={handleConfirmAvailability}
+          title="Update Availability"
+          message="Are you sure you want to change your availability status?"
+        />
       </div>
     </>
   );
 };
+
+// Helper Components
+const DetailItem = ({ label, value }) => (
+  <div>
+    <span className="font-medium">{label}: </span>
+    <span>{value}</span>
+  </div>
+);
+
+const ProjectCard = ({ project, onClick }) => (
+  <Card 
+    onClick={onClick}
+    sx={{ 
+      cursor: 'pointer',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: 3
+      }
+    }}
+  >
+    <div className="relative h-48">
+      {project.media[0] && project.media[0].type === 'video' ? (
+        <video
+          src={project.media[0].url}
+          className="w-full h-full object-cover"
+          muted
+          loop
+          autoPlay
+        />
+      ) : (
+        <img
+          src={project.media[0] && project.media[0].url}
+          alt="Project thumbnail"
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      )}
+      {project.media?.length > 1 && (
+        <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+          +{project.media.length - 1}
+        </div>
+      )}
+    </div>
+    <CardContent>
+      <Typography 
+        variant="body2" 
+        className="line-clamp-2"
+        title={project.description}
+      >
+        {project.description}
+      </Typography>
+    </CardContent>
+  </Card>
+);
 
 export default DynamicProfile;

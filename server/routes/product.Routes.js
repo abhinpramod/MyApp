@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/product.controller');
-const upload = require('../middleware/Multermiddleware');
+const {upload} = require('../middleware/Multermiddleware');
 const { protectRoutestore } = require('../middleware/authmiddleware');
 
 // Add new product

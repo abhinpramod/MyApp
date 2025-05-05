@@ -1,51 +1,69 @@
-// controllers/projectController.js
 const Contractor = require("../../model/contractors.model.js");
 const cloudinary = require("../../lib/cloudinary");
 
+// Upload media files
+const uploadProjectMedia = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    const uploadResults = await Promise.all(
+      req.files.map(async (file) => {
+        const result = await cloudinary.uploader.upload(
+          `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+          {
+            folder: "contractor_projects",
+            resource_type: file.mimetype.startsWith('video') ? 'video' : 'image'
+          }
+        );
+        return {
+          url: result.secure_url,
+          publicId: result.public_id,
+          type: file.mimetype.startsWith('video') ? 'video' : 'image'
+        };
+      })
+    );
+
+    res.status(200).json({ 
+      message: "Media uploaded successfully",
+      mediaUrls: uploadResults 
+    });
+  } catch (error) {
+    console.error("Error uploading media:", error);
+    res.status(500).json({ message: "Failed to upload media", error });
+  }
+};
+
+// Add new project
 const addProject = async (req, res) => {
   try {
+    const { description, media } = req.body;
     const contractorId = req.contractor._id;
 
-    if (!req.body.image || !req.body.description) {
-      return res
-        .status(400)
-        .json({ message: "Image and description are required" });
+    if (!description || !media || media.length === 0) {
+      return res.status(400).json({ message: "Description and media are required" });
     }
 
-    if (req.body.description.length > 10000) {
-      return res.status(400).json({ message: "Description is too long" });
-    }
+    const newProject = {
+      description,
+      media: media.map(item => ({
+        url: item.url,
+        type: item.type,
+        publicId: item.publicId
+      })),
+      createdAt: new Date()
+    };
 
-    // Upload image directly to Cloudinary
-    const result = await cloudinary.uploader.upload(req.body.image, {
-      folder: "contractor_projects",
-      resource_type: "image",
-    });
-
-    console.log("Image uploaded:", result);
-
-    // Update contractor's projects array
     const contractor = await Contractor.findByIdAndUpdate(
       contractorId,
-      {
-        $push: {
-          projects: {
-            image: result.secure_url,
-            description: req.body.description,
-            imagePublicId: result.public_id,
-          },
-        },
-      },
+      { $push: { projects: newProject } },
       { new: true }
     );
 
-    res.status(200).json({
+    res.status(201).json({
       message: "Project added successfully",
-      project: {
-        image: result.secure_url,
-        description: req.body.description,
-        _id: contractor.projects[contractor.projects.length - 1]._id, // Returning ID for frontend
-      },
+      project: contractor.projects[contractor.projects.length - 1]
     });
   } catch (error) {
     console.error("Error adding project:", error);
@@ -53,51 +71,69 @@ const addProject = async (req, res) => {
   }
 };
 
-const handleDeleteProject = async (req, res) => {
-  const projectId = req.body.projectId;
-
+// Get all projects
+const getProjects = async (req, res) => {
   try {
-    const contractor = await Contractor.findById(req.contractor._id);
+    const contractor = await Contractor.findById(req.contractor._id)
+      .select("projects")
+      .lean();
+
     if (!contractor) {
       return res.status(404).json({ message: "Contractor not found" });
     }
 
-    const projectToDelete = contractor.projects.find(
-      (project) => project._id.toString() === projectId
-    );
-    if (!projectToDelete) {
+    res.status(200).json({ projects: contractor.projects });
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Failed to fetch projects", error });
+  }
+};
+
+// Delete project
+const deleteProject = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const contractor = await Contractor.findById(req.contractor._id);
+
+    if (!contractor) {
+      return res.status(404).json({ message: "Contractor not found" });
+    }
+
+    const project = contractor.projects.id(projectId);
+    if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Delete image from Cloudinary
-    if (projectToDelete.imagePublicId) {
-      const cloudinaryResponse = await cloudinary.uploader.destroy(
-        projectToDelete.imagePublicId
-      );
-      console.log("Cloudinary response:", cloudinaryResponse);
-      if (cloudinaryResponse.result !== "ok") {
-        console.warn("Cloudinary image deletion may have failed.");
-      }
-    }
-
-    // Remove project from contractor's projects array
-    const updatedContractor = await Contractor.findByIdAndUpdate(
-      req.contractor._id,
-      { $pull: { projects: { _id: projectId } } },
-      { new: true }
+    // Delete media from Cloudinary
+    await Promise.all(
+      project.media.map(async (mediaItem) => {
+        try {
+          await cloudinary.uploader.destroy(mediaItem.publicId, {
+            resource_type: mediaItem.type === 'video' ? 'video' : 'image'
+          });
+        } catch (error) {
+          console.error(`Error deleting media ${mediaItem.publicId}:`, error);
+        }
+      })
     );
 
-    res.status(200).json({
-      message: "Project and image deleted successfully",
-      projects: updatedContractor.projects, // Returning updated project list
+    // Remove project
+    contractor.projects.pull(projectId);
+    await contractor.save();
+
+    res.status(200).json({ 
+      message: "Project deleted successfully",
+      projects: contractor.projects 
     });
   } catch (error) {
     console.error("Error deleting project:", error);
-    res.status(500).json({ message: "Failed to delete project" });
+    res.status(500).json({ message: "Failed to delete project", error });
   }
 };
 
 module.exports = {
+  uploadProjectMedia,
   addProject,
-  handleDeleteProject,
+  getProjects,
+  deleteProject
 };

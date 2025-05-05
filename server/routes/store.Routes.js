@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {  sendOtp, verifyOtp, registerStore, login,checkstore, getStoreProfile,logout, getStoreById, getStoreProducts, getPublicStoreProducts, updateProfilePicture,updateDescription  } = require('../controllers/store.controller');
-const upload = require('../middleware/Multermiddleware');
+const {upload} = require('../middleware/Multermiddleware');
 const {protectRoutestore}= require('../middleware/authmiddleware');
 
 router.post("/send-otp", sendOtp);
