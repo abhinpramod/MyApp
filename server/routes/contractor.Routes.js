@@ -82,9 +82,9 @@ router.get("/all-interests", protectRoutecontractor, fectchintrestes);
 router.patch("/mark-interest-seen/:id", markseen);
 
 // Settings Routes
-router.put("/availability", protectRoutecontractor, updateAvailability);
-router.put("/employeesnumber", protectRoutecontractor, updateemployeesnumber);
-router.put("/updatedescription", protectRoutecontractor, updateDescription);
+router.put("/update-availability", protectRoutecontractor, updateAvailability);
+router.put("/update-employees", protectRoutecontractor, updateemployeesnumber);
+router.put("/update-description", protectRoutecontractor, updateDescription);
 
 // Auth Middleware Route
 router.get("/check", protectRoutecontractor, checkAuth);
