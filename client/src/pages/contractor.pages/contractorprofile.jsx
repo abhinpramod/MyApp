@@ -173,7 +173,18 @@ const DynamicProfile = () => {
     fetchContractorData();
   }, [profileContractorId, isOwnerView, navigate]);
 
+  // Fetch projects
+  // const fetchProjects = useCallback(async () => {
+  //   try {
+  //     const response = await axiosInstance.get("/contractor/projects");
+  //     setProjects(response.data.projects || []);
+  //     console.log(response.data.projects);
 
+  //   } catch (error) {
+  //     console.error("Failed to fetch projects:", error);
+  //     toast.error("Failed to load projects");
+  //   }
+  // }, []);
 
   // Handle profile picture upload
   const handleProfilePicUpload = async (e) => {
@@ -624,10 +635,10 @@ const DynamicProfile = () => {
               {isOwnerView ? (
                 <>
                   <Switch
-                     checked={availability}
-                     onCheckedChange={(checked) => {
-                       setTempAvailability(checked);
-                       setConfirmAvailabilityOpen(true);
+                    checked={availability}
+                    onChange={(e) => {
+                      setTempAvailability(e.target.checked);
+                      setConfirmAvailabilityOpen(true);
                     }}
                   />
                   <span className={availability ? "text-green-600" : "text-red-600"}>
