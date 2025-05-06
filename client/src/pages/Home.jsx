@@ -210,7 +210,7 @@ export default function LandingPage() {
                     className="overflow-hidden bg-white shadow-lg rounded-lg cursor-pointer"
                     onClick={() =>
                       navigate(
-                        `/contractors/${encodeURIComponent(service.name)}`
+                        `/contractors/${service.name}`
                       )
                     }
                   >
