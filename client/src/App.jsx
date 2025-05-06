@@ -64,7 +64,7 @@ function App() {
           {/* User Routes */}
           <Route path="/userprofile" element={user ? <UserProfile /> : <Loginuser />} />
           <Route path="/InterestSentHistory" element={user ? <InterestSentHistory /> : <Loginuser />} />
-          <Route path="/stores" element={user ? <Stores /> : <Loginuser />} />
+          <Route path="/stores" element={ <Stores /> } />
           <Route path="/loginuser" element={user ? <Navigate to="/userprofile" /> : <Loginuser />} />
           <Route path="/registeruser" element={user ? <Navigate to="/" /> : <Registeruser />} />
           <Route path="/contractors" element={<Contractors />} />

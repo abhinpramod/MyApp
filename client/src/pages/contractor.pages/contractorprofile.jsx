@@ -173,18 +173,7 @@ const DynamicProfile = () => {
     fetchContractorData();
   }, [profileContractorId, isOwnerView, navigate]);
 
-  // Fetch projects
-  // const fetchProjects = useCallback(async () => {
-  //   try {
-  //     const response = await axiosInstance.get("/contractor/projects");
-  //     setProjects(response.data.projects || []);
-  //     console.log(response.data.projects);
-
-  //   } catch (error) {
-  //     console.error("Failed to fetch projects:", error);
-  //     toast.error("Failed to load projects");
-  //   }
-  // }, []);
+  
 
   // Handle profile picture upload
   const handleProfilePicUpload = async (e) => {
