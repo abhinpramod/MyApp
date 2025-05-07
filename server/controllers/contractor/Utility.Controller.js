@@ -41,8 +41,20 @@ const markseen = async (req, res) => {
   }
 };
 
+const numberofnotification = async (req, res) => {
+  const { _id } = req.contractor;
+  try {
+    const data = await interests.find({ contractorId: _id, seenByContractor: false });
+    res.status(200).json(data.length);
+  } catch (error) {
+    console.error("Error fetching job types:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
 module.exports = {
   fectchjobtypes,
   fectchintrestes,
   markseen,
+  numberofnotification
 };

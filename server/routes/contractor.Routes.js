@@ -19,6 +19,7 @@ const {
   fectchjobtypes,
   fectchintrestes,
   markseen,
+  numberofnotification
 } = require("../controllers/contractor/Utility.Controller");
 const {
   updateAvailability,
@@ -80,11 +81,13 @@ router.delete(
 router.get("/jobtypes", fectchjobtypes);
 router.get("/all-interests", protectRoutecontractor, fectchintrestes);
 router.patch("/mark-interest-seen/:id", markseen);
+router.get("/notifications",protectRoutecontractor,numberofnotification );
 
 // Settings Routes
 router.put("/update-availability", protectRoutecontractor, updateAvailability);
 router.put("/update-employees", protectRoutecontractor, updateemployeesnumber);
 router.put("/update-description", protectRoutecontractor, updateDescription);
+
 
 // Auth Middleware Route
 router.get("/check", protectRoutecontractor, checkAuth);
