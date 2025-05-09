@@ -147,6 +147,48 @@ const ShoppingCartUI = () => {
     }
   };
 
+  const handlePlaceOrder = async () => {
+    try {
+      setIsMutating(true);
+      
+      // Prepare order data
+      const orderData = {
+        storeId: selectedStore, // null if ordering from multiple stores
+        items: filteredItems.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.basePrice
+        })),
+        totalAmount: selectedStore 
+          ? calculateStoreTotal(selectedStore)
+          : grandTotal
+      };
+  
+      // Call API to create order
+      const { data } = await axiosInstance.post('/orders/create', orderData);
+      
+      // Clear the cart if order is successful
+      if (data.success) {
+        await axiosInstance.delete('/cart/clear');
+        setCart({ items: [], totalPrice: 0 });
+        setStores([]);
+        setSelectedStore(null);
+        
+        // Close checkout dialog
+        setIsCheckoutOpen(false);
+        
+        // Navigate to order confirmation page
+        // navigate(`/orders/${data.order._id}`);
+        // toast.success("Order placed successfully!");
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error(error.response?.data?.message || "Failed to place order");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   const handleCheckout = async () => {
     try {
       setIsMutating(true);
@@ -474,9 +516,17 @@ const ShoppingCartUI = () => {
                         </span>
                       </div>
                     </div>
-                    <Button className="w-full" size="lg">
-                      Place Order
-                    </Button>
+                    <Button 
+  className="w-full" 
+  size="lg" 
+  onClick={handlePlaceOrder}
+  disabled={isMutating}
+>
+  {isMutating ? (
+    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+  ) : null}
+  Place Order
+</Button>
                   </div>
                 </DialogContent>
               </Dialog>
