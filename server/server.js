@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const storeRoutes = require("./routes/store.Routes");
 const productRoutes = require("./routes/product.Routes");
 const cartRoutes = require("./routes/cart.Routes");
+const orderRoutes = require("./routes/order.Routes");
 const testimonialsRoutes = require("./routes/testimonials.routes");
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
@@ -20,6 +21,8 @@ app.use("/api/store", storeRoutes);
 app.use ("/api/products",productRoutes )
 app.use ("/api/cart",cartRoutes) 
 app.use("/api/testimonials", testimonialsRoutes);
+app.use('/api/orders', orderRoutes);
+
 connectDB()
   .then(() => {
     const PORT = process.env.PORT || 4000;
