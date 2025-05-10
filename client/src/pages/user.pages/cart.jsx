@@ -13,7 +13,9 @@ import {
   ArrowLeft,
   HardHat,
   Warehouse,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import Card from '@/components/ui/card';
 import CardContent from '@/components/ui/card-content';
@@ -39,28 +41,54 @@ const ShoppingCartUI = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  const [shippingInfo, setShippingInfo] = useState({
+    phoneNumber: '',
+    country: 'India', // Default value
+    state: '',
+    city: '',
+    pincode: '',
+    buildingAddress: '',
+    landmark: ''
+  });
 
-  // Fetch cart data
+  // Fetch cart data and user shipping info
   useEffect(() => {
-    const fetchCartData = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosInstance.get('/cart');
-        setCart(data.cart || { items: [], totalPrice: 0 });
+        // Fetch cart data
+        const { data: cartData } = await axiosInstance.get('/cart');
+        setCart(cartData.cart || { items: [], totalPrice: 0 });
         
-        if (data.cart?.items?.length > 0) {
-          const storesRes = await axiosInstance.get('/cart/stores');
-          setStores(storesRes.data.stores || []);
+        if (cartData.cart?.items?.length > 0) {
+          const { data: storesData } = await axiosInstance.get('/cart/stores');
+          setStores(storesData.stores || []);
+        }
+
+        // Fetch user shipping info if available
+        const { data: userData } = await axiosInstance.get('/auth/me');
+        if (userData.user) {
+          setShippingInfo(prev => ({
+            ...prev,
+            phoneNumber: userData.user.phoneNumber || '',
+            country: userData.user.address?.country || 'India',
+            state: userData.user.address?.state || '',
+            city: userData.user.address?.city || '',
+            pincode: userData.user.address?.pincode || '',
+            buildingAddress: userData.user.address?.buildingAddress || '',
+            landmark: userData.user.address?.landmark || ''
+          }));
         }
       } catch (error) {
-        console.error("Error fetching cart:", error);
-        toast.error("Failed to load cart data");
+        console.error("Error fetching data:", error);
+        // toast.error("Failed to load data");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCartData();
+    fetchData();
   }, []);
 
   // Update item quantity
@@ -70,11 +98,10 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.put('/cart/update', {
-        productId, // Only need productId now
+        productId,
         quantity: newQuantity
       });
       
-      // Update local state optimistically
       setCart(prev => ({
         ...prev,
         items: prev.items.map(item => 
@@ -91,7 +118,6 @@ const ShoppingCartUI = () => {
       const message = error.response?.data?.message || "Failed to update quantity";
       toast.error(message);
       
-      // Revert optimistic update on error
       const { data } = await axiosInstance.get('/cart');
       setCart(data.cart || { items: [], totalPrice: 0 });
     } finally {
@@ -104,13 +130,11 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.post('/cart/remove', {
-        productId // Only need productId now
+        productId
       });
       
-      // Update local state
       if (data.cart) {
         setCart(data.cart);
-        // Refresh stores list if needed
         if (data.cart.items.length === 0) {
           setStores([]);
           setSelectedStore(null);
@@ -147,13 +171,52 @@ const ShoppingCartUI = () => {
     }
   };
 
+  const handleShippingInfoChange = (e) => {
+    const { name, value } = e.target;
+    setShippingInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const saveShippingInfo = async () => {
+    try {
+      // Basic validation
+      if (!shippingInfo.phoneNumber || !shippingInfo.country || 
+          !shippingInfo.state || !shippingInfo.city || 
+          !shippingInfo.pincode || !shippingInfo.buildingAddress) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      setIsMutating(true);
+      await axiosInstance.put('/user/update-shipping', {
+        phoneNumber: shippingInfo.phoneNumber,
+        address: {
+          country: shippingInfo.country,
+          state: shippingInfo.state,
+          city: shippingInfo.city,
+          pincode: shippingInfo.pincode,
+          buildingAddress: shippingInfo.buildingAddress,
+          landmark: shippingInfo.landmark
+        }
+      });
+      toast.success("Shipping information saved");
+      setCheckoutStep(3); // Move to place order step
+    } catch (error) {
+      console.error("Error saving shipping info:", error);
+      toast.error("Failed to save shipping information");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     try {
       setIsMutating(true);
       
-      // Prepare order data
       const orderData = {
-        storeId: selectedStore, // null if ordering from multiple stores
+        storeId: selectedStore,
         items: filteredItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -161,25 +224,31 @@ const ShoppingCartUI = () => {
         })),
         totalAmount: selectedStore 
           ? calculateStoreTotal(selectedStore)
-          : grandTotal
+          : grandTotal,
+        shippingInfo: {
+          phoneNumber: shippingInfo.phoneNumber,
+          address: {
+            country: shippingInfo.country,
+            state: shippingInfo.state,
+            city: shippingInfo.city,
+            pincode: shippingInfo.pincode,
+            buildingAddress: shippingInfo.buildingAddress,
+            landmark: shippingInfo.landmark
+          }
+        }
       };
   
-      // Call API to create order
       const { data } = await axiosInstance.post('/orders/create', orderData);
       
-      // Clear the cart if order is successful
       if (data.success) {
         await axiosInstance.delete('/cart/clear');
         setCart({ items: [], totalPrice: 0 });
         setStores([]);
         setSelectedStore(null);
-        
-        // Close checkout dialog
         setIsCheckoutOpen(false);
-        
-        // Navigate to order confirmation page
-        // navigate(`/orders/${data.order._id}`);
-        // toast.success("Order placed successfully!");
+        setCheckoutStep(1);
+        navigate(`/orders/${data.order._id}`);
+        toast.success("Order placed successfully!");
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -193,7 +262,7 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       setIsCheckoutOpen(true);
-      console.log("Checkout triggered");
+      setCheckoutStep(1);
     } catch (error) {
       console.error("Error during checkout:", error);
       toast.error("Failed to proceed with checkout");
@@ -209,7 +278,7 @@ const ShoppingCartUI = () => {
         item.storeId === selectedStore
       )
     : cart.items
-  ).filter(item => item.productDetails); // Ensure productDetails exists
+  ).filter(item => item.productDetails);
 
   // Calculate store-specific total
   const calculateStoreTotal = (storeId) => {
@@ -494,39 +563,209 @@ const ShoppingCartUI = () => {
                 </DialogTrigger>
                 <DialogContent className="max-w-md sm:max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>Confirm Order</DialogTitle>
+                    <DialogTitle>
+                      {checkoutStep === 1 && "Review Order"}
+                      {checkoutStep === 2 && "Shipping Information"}
+                      {checkoutStep === 3 && "Confirm Order"}
+                    </DialogTitle>
                   </DialogHeader>
                   <div className="py-4">
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium mb-2">Order Summary</h4>
-                      {filteredItems.map(item => (
-                        <div key={item.productId} className="flex justify-between py-2">
-                          <span className="truncate max-w-[180px]">
-                            {item.productDetails?.name} × {item.quantity}
-                          </span>
-                          <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
+                    {/* Step 1: Review Order */}
+                    {checkoutStep === 1 && (
+                      <>
+                        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium mb-2">Order Summary</h4>
+                          {filteredItems.map(item => (
+                            <div key={item.productId} className="flex justify-between py-2">
+                              <span className="truncate max-w-[180px]">
+                                {item.productDetails?.name} × {item.quantity}
+                              </span>
+                              <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between border-t pt-2 mt-2 font-medium">
+                            <span>Total</span>
+                            <span>
+                              ₹{selectedStore 
+                                ? calculateStoreTotal(selectedStore).toFixed(2)
+                                : grandTotal.toFixed(2)}
+                            </span>
+                          </div>
                         </div>
-                      ))}
-                      <div className="flex justify-between border-t pt-2 mt-2 font-medium">
-                        <span>Total</span>
-                        <span>
-                          ₹{selectedStore 
-                            ? calculateStoreTotal(selectedStore).toFixed(2)
-                            : grandTotal.toFixed(2)}
-                        </span>
+                        <Button 
+                          className="w-full" 
+                          size="lg" 
+                          onClick={() => setCheckoutStep(2)}
+                        >
+                          Continue to Shipping
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Step 2: Shipping Information */}
+                    {checkoutStep === 2 && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Phone Number*</label>
+                            <Input
+                              type="tel"
+                              name="phoneNumber"
+                              value={shippingInfo.phoneNumber}
+                              onChange={handleShippingInfoChange}
+                              placeholder="Enter phone number"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Country*</label>
+                              <Input
+                                name="country"
+                                value={shippingInfo.country}
+                                onChange={handleShippingInfoChange}
+                                placeholder="Country"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">State*</label>
+                              <Input
+                                name="state"
+                                value={shippingInfo.state}
+                                onChange={handleShippingInfoChange}
+                                placeholder="State"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">City*</label>
+                              <Input
+                                name="city"
+                                value={shippingInfo.city}
+                                onChange={handleShippingInfoChange}
+                                placeholder="City"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Pincode*</label>
+                              <Input
+                                name="pincode"
+                                value={shippingInfo.pincode}
+                                onChange={handleShippingInfoChange}
+                                placeholder="Pincode"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Building Address*</label>
+                            <Input
+                              name="buildingAddress"
+                              value={shippingInfo.buildingAddress}
+                              onChange={handleShippingInfoChange}
+                              placeholder="House no, building, street"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Landmark (Optional)</label>
+                            <Input
+                              name="landmark"
+                              value={shippingInfo.landmark}
+                              onChange={handleShippingInfoChange}
+                              placeholder="Nearby landmark"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setCheckoutStep(1)}
+                          >
+                            <ChevronLeft className="w-4 h-4 mr-1" />
+                            Back
+                          </Button>
+                          <Button
+                            className="w-full"
+                            onClick={saveShippingInfo}
+                            disabled={isMutating}
+                          >
+                            {isMutating ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 mr-1" />
+                            )}
+                            Save & Continue
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <Button 
-  className="w-full" 
-  size="lg" 
-  onClick={handlePlaceOrder}
-  disabled={isMutating}
->
-  {isMutating ? (
-    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-  ) : null}
-  Place Order
-</Button>
+                    )}
+
+                    {/* Step 3: Confirm Order */}
+                    {checkoutStep === 3 && (
+                      <>
+                        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium mb-2">Shipping Information</h4>
+                          <div className="space-y-2">
+                            <p><strong>Phone:</strong> {shippingInfo.phoneNumber}</p>
+                            <p>
+                              <strong>Address:</strong> {shippingInfo.buildingAddress}, {shippingInfo.landmark && `${shippingInfo.landmark}, `}
+                              {shippingInfo.city}, {shippingInfo.state}, {shippingInfo.country} - {shippingInfo.pincode}
+                            </p>
+                          </div>
+                          
+                          <h4 className="font-medium mt-4 mb-2">Order Summary</h4>
+                          {filteredItems.map(item => (
+                            <div key={item.productId} className="flex justify-between py-2">
+                              <span className="truncate max-w-[180px]">
+                                {item.productDetails?.name} × {item.quantity}
+                              </span>
+                              <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between border-t pt-2 mt-2 font-medium">
+                            <span>Total</span>
+                            <span>
+                              ₹{selectedStore 
+                                ? calculateStoreTotal(selectedStore).toFixed(2)
+                                : grandTotal.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setCheckoutStep(2)}
+                          >
+                            <ChevronLeft className="w-4 h-4 mr-1" />
+                            Back
+                          </Button>
+                          <Button 
+                            className="w-full" 
+                            size="lg" 
+                            onClick={handlePlaceOrder}
+                            disabled={isMutating}
+                          >
+                            {isMutating ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : null}
+                            Place Order
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>

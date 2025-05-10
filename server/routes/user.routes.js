@@ -11,7 +11,8 @@ const {
   addInterests,
   checkUser,
   uploadProfilePicture,
-  fetchAllInterests
+  fetchAllInterests,
+  updateShippingInfo
 } = require("../controllers/user/index.js");
 const { protectRouteuser } = require("../middleware/authmiddleware");
 const {upload }= require("../middleware/Multermiddleware");
@@ -37,5 +38,7 @@ router.get("/contractors",fetchAllContractors);
 router.get("/contractors/:id", fetchContractorById);
 router.post("/contractor/interest/:id", protectRouteuser, addInterests);
 router.get("/all-interests", protectRouteuser, fetchAllInterests);
+
+router.put('/update-shipping', protectRouteuser, updateShippingInfo);
 
 module.exports = router;

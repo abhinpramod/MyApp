@@ -53,7 +53,24 @@ const uploadProfilePicture = async (req, res) => {
   }
 };
 
+const updateShippingInfo = async (req, res) => {
+  try {
+    const { phoneNumber, address } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { 
+        phoneNumber,
+        address 
+      },
+      { new: true }
+    );
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   checkUser,
-  uploadProfilePicture
+  uploadProfilePicture,updateShippingInfo
 };
