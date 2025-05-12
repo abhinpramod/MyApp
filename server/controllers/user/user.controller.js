@@ -56,17 +56,44 @@ const uploadProfilePicture = async (req, res) => {
 const updateShippingInfo = async (req, res) => {
   try {
     const { phoneNumber, address } = req.body;
+    
+    // Validate required fields
+    if (!phoneNumber || !address || !address.country || !address.state || 
+        !address.city || !address.pincode || !address.buildingAddress) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'All address fields are required' 
+      });
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { 
         phoneNumber,
-        address 
+        address: {
+          country: address.country || 'India',
+          state: address.state,
+          city: address.city,
+          pincode: address.pincode,
+          buildingAddress: address.buildingAddress,
+          landmark: address.landmark || ''
+        }
       },
       { new: true }
     );
-    res.json({ success: true, user });
+    
+    res.json({ 
+      success: true, 
+      user: {
+        phoneNumber: user.phoneNumber,
+        address: user.address
+      } 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 }
 

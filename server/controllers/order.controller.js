@@ -1,6 +1,8 @@
 const Order = require('../model/Orders.model');
 const Cart = require('../model/cart');
 const Product = require('../model/products.model');
+const User = require('../model/user.model');
+const Store = require('../model/store.model');
 const mongoose = require('mongoose');
 
 const createOrder = async (req, res) => {
@@ -8,126 +10,140 @@ const createOrder = async (req, res) => {
   session.startTransaction();
   
   try {
-    const { storeId, items, totalAmount, shippingInfo } = req.body;
-    
+    const { storeId, items, totalAmount, shippingInfo, paymentMethod = 'cod' } = req.body;
+    const userId = req.user._id;
+    console.log(storeId,"after the store id", items, totalAmount, shippingInfo, paymentMethod);
+       if (!storeId ) {
+         return res.status(400).json({ success: false, message: 'select a store' });
+       }
     // Validate required fields
-    if (!items || !items.length) {
+    if (!storeId || !items || !items.length || !shippingInfo) {
       await session.abortTransaction();
       return res.status(400).json({ 
         success: false,
-        message: 'No items in order' 
+        message: 'Store ID, items, and shipping information are required' 
       });
     }
 
-    // Validate shipping info
-    if (!shippingInfo || !shippingInfo.phoneNumber || !shippingInfo.address) {
+    // Get user and store details
+    const [user, store] = await Promise.all([
+      User.findById(userId).session(session),
+      Store.findById(storeId).session(session)
+    ]);
+
+    if (!user) {
       await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: 'Shipping information is incomplete'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Check product availability and validate prices
-    let calculatedTotal = 0;
-    const productUpdates = [];
-    
-    for (const item of items) {
+    if (!store) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Store not found' });
+    }
+
+    // Prepare order items with product details
+    const orderItems = await Promise.all(items.map(async (item) => {
       const product = await Product.findById(item.productId).session(session);
-      
       if (!product) {
-        await session.abortTransaction();
-        return res.status(404).json({
-          success: false,
-          message: `Product not found: ${item.productId}`
-        });
+        throw new Error(`Product ${item.productId} not found`);
       }
-      
-      if (product.stock < item.quantity) {
-        await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for product: ${product.name}`
-        });
-      }
-      
-      if (product.price !== item.price) {
-        await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: `Price mismatch for product: ${product.name}`
-        });
-      }
-      
-      calculatedTotal += item.price * item.quantity;
-      productUpdates.push({
-        updateOne: {
-          filter: { _id: item.productId },
-          update: { $inc: { stock: -item.quantity } }
+
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        basePrice: item.basePrice,
+        price: item.price || item.basePrice, // Use applied price if available
+        productDetails: {
+          name: product.name,
+          image: product.image,
+          category: product.category,
+          grade: product.grade,
+          weightPerUnit: product.weightPerUnit,
+          unit: product.unit
         }
-      });
-    }
+      };
+    }));
 
-    // Validate total amount matches calculated total
-    if (calculatedTotal !== totalAmount) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: 'Total amount does not match calculated order total'
-      });
-    }
-
-    // Generate order number (example: ORD-20230510-0001)
-    const orderCount = await Order.countDocuments();
-    const orderNumber = `ORD-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${(orderCount + 1).toString().padStart(4, '0')}`;
+    // Calculate subtotal
+    const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const transportationCharge = 0; // Can be calculated later
 
     // Create order
     const order = new Order({
-      user: req.user._id,
-      store: storeId,
-      items,
-      totalAmount,
+      userId,
+      storeId,
+      items: orderItems,
+      subtotal,
+      transportationCharge,
+      totalAmount: subtotal + transportationCharge,
       shippingInfo,
+      paymentMethod,
       status: 'pending',
-      orderNumber,
-      paymentStatus: 'pending' // You might want to add this
+      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+      storeDetails: {
+        storeName: store.storeName,
+        city: store.city,
+        state: store.state,
+        profilePicture: store.profilePicture
+      },
+      userDetails: {
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber
+      }
     });
 
-    await order.save({ session });
-
-    // Update product stocks
-    if (productUpdates.length > 0) {
-      await Product.bulkWrite(productUpdates, { session });
+    // Validate total amount
+    if (Math.abs(order.totalAmount - totalAmount) > 0.01) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: `Total amount mismatch. Calculated: ${order.totalAmount}, Received: ${totalAmount}`
+      });
     }
 
-    // Clear user's cart
-    await Cart.findOneAndUpdate(
-      { user: req.user._id },
-      { $set: { items: [], totalPrice: 0 } },
-      { session, new: true }
+    // Save order
+    await order.save({ session });
+
+    // Remove ordered items from cart
+    await Cart.updateMany(
+      { userId },
+      { $pull: { items: { productId: { $in: items.map(i => i.productId) } } } },
+      { session }
     );
 
+    // Update cart totals
+    const carts = await Cart.find({ userId }).session(session);
+    for (const cart of carts) {
+      if (cart.items.length === 0) {
+        await Cart.findByIdAndDelete(cart._id).session(session);
+      } else {
+        cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
+        cart.totalSavings = cart.items.reduce((sum, item) => sum + (item.savings || 0), 0);
+        await cart.save({ session });
+      }
+    }
+
     await session.commitTransaction();
-    
-    // TODO: Send order confirmation email (consider doing this outside the transaction)
     
     res.status(201).json({ 
       success: true, 
       order,
       message: 'Order created successfully' 
     });
+
   } catch (error) {
     await session.abortTransaction();
     console.error('Order creation error:', error);
-    
     res.status(500).json({ 
       success: false, 
-      message: error.message || 'Failed to create order',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message || 'Failed to create order'
     });
   } finally {
     session.endSession();
   }
 };
 
-module.exports = { createOrder };
+module.exports = {
+  createOrder
+};

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Define the item schema first
 const orderItemSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -17,82 +16,108 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0
+  },
+  price: {  // Actual price charged (could be same as basePrice or discounted)
+    type: Number,
+    required: true,
+    min: 0
+  },
+  productDetails: {  // Snapshot of product at time of order
+    name: String,
+    image: String,
+    category: String,
+    grade: String,
+    weightPerUnit: String,
+    unit: String
   }
 }, { _id: false });
 
-const OrderSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+const OrderSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true
+  },
+  items: [orderItemSchema],
+  subtotal: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  transportationCharge: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending'
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['cod', 'online', 'wallet'],
+    default: 'cod'
+  },
+  shippingInfo: {
+    phoneNumber: {
+      type: String,
       required: true
     },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Store',
-      required: true
-    },
-    items: [orderItemSchema],  // Array of ordered items
-    subtotal: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    transportationCharge: {
-      type: Number,
-      required: true,
-      default: 0,
-      min: 0
-    },
-    totalAmount: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-      default: 'pending'
-    },
-    paymentStatus: {
-      type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
-      default: 'pending'
-    },
-    paymentMethod: {
-      type: String,
-      enum: ['cod', 'online', 'wallet'],
-      default: 'cod'
-    },
-    deliveryAddress: {
-      addressLine1: {
+    address: {
+      country: {
         type: String,
-        required: true
-      },
-      addressLine2: String,
-      city: {
-        type: String,
-        required: true
+        required: true,
+        default: 'India'
       },
       state: {
         type: String,
         required: true
       },
-      postalCode: {
+      city: {
         type: String,
         required: true
       },
-      country: {
+      pincode: {
         type: String,
         required: true
-      }
-    },
-    contactNumber: {
-      type: String,
-      required: true
+      },
+      buildingAddress: {
+        type: String,
+        required: true
+      },
+      landmark: String
     }
   },
-  { timestamps: true }
-);
+  // Store snapshot for reference
+  storeDetails: {
+    storeName: String,
+    city: String,
+    state: String,
+    profilePicture: String
+  },
+  // User snapshot for reference
+  userDetails: {
+    name: String,
+    email: String,
+    phoneNumber: String
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

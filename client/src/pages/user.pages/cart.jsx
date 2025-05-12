@@ -44,45 +44,53 @@ const ShoppingCartUI = () => {
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [shippingInfo, setShippingInfo] = useState({
     phoneNumber: '',
-    country: 'India', // Default value
+    country: 'India',
     state: '',
     city: '',
     pincode: '',
     buildingAddress: '',
     landmark: ''
   });
+  const [userData, setUserData] = useState(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
 
   // Fetch cart data and user shipping info
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Fetch cart data
         const { data: cartData } = await axiosInstance.get('/cart');
-        setCart(cartData.cart || { items: [], totalPrice: 0 });
+        setCart({
+          items: cartData.cart?.items?.map(item => ({
+            ...item,
+            basePrice: Number(item.basePrice) || 0,
+            quantity: Number(item.quantity) || 1
+          })) || [],
+          totalPrice: Number(cartData.cart?.totalPrice) || 0
+        });
         
         if (cartData.cart?.items?.length > 0) {
           const { data: storesData } = await axiosInstance.get('/cart/stores');
           setStores(storesData.stores || []);
         }
 
-        // Fetch user shipping info if available
-        const { data: userData } = await axiosInstance.get('/auth/me');
-        if (userData.user) {
+        const { data: userData } = await axiosInstance.get('/user/check');
+        setUserData(userData);
+        if (userData) {
           setShippingInfo(prev => ({
             ...prev,
-            phoneNumber: userData.user.phoneNumber || '',
-            country: userData.user.address?.country || 'India',
-            state: userData.user.address?.state || '',
-            city: userData.user.address?.city || '',
-            pincode: userData.user.address?.pincode || '',
-            buildingAddress: userData.user.address?.buildingAddress || '',
-            landmark: userData.user.address?.landmark || ''
+            phoneNumber: userData.phoneNumber || '',
+            country: userData.address?.country || 'India',
+            state: userData.address?.state || '',
+            city: userData.address?.city || '',
+            pincode: userData.address?.pincode || '',
+            buildingAddress: userData.address?.buildingAddress || '',
+            landmark: userData.address?.landmark || ''
           }));
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        // toast.error("Failed to load data");
+        toast.error("Failed to load data");
       } finally {
         setIsLoading(false);
       }
@@ -93,23 +101,24 @@ const ShoppingCartUI = () => {
 
   // Update item quantity
   const handleQuantityChange = async (productId, newQuantity) => {
-    if (newQuantity < 1) return;
+    const quantity = Number(newQuantity);
+    if (quantity < 1) return;
     
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.put('/cart/update', {
         productId,
-        quantity: newQuantity
+        quantity
       });
       
       setCart(prev => ({
         ...prev,
         items: prev.items.map(item => 
           item.productId === productId 
-            ? { ...item, quantity: newQuantity } 
+            ? { ...item, quantity } 
             : item
         ),
-        totalPrice: data.cart?.totalPrice || prev.totalPrice
+        totalPrice: Number(data.cart?.totalPrice) || prev.totalPrice
       }));
       
       toast.success("Quantity updated successfully");
@@ -119,7 +128,14 @@ const ShoppingCartUI = () => {
       toast.error(message);
       
       const { data } = await axiosInstance.get('/cart');
-      setCart(data.cart || { items: [], totalPrice: 0 });
+      setCart({
+        items: data.cart?.items?.map(item => ({
+          ...item,
+          basePrice: Number(item.basePrice) || 0,
+          quantity: Number(item.quantity) || 1
+        })) || [],
+        totalPrice: Number(data.cart?.totalPrice) || 0
+      });
     } finally {
       setIsMutating(false);
     }
@@ -134,7 +150,14 @@ const ShoppingCartUI = () => {
       });
       
       if (data.cart) {
-        setCart(data.cart);
+        setCart({
+          items: data.cart.items.map(item => ({
+            ...item,
+            basePrice: Number(item.basePrice) || 0,
+            quantity: Number(item.quantity) || 1
+          })),
+          totalPrice: Number(data.cart.totalPrice) || 0
+        });
         if (data.cart.items.length === 0) {
           setStores([]);
           setSelectedStore(null);
@@ -181,7 +204,6 @@ const ShoppingCartUI = () => {
 
   const saveShippingInfo = async () => {
     try {
-      // Basic validation
       if (!shippingInfo.phoneNumber || !shippingInfo.country || 
           !shippingInfo.state || !shippingInfo.city || 
           !shippingInfo.pincode || !shippingInfo.buildingAddress) {
@@ -201,8 +223,14 @@ const ShoppingCartUI = () => {
           landmark: shippingInfo.landmark
         }
       });
+      
+      // Refresh user data after saving
+      const { data: userData } = await axiosInstance.get('/user/check');
+      setUserData(userData);
+      
       toast.success("Shipping information saved");
-      setCheckoutStep(3); // Move to place order step
+      setCheckoutStep(3);
+      setShowAddressForm(false);
     } catch (error) {
       console.error("Error saving shipping info:", error);
       toast.error("Failed to save shipping information");
@@ -215,16 +243,23 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       
+      // Prepare items with basePrice
+      const orderItems = filteredItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        basePrice: item.basePrice,
+        price: item.appliedPrice || item.basePrice
+      }));
+
+      // Calculate totals
+      const subtotal = orderItems.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
+      const transportationCharge = 0;
+      const totalAmount = subtotal + transportationCharge;
+
       const orderData = {
         storeId: selectedStore,
-        items: filteredItems.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.basePrice
-        })),
-        totalAmount: selectedStore 
-          ? calculateStoreTotal(selectedStore)
-          : grandTotal,
+        items: orderItems,
+        totalAmount,
         shippingInfo: {
           phoneNumber: shippingInfo.phoneNumber,
           address: {
@@ -233,20 +268,16 @@ const ShoppingCartUI = () => {
             city: shippingInfo.city,
             pincode: shippingInfo.pincode,
             buildingAddress: shippingInfo.buildingAddress,
-            landmark: shippingInfo.landmark
+            landmark: shippingInfo.landmark || ''
           }
-        }
+        },
+        paymentMethod: 'cod'
       };
-  
+
       const { data } = await axiosInstance.post('/orders/create', orderData);
       
       if (data.success) {
-        await axiosInstance.delete('/cart/clear');
-        setCart({ items: [], totalPrice: 0 });
-        setStores([]);
-        setSelectedStore(null);
-        setIsCheckoutOpen(false);
-        setCheckoutStep(1);
+        await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
         navigate(`/orders/${data.order._id}`);
         toast.success("Order placed successfully!");
       }
@@ -262,7 +293,33 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       setIsCheckoutOpen(true);
-      setCheckoutStep(1);
+      
+      // Check if user has complete shipping info
+      const response = await axiosInstance.get('/user/check');
+      const userData = response.data;
+      
+      const hasCompleteAddress = userData?.address?.country && 
+                                userData?.address?.state && 
+                                userData?.address?.city && 
+                                userData?.address?.pincode && 
+                                userData?.address?.buildingAddress;
+
+      setCheckoutStep(hasCompleteAddress ? 3 : 1);
+      setUserData(userData);
+      
+      // Update shipping info if address exists
+      if (userData?.address) {
+        setShippingInfo(prev => ({
+          ...prev,
+          phoneNumber: userData.phoneNumber || prev.phoneNumber,
+          country: userData.address.country || prev.country,
+          state: userData.address.state || prev.state,
+          city: userData.address.city || prev.city,
+          pincode: userData.address.pincode || prev.pincode,
+          buildingAddress: userData.address.buildingAddress || prev.buildingAddress,
+          landmark: userData.address.landmark || prev.landmark
+        }));
+      }
     } catch (error) {
       console.error("Error during checkout:", error);
       toast.error("Failed to proceed with checkout");
@@ -282,19 +339,20 @@ const ShoppingCartUI = () => {
 
   // Calculate store-specific total
   const calculateStoreTotal = (storeId) => {
-    return cart.items
-      .filter(item => 
-        (item.productDetails?.storeId === storeId) || 
-        (item.storeId === storeId)
-      )
-      .reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
+    return filteredItems
+      .reduce((sum, item) => {
+        const price = Number(item.basePrice) || 0;
+        const quantity = Number(item.quantity) || 0;
+        return sum + (price * quantity);
+      }, 0);
   };
 
   // Calculate grand total
-  const grandTotal = cart.items.reduce(
-    (sum, item) => sum + (item.basePrice * item.quantity), 
-    0
-  );
+  const grandTotal = cart.items.reduce((sum, item) => {
+    const price = Number(item.basePrice) || 0;
+    const quantity = Number(item.quantity) || 0;
+    return sum + (price * quantity);
+  }, 0);
 
   // Loading state
   if (isLoading) {
@@ -439,7 +497,7 @@ const ShoppingCartUI = () => {
                       {item.productDetails?.grade} {item.productDetails?.category}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {item.productDetails?.weightPerUnit}{item.productDetails?.unit} × ₹{item.basePrice}
+                      {item.productDetails?.weightPerUnit}{item.productDetails?.unit} × ₹{Number(item.basePrice).toFixed(2)}
                     </p>
                   </div>
                   <div className="ml-0 sm:ml-4 flex items-center w-full sm:w-auto justify-between sm:justify-normal">
@@ -497,7 +555,7 @@ const ShoppingCartUI = () => {
                     ) : (
                       <div className="text-right">
                         <p className="font-medium">
-                          ₹{(item.basePrice * item.quantity).toFixed(2)}
+                          ₹{(Number(item.basePrice) * Number(item.quantity)).toFixed(2)}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {item.quantity} {item.quantity > 1 ? 'units' : 'unit'}
@@ -565,7 +623,7 @@ const ShoppingCartUI = () => {
                   <DialogHeader>
                     <DialogTitle>
                       {checkoutStep === 1 && "Review Order"}
-                      {checkoutStep === 2 && "Shipping Information"}
+                      {checkoutStep === 2 && "Shipping Options"}
                       {checkoutStep === 3 && "Confirm Order"}
                     </DialogTitle>
                   </DialogHeader>
@@ -580,7 +638,7 @@ const ShoppingCartUI = () => {
                               <span className="truncate max-w-[180px]">
                                 {item.productDetails?.name} × {item.quantity}
                               </span>
-                              <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
+                              <span>₹{(Number(item.basePrice) * Number(item.quantity)).toFixed(2)}</span>
                             </div>
                           ))}
                           <div className="flex justify-between border-t pt-2 mt-2 font-medium">
@@ -602,112 +660,159 @@ const ShoppingCartUI = () => {
                       </>
                     )}
 
-                    {/* Step 2: Shipping Information */}
+                    {/* Step 2: Shipping Options */}
                     {checkoutStep === 2 && (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Phone Number*</label>
-                            <Input
-                              type="tel"
-                              name="phoneNumber"
-                              value={shippingInfo.phoneNumber}
-                              onChange={handleShippingInfoChange}
-                              placeholder="Enter phone number"
-                              required
-                            />
+                        {userData?.address?.buildingAddress && (
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-medium mb-2">Shipping Options</h4>
+                            
+                            {/* Option 1: Use existing address */}
+                            <div 
+                              className="p-3 border rounded-md mb-3 cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                setShippingInfo(prev => ({
+                                  ...prev,
+                                  phoneNumber: userData.phoneNumber || '',
+                                  country: userData.address?.country || 'India',
+                                  state: userData.address?.state || '',
+                                  city: userData.address?.city || '',
+                                  pincode: userData.address?.pincode || '',
+                                  buildingAddress: userData.address?.buildingAddress || '',
+                                  landmark: userData.address?.landmark || ''
+                                }));
+                                setCheckoutStep(3);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Check className="w-4 h-4 text-green-500" />
+                                <div>
+                                  <p className="font-medium">Use existing address</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {userData.address?.buildingAddress}, {userData.address?.landmark && `${userData.address?.landmark}, `}
+                                    {userData.address?.city}, {userData.address?.state}, {userData.address?.country} - {userData.address?.pincode}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Option 2: Add new address */}
+                            <div 
+                              className="p-3 border rounded-md cursor-pointer hover:bg-gray-100"
+                              onClick={() => setShowAddressForm(true)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                <p className="font-medium">Add new address</p>
+                              </div>
+                            </div>
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
+                        )}
+
+                        {(!userData?.address?.buildingAddress || showAddressForm) && (
+                          <div className="grid grid-cols-1 gap-4">
                             <div>
-                              <label className="block text-sm font-medium mb-1">Country*</label>
+                              <label className="block text-sm font-medium mb-1">Phone Number*</label>
                               <Input
-                                name="country"
-                                value={shippingInfo.country}
+                                type="tel"
+                                name="phoneNumber"
+                                value={shippingInfo.phoneNumber}
                                 onChange={handleShippingInfoChange}
-                                placeholder="Country"
+                                placeholder="Enter phone number"
                                 required
                               />
                             </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1">Country*</label>
+                                <Input
+                                  name="country"
+                                  value={shippingInfo.country}
+                                  onChange={handleShippingInfoChange}
+                                  placeholder="Country"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1">State*</label>
+                                <Input
+                                  name="state"
+                                  value={shippingInfo.state}
+                                  onChange={handleShippingInfoChange}
+                                  placeholder="State"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1">City*</label>
+                                <Input
+                                  name="city"
+                                  value={shippingInfo.city}
+                                  onChange={handleShippingInfoChange}
+                                  placeholder="City"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1">Pincode*</label>
+                                <Input
+                                  name="pincode"
+                                  value={shippingInfo.pincode}
+                                  onChange={handleShippingInfoChange}
+                                  placeholder="Pincode"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            
                             <div>
-                              <label className="block text-sm font-medium mb-1">State*</label>
+                              <label className="block text-sm font-medium mb-1">Building Address*</label>
                               <Input
-                                name="state"
-                                value={shippingInfo.state}
+                                name="buildingAddress"
+                                value={shippingInfo.buildingAddress}
                                 onChange={handleShippingInfoChange}
-                                placeholder="State"
+                                placeholder="House no, building, street"
                                 required
                               />
                             </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
+                            
                             <div>
-                              <label className="block text-sm font-medium mb-1">City*</label>
+                              <label className="block text-sm font-medium mb-1">Landmark (Optional)</label>
                               <Input
-                                name="city"
-                                value={shippingInfo.city}
+                                name="landmark"
+                                value={shippingInfo.landmark}
                                 onChange={handleShippingInfoChange}
-                                placeholder="City"
-                                required
+                                placeholder="Nearby landmark"
                               />
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Pincode*</label>
-                              <Input
-                                name="pincode"
-                                value={shippingInfo.pincode}
-                                onChange={handleShippingInfoChange}
-                                placeholder="Pincode"
-                                required
-                              />
+                            
+                            <div className="flex gap-2">
+                              {userData?.address?.buildingAddress && (
+                                <Button
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => setShowAddressForm(false)}
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                              <Button
+                                className="w-full"
+                                onClick={saveShippingInfo}
+                                disabled={isMutating}
+                              >
+                                {isMutating ? (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : null}
+                                Save Address
+                              </Button>
                             </div>
                           </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Building Address*</label>
-                            <Input
-                              name="buildingAddress"
-                              value={shippingInfo.buildingAddress}
-                              onChange={handleShippingInfoChange}
-                              placeholder="House no, building, street"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Landmark (Optional)</label>
-                            <Input
-                              name="landmark"
-                              value={shippingInfo.landmark}
-                              onChange={handleShippingInfoChange}
-                              placeholder="Nearby landmark"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setCheckoutStep(1)}
-                          >
-                            <ChevronLeft className="w-4 h-4 mr-1" />
-                            Back
-                          </Button>
-                          <Button
-                            className="w-full"
-                            onClick={saveShippingInfo}
-                            disabled={isMutating}
-                          >
-                            {isMutating ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 mr-1" />
-                            )}
-                            Save & Continue
-                          </Button>
-                        </div>
+                        )}
                       </div>
                     )}
 
@@ -730,7 +835,7 @@ const ShoppingCartUI = () => {
                               <span className="truncate max-w-[180px]">
                                 {item.productDetails?.name} × {item.quantity}
                               </span>
-                              <span>₹{(item.basePrice * item.quantity).toFixed(2)}</span>
+                              <span>₹{(Number(item.basePrice) * Number(item.quantity)).toFixed(2)}</span>
                             </div>
                           ))}
                           <div className="flex justify-between border-t pt-2 mt-2 font-medium">
