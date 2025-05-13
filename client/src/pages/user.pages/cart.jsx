@@ -239,55 +239,55 @@ const ShoppingCartUI = () => {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    try {
-      setIsMutating(true);
-      
-      // Prepare items with basePrice
-      const orderItems = filteredItems.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        basePrice: item.basePrice,
-        price: item.appliedPrice || item.basePrice
-      }));
+ const handlePlaceOrder = async () => {
+  try {
+    setIsMutating(true);
+    
+    // Prepare items with basePrice
+    const orderItems = filteredItems.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      basePrice: item.basePrice, // Make sure this is included
+      price: item.appliedPrice || item.basePrice
+    }));
 
-      // Calculate totals
-      const subtotal = orderItems.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
-      const transportationCharge = 0;
-      const totalAmount = subtotal + transportationCharge;
+    // Calculate totals
+    const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const transportationCharge = 0;
+    const totalAmount = subtotal + transportationCharge;
 
-      const orderData = {
-        storeId: selectedStore,
-        items: orderItems,
-        totalAmount,
-        shippingInfo: {
-          phoneNumber: shippingInfo.phoneNumber,
-          address: {
-            country: shippingInfo.country,
-            state: shippingInfo.state,
-            city: shippingInfo.city,
-            pincode: shippingInfo.pincode,
-            buildingAddress: shippingInfo.buildingAddress,
-            landmark: shippingInfo.landmark || ''
-          }
-        },
-        paymentMethod: 'cod'
-      };
+    const orderData = {
+      storeId: selectedStore,
+      items: orderItems,
+      totalAmount,
+      shippingInfo: {
+        phoneNumber: shippingInfo.phoneNumber,
+        address: {
+          country: shippingInfo.country,
+          state: shippingInfo.state,
+          city: shippingInfo.city,
+          pincode: shippingInfo.pincode,
+          buildingAddress: shippingInfo.buildingAddress,
+          landmark: shippingInfo.landmark || ''
+        }
+      },
+      paymentMethod: 'cod'
+    };
 
-      const { data } = await axiosInstance.post('/orders/create', orderData);
-      
-      if (data.success) {
-        await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
-        navigate(`/orders/${data.order._id}`);
-        toast.success("Order placed successfully!");
-      }
-    } catch (error) {
-      console.error("Error placing order:", error);
-      toast.error(error.response?.data?.message || "Failed to place order");
-    } finally {
-      setIsMutating(false);
+    const { data } = await axiosInstance.post('/orders/create', orderData);
+    
+    if (data.success) {
+      await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
+      navigate(`/orders/${data.order._id}`);
+      toast.success("Order placed successfully!");
     }
-  };
+  } catch (error) {
+    console.error("Error placing order:", error);
+    toast.error(error.response?.data?.message || "Failed to place order");
+  } finally {
+    setIsMutating(false);
+  }
+};
 
   const handleCheckout = async () => {
     try {

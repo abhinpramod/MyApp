@@ -1,36 +1,36 @@
 const mongoose = require('mongoose');
 
-const orderItemSchema = new mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-    default: 1
-  },
-  basePrice: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  price: {  // Actual price charged (could be same as basePrice or discounted)
-    type: Number,
-    required: true,
-    min: 0
-  },
-  productDetails: {  // Snapshot of product at time of order
-    name: String,
-    image: String,
-    category: String,
-    grade: String,
-    weightPerUnit: String,
-    unit: String
-  }
-}, { _id: false });
+// const orderItemSchema = new mongoose.Schema({
+//   productId: {
+//     type: mongoose.Schema.Types.ObjectId,
+//     ref: 'Product',
+//     required: true
+//   },
+//   quantity: {
+//     type: Number,
+//     required: true,
+//     min: 1,
+//     default: 1
+//   },
+//   basePrice: {
+//     type: Number,
+//     required: true,
+//     min: 0
+//   },
+//   price: {  // Actual price charged (could be same as basePrice or discounted)
+//     type: Number,
+//     required: true,
+//     min: 0
+//   },
+//   productDetails: {  // Snapshot of product at time of order
+//     name: String,
+//     image: String,
+//     category: String,
+//     grade: String,
+//     weightPerUnit: String,
+//     unit: String
+//   }
+// }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({
   userId: {
@@ -43,7 +43,18 @@ const OrderSchema = new mongoose.Schema({
     ref: 'Store',
     required: true
   },
-  items: [orderItemSchema],
+    items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true },
+    basePrice: { type: Number, required: true }, // This is what's causing the error if missing
+    productDetails: {
+      name: String,
+      image: String,
+      weightPerUnit: Number,
+      unit: String
+    }
+  }],
   subtotal: {
     type: Number,
     required: true,
