@@ -47,7 +47,7 @@ const OrderSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
-    basePrice: { type: Number, required: true }, // This is what's causing the error if missing
+    basePrice: { type: Number, required: true }, 
     productDetails: {
       name: String,
       image: String,

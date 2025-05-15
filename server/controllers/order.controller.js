@@ -103,6 +103,24 @@ const createOrder = async (req, res) => {
   }
 };
 
+const getOrders=async(req,res)=>{
+  try {
+    const orders = await Order.find({ storeId: req.store._id });
+    res.status(200).json({ 
+      success: true, 
+      orders,
+      message: 'Orders fetched successfully' 
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Internal server error' 
+    });
+  }
+}
+
 module.exports = {
-  createOrder
+  createOrder,
+  getOrders
 };
