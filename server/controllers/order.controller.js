@@ -3,7 +3,9 @@ const Cart = require('../model/cart');
 const Product = require('../model/products.model');
 const User = require('../model/user.model');
 const Store = require('../model/store.model');
+const sendEmail = require('../lib/nodemailer');
 
+// Create new order
 const createOrder = async (req, res) => {
   try {
     const { storeId, items, totalAmount, shippingInfo, paymentMethod = 'cod' } = req.body;
@@ -103,12 +105,53 @@ const createOrder = async (req, res) => {
   }
 };
 
-const getOrders=async(req,res)=>{
+// Get orders with filtering and pagination
+const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ storeId: req.store._id });
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      paymentStatus, 
+      search,
+      sortBy = 'createdAt', 
+      sortOrder = 'desc' 
+    } = req.query;
+
+    // Build filter object
+    const filter = { storeId: req.store._id };
+    
+    if (status) filter.status = status;
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+    
+    if (search) {
+      filter.$or = [
+        { 'userDetails.name': { $regex: search, $options: 'i' } },
+        { 'userDetails.email': { $regex: search, $options: 'i' } },
+        // Remove regex from _id search or handle it differently
+        search.match(/^[0-9a-fA-F]{24}$/) ? { _id: search } : null
+      ].filter(Boolean); // Remove null entries
+    }
+
+    // Calculate pagination values
+    const skip = (page - 1) * limit;
+    const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    // Execute queries
+    const orders = await Order.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Order.countDocuments(filter);
+
     res.status(200).json({ 
       success: true, 
       orders,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      limit: parseInt(limit),
       message: 'Orders fetched successfully' 
     });
   } catch (error) {
@@ -118,9 +161,119 @@ const getOrders=async(req,res)=>{
       message: error.message || 'Internal server error' 
     });
   }
+};
+
+// Update transportation charge
+const updateTransportationCharge = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { transportationCharge } = req.body;
+
+    // Validate input
+    if (isNaN(transportationCharge)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transportation charge must be a number'
+      });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { 
+        _id: orderId,
+        storeId: req.store._id,
+        status: 'pending' // Only allow updates for pending orders
+      },
+      { 
+        transportationCharge: Number(transportationCharge),
+        totalAmount: await calculateTotalAmount(orderId, Number(transportationCharge))
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found or not in pending status'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order,
+      message: 'Transportation charge updated successfully'
+    });
+    sendEmail(order.userDetails.email, 'Transportation Charge Updated', `Your transportation charge has been updated to ${transportationCharge}and the total amount is ${order.totalAmount}. confirm your order.`);
+    
+  } catch (error) {
+    console.error('Error updating transportation charge:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error'
+    });
+  }
+};
+
+// Reject order
+const rejectOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { rejectionReason } = req.body;
+
+    // Validate input
+    if (!rejectionReason || rejectionReason.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { 
+        _id: orderId,
+        storeId: req.store._id,
+        status: { $in: ['pending', 'processing'] } // Only allow rejection for these statuses
+      },
+      { 
+        status: 'cancelled',
+        rejectionReason: rejectionReason.trim(),
+        paymentStatus: req.body.paymentStatus === 'paid' ? 'refunded' : 'failed'
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found or cannot be rejected in current status'
+      });
+    }
+    sendEmail(order.userDetails.email, 'Order Rejected', `Your order has been rejected. Reason: ${rejectionReason}`);
+
+    res.status(200).json({
+      success: true,
+      order,
+      message: 'Order rejected successfully'
+    });
+
+  } catch (error) {
+    console.error('Error rejecting order:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error'
+    });
+  }
+};
+
+// Helper function to calculate total amount
+async function calculateTotalAmount(orderId, transportationCharge) {
+  const order = await Order.findById(orderId);
+  if (!order) return 0;
+  return order.subtotal + transportationCharge;
 }
 
 module.exports = {
   createOrder,
-  getOrders
+  getOrders,
+  updateTransportationCharge,
+  rejectOrder
 };

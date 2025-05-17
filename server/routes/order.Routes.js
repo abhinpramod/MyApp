@@ -1,10 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { createOrder,getOrders } = require('../controllers/order.controller');
-const {protectRouteuser, protectRoutestore} = require('../middleware/authmiddleware'); // Your auth middleware
+const { 
+  createOrder,
+  getOrders,
+  updateTransportationCharge,
+  rejectOrder
+} = require('../controllers/order.controller');
+const { protectRouteuser, protectRoutestore } = require('../middleware/authmiddleware');
 
 // Create new order
-router.post('/create', protectRouteuser,createOrder);
-router.get('/', protectRoutestore,getOrders);
+router.post('/create', protectRouteuser, createOrder);
+
+// Get orders with filtering
+router.get('/', protectRoutestore, getOrders);
+
+// Update transportation charge
+router.patch('/:orderId/transportation', protectRoutestore, updateTransportationCharge);
+
+// Reject order
+router.patch('/:orderId/reject', protectRoutestore, rejectOrder);
 
 module.exports = router;
