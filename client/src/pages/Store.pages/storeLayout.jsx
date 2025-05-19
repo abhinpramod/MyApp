@@ -30,6 +30,7 @@ const StoreDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [open, setOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -47,13 +48,21 @@ const StoreDashboard = () => {
 
   const handleLogout = () => {
     console.log("Logout clicked");  
-    
-  
     navigate("/");
     axiosInstance.post("/store/logout");
     handleCloseDialog();
     dispatch(logoutstore());
-    
+  };
+
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    try {
+      setNotificationCount(2)
+      const response = await axiosInstance.get("/store/notifications/count");
+      // setNotificationCount(response.data.count);
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
   };
 
   useEffect(() => {
@@ -67,13 +76,23 @@ const StoreDashboard = () => {
     };
     window.addEventListener("resize", handleResize);
     handleResize();
-    return () => window.removeEventListener("resize", handleResize);
+    
+    // Fetch notification count when component mounts
+    fetchNotificationCount();
+    
+    // Set up polling to check for new notifications every 30 seconds
+    const intervalId = setInterval(fetchNotificationCount, 30000);
+    
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearInterval(intervalId);
+    };
   }, []);
 
   return (
     <>
       <div className="flex h-screen">
-        {/* Sidebar - matches contractor layout exactly */}
+        {/* Sidebar */}
         <aside
           className={`bg-gray-900 text-white h-screen fixed top-0 left-0 flex flex-col p-4 transition-all duration-300 ${
             isSidebarOpen ? "w-64" : "w-20"
@@ -114,14 +133,24 @@ const StoreDashboard = () => {
               <PackagePlus />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Manage Products</span>
             </Link>
-            <Link 
+            
+            <Link
               to="/store/orders"
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isSidebarOpen ? "justify-start" : "justify-center"
-              } hover:bg-gray-800`}
+              } hover:bg-gray-800 relative`}
             >
-              <ShoppingCart />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Orders</span>
+              <ShoppingCart className="w-5 h-5" />
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>
+                Orders
+              </span>
+              {notificationCount > 0 && (
+                <span className={`absolute ${
+                  isSidebarOpen ? "right-3" : "right-1/2 translate-x-1/2"
+                } bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center`}>
+                  {notificationCount}
+                </span>
+              )}
             </Link>
             <Link
               to="/store/orderhistory"
@@ -144,7 +173,6 @@ const StoreDashboard = () => {
           </nav>
           
           <div className="mt-auto space-y-2">
-      
             <Button
               onClick={handleOpenDialog}
               className={`w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-red-400 hover:text-red-300 ${
@@ -157,26 +185,37 @@ const StoreDashboard = () => {
           </div>
         </aside>
 
-        {/* Main Content Area - matches contractor layout */}
+        {/* Main Content Area */}
         <div className="flex flex-col flex-1">
-          {/* Navbar - fixed position with proper left spacing */}
+          {/* Navbar */}
           <header
             className={`bg-white shadow-md w-full fixed top-0 h-16 flex items-center px-6 justify-between z-40 transition-all duration-300 ${
               isSidebarOpen ? "left-64" : "left-20"
             }`}
           >
             <h1 className="text-lg font-semibold text-gray-800">Store Dashboard</h1>
-            <button 
-              className={`flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors ${
-                isSidebarOpen ? "mr-60" : "mr-20"
-              }`} 
-              onClick={() => navigate("/")}
-            >
-              <Home className="w-5 h-5 text-gray-800" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button 
+                className="flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors relative"
+                onClick={() => navigate("/store/notifications")}
+              >
+                <BellRing className="w-5 h-5 text-gray-800" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+              <button 
+                className="flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors" 
+                onClick={() => navigate("/")}
+              >
+                <Home className="w-5 h-5 text-gray-800" />
+              </button>
+            </div>
           </header>
           
-          {/* Content Area with proper margin */}
+          {/* Content Area */}
           <main
             className={`p-6 overflow-auto flex-1 bg-gray-100 transition-all duration-300 ${
               isSidebarOpen ? "ml-64" : "ml-20"

@@ -25,8 +25,18 @@ const createOrder = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
 
-    // 2. Prepare order items with product details
+    // 2. Check for existing pending order without transportation charge
+    const existingOrder = await Order.findOne({
+      userId,
+      storeId,
+      status: 'pending',
+      transportationCharge: { $exists: true, $eq: 0 }
+    });
+
+    // 3. Prepare order items with product details
     const orderItems = [];
+    const productIdsInRequest = items.map(item => item.productId.toString());
+    
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) return res.status(404).json({ success: false, message: `Product ${item.productId} not found` });
@@ -38,7 +48,7 @@ const createOrder = async (req, res) => {
         productId: item.productId,
         quantity: item.quantity,
         price: item.price || basePrice,
-        basePrice: basePrice, // Make sure this is included
+        basePrice: basePrice, 
         productDetails: {
           name: product.name,
           image: product.image,
@@ -48,7 +58,7 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // 3. Calculate totals
+    // 4. Calculate totals for the new items
     const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const calculatedTotal = subtotal;
 
@@ -59,30 +69,65 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // 4. Create the order
-    const order = new Order({
-      userId,
-      storeId,
-      items: orderItems,
-      subtotal,
-      totalAmount: calculatedTotal,
-      shippingInfo,
-      paymentMethod,
-      status: 'pending',
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
-      storeDetails: {
-        storeName: store.storeName,
-        city: store.city,
-        state: store.state
-      },
-      userDetails: {
-        name: user.name,
-        email: user.email,
-        phoneNumber: user.phoneNumber
-      }
-    });
+    let order;
+    if (existingOrder) {
+      // Check for duplicate products in existing order and new items
+      const existingItemsMap = new Map();
+      existingOrder.items.forEach(item => {
+        existingItemsMap.set(item.productId.toString(), item);
+      });
 
-    await order.save();
+      // Process each new item
+      for (const newItem of orderItems) {
+        const productIdStr = newItem.productId.toString();
+        if (existingItemsMap.has(productIdStr)) {
+          // Product exists in order - update quantity
+          const existingItem = existingItemsMap.get(productIdStr);
+          existingItem.quantity += newItem.quantity;
+        } else {
+          // New product - add to order
+          existingOrder.items.push(newItem);
+        }
+      }
+
+      // Recalculate totals
+      const newSubtotal = existingOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      existingOrder.subtotal = newSubtotal;
+      existingOrder.totalAmount = newSubtotal;
+      
+      // Update shipping info if provided (optional)
+      if (shippingInfo) {
+        existingOrder.shippingInfo = shippingInfo;
+      }
+      
+      await existingOrder.save();
+      order = existingOrder;
+    } else {
+      // Create new order
+      order = new Order({
+        userId,
+        storeId,
+        items: orderItems,
+        subtotal,
+        totalAmount: calculatedTotal,
+        transportationCharge: 0, // Initialize as 0
+        shippingInfo,
+        paymentMethod,
+        status: 'pending',
+        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+        storeDetails: {
+          storeName: store.storeName,
+          city: store.city,
+          state: store.state
+        },
+        userDetails: {
+          name: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber
+        }
+      });
+      await order.save();
+    }
 
     // 5. Update cart - remove ordered items
     await Cart.updateMany(
@@ -93,7 +138,7 @@ const createOrder = async (req, res) => {
     res.status(201).json({ 
       success: true, 
       order,
-      message: 'Order created successfully' 
+      message: existingOrder ? 'Order updated successfully' : 'Order created successfully' 
     });
 
   } catch (error) {
