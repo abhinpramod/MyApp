@@ -1,7 +1,7 @@
 // components/store/StoreHeader.jsx
-import { Avatar, Box, Button, Chip, IconButton, Typography } from "@mui/material";
+import { Avatar, Box, Button, Chip, IconButton, Typography, TextField } from "@mui/material";
 import { Camera, Edit, Save } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const StoreHeader = ({ 
   storeData, 
@@ -10,11 +10,16 @@ const StoreHeader = ({
   profileImagePreview,
   onSaveProfileImage,
   profileImage,
-  description,
+  description: propDescription,
   onDescriptionUpdate
 }) => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [localDescription, setLocalDescription] = useState(description);
+  const [localDescription, setLocalDescription] = useState(propDescription);
+
+  // Sync local description when prop changes
+  useEffect(() => {
+    setLocalDescription(propDescription);
+  }, [propDescription]);
 
   const handleDescriptionSave = () => {
     onDescriptionUpdate(localDescription);
@@ -107,13 +112,13 @@ const DescriptionSection = ({
           onDescriptionChange={onDescriptionChange}
           onCancel={() => {
             onEditToggle();
-            onDescriptionChange(description); // Reset to original
+            // Reset to the current prop value (handled by parent's useEffect)
           }}
           onSave={onSave}
         />
       ) : (
         <Typography variant="body1" className="text-gray-700">
-          {description}
+          {description || "No description available"}
         </Typography>
       )}
     </Box>
@@ -130,6 +135,7 @@ const EditDescriptionForm = ({ description, onDescriptionChange, onCancel, onSav
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
         variant="outlined"
+        placeholder="Enter store description..."
       />
       <Box className="flex justify-end gap-2 mt-2">
         <Button

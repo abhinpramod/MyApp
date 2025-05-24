@@ -152,7 +152,7 @@ const createOrder = async (req, res) => {
 
 const getnotifications = async (req, res) => {
   try {
-    const notifications = await Order.find({ storeId: req.store._id, status: 'pending',transportationCharge :0 });
+    const notifications = await Order.find({ storeId: req.store._id, status: 'pending',deleverychargeadded:false });
     count = notifications.length;
     console.log('countof notifications  ',count);
     res.status(200).json( count );
@@ -260,7 +260,23 @@ const getOrders = async (req, res) => {
     });
   }
 };
-
+const getOrdersforconfirmation = async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.user._id, status: 'pending' ,deleverychargeadded:true });
+    res.status(200).json({ 
+      success: true, 
+      orders,
+      message: 'Orders fetched successfully' 
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Internal server error' 
+    });
+  }
+  
+}
 // Update transportation charge
 const updateTransportationCharge = async (req, res) => {
   try {
@@ -375,5 +391,6 @@ module.exports = {
   getOrders,
   updateTransportationCharge,
   rejectOrder,
-getnotifications
+getnotifications,
+getOrdersforconfirmation
 };
