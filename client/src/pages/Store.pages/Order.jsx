@@ -4,8 +4,6 @@ import axiosInstance from "../../lib/axios";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import {
-  FiChevronLeft,
-  FiChevronRight,
   FiFilter,
   FiSearch,
   FiX,
@@ -55,6 +53,7 @@ const Orders = () => {
     paymentStatus: "",
     search: "",
   });
+  const [filterType, setFilterType] = useState(""); // 'new', 'rejected', or ''
   const [sort, setSort] = useState({ field: "createdAt", order: "desc" });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -62,6 +61,7 @@ const Orders = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
+  const [newOrderCount, setNewOrderCount] = useState(0);
 
   // Confirmation dialog states
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -80,8 +80,9 @@ const Orders = () => {
         const params = {
           page: pagination.page,
           limit: pagination.limit,
-          ...(filters.status && { status: filters.status }),
-          ...(filters.paymentStatus && {
+          ...(filterType && { filterType }),
+          ...(!filterType && filters.status && { status: filters.status }),
+          ...(!filterType && filters.paymentStatus && {
             paymentStatus: filters.paymentStatus,
           }),
           ...(filters.search && { search: filters.search }),
@@ -104,10 +105,19 @@ const Orders = () => {
       }
     };
 
-    fetchOrders();
-  }, [pagination.page, pagination.limit, filters, sort]);
+    const fetchNotificationCount = async () => {
+      try {
+        const response = await axiosInstance.get("/orders/notifications");
+        setNewOrderCount(response.data);
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
 
-  // Open confirmation dialog
+    fetchOrders();
+    fetchNotificationCount();
+  }, [pagination.page, pagination.limit, filters, sort, filterType]);
+
   const openConfirmDialog = (
     action,
     title,
@@ -123,13 +133,11 @@ const Orders = () => {
     setConfirmDialogOpen(true);
   };
 
-  // Close confirmation dialog
   const closeConfirmDialog = () => {
     setConfirmDialogOpen(false);
     setConfirmAction(null);
   };
 
-  // Execute confirmed action
   const executeConfirmedAction = () => {
     if (confirmAction) {
       confirmAction();
@@ -137,12 +145,19 @@ const Orders = () => {
     closeConfirmDialog();
   };
 
+  const handleFilterType = (type) => {
+    setFilterType(filterType === type ? "" : type);
+    setFilters(prev => ({ ...prev, status: "", paymentStatus: "" }));
+  };
+
   const handleStatusFilter = (status) => {
+    setFilterType("");
     setFilters((prev) => ({ ...prev, status }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handlePaymentStatusFilter = (paymentStatus) => {
+    setFilterType("");
     setFilters((prev) => ({ ...prev, paymentStatus }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
@@ -266,7 +281,32 @@ const Orders = () => {
     );
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (order) => {
+    // Check for new orders (pending and transportationCharge = 0)
+    if (order.status === 'pending' && order.transportationCharge === 0) {
+      return (
+        <Chip
+          label="New Order"
+          color="warning"
+          size="small"
+          icon={<FiAlertCircle size={14} />}
+        />
+      );
+    }
+    
+    // Check for rejected orders
+    if (order.status === 'cancelled' && order.rejectionReason) {
+      return (
+        <Chip
+          label="Rejected"
+          color="error"
+          size="small"
+          icon={<FiX size={14} />}
+        />
+      );
+    }
+
+    // Regular status badges
     const statusColors = {
       pending: "warning",
       processing: "info",
@@ -274,10 +314,11 @@ const Orders = () => {
       delivered: "success",
       cancelled: "error",
     };
+    
     return (
       <Chip
-        label={status.charAt(0).toUpperCase() + status.slice(1)}
-        color={statusColors[status] || "default"}
+        label={order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+        color={statusColors[order.status] || "default"}
         size="small"
       />
     );
@@ -357,17 +398,49 @@ const Orders = () => {
             </Box>
 
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Badge badgeContent={newOrderCount} color="error">
+                <Button
+                  onClick={() => handleFilterType("new")}
+                  variant={filterType === "new" ? "contained" : "outlined"}
+                  size="small"
+                  color={filterType === "new" ? "primary" : "inherit"}
+                >
+                  New Orders
+                </Button>
+              </Badge>
+              
+              <Button
+                onClick={() => handleFilterType("rejected")}
+                variant={filterType === "rejected" ? "contained" : "outlined"}
+                size="small"
+                color={filterType === "rejected" ? "error" : "inherit"}
+              >
+                Rejected Orders
+              </Button>
+              
+              <Button
+                onClick={() => setFilterType("")}
+                variant={filterType === "" ? "contained" : "outlined"}
+                size="small"
+                color={filterType === "" ? "primary" : "inherit"}
+              >
+                All Orders
+              </Button>
+            </Box>
+
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <Button
                 onClick={() => handleStatusFilter("")}
                 variant={filters.status === "" ? "contained" : "outlined"}
                 size="small"
                 color={filters.status === "" ? "primary" : "inherit"}
+                disabled={!!filterType}
               >
                 All Statuses
               </Button>
               {[
                 "pending",
-                "new orders",
+                "processing",
                 "shipped",
                 "delivered",
                 "cancelled",
@@ -378,6 +451,7 @@ const Orders = () => {
                   variant={filters.status === status ? "contained" : "outlined"}
                   size="small"
                   color={filters.status === status ? "primary" : "inherit"}
+                  disabled={!!filterType}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </Button>
@@ -392,6 +466,7 @@ const Orders = () => {
                 }
                 size="small"
                 color={filters.paymentStatus === "" ? "primary" : "inherit"}
+                disabled={!!filterType}
               >
                 All Payments
               </Button>
@@ -411,6 +486,7 @@ const Orders = () => {
                         ? "primary"
                         : "inherit"
                     }
+                    disabled={!!filterType}
                   >
                     {paymentStatus.charAt(0).toUpperCase() +
                       paymentStatus.slice(1)}
@@ -526,7 +602,7 @@ const Orders = () => {
                         <TableCell fontWeight="medium">
                           ₹{order.totalAmount}
                         </TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
+                        <TableCell>{getStatusBadge(order)}</TableCell>
                         <TableCell>
                           {getPaymentStatusBadge(order.paymentStatus)}
                         </TableCell>
@@ -677,7 +753,7 @@ const Orders = () => {
                         <Typography variant="body2" color="textSecondary">
                           Status:
                         </Typography>
-                        {getStatusBadge(selectedOrder.status)}
+                        {getStatusBadge(selectedOrder)}
                       </Box>
                       <Box
                         sx={{
@@ -883,7 +959,7 @@ const Orders = () => {
                 )}
 
               {/* Transportation Charge Section */}
-              {selectedOrder.status === "pending" && (
+              {selectedOrder.status === "pending" && selectedOrder.transportationCharge === 0 && (
                 <Paper variant="outlined" sx={{ mt: 3, p: 2 }}>
                   <Typography
                     variant="subtitle2"

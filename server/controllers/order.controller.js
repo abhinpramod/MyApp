@@ -171,6 +171,7 @@ const getOrders = async (req, res) => {
       status, 
       paymentStatus, 
       search,
+      filterType, // 'new' or 'rejected'
       sortBy = 'createdAt', 
       sortOrder = 'desc' 
     } = req.query;
@@ -178,29 +179,68 @@ const getOrders = async (req, res) => {
     // Build filter object
     const filter = { storeId: req.store._id };
     
-    if (status) filter.status = status;
-    if (paymentStatus) filter.paymentStatus = paymentStatus;
+    // Handle filterType first (takes precedence over individual filters)
+    if (filterType === 'new') {
+      filter.status = 'pending';
+      filter.transportationCharge = 0;
+    } else if (filterType === 'rejected') {
+      filter.status = 'cancelled';
+      filter.rejectionReason = { $exists: true, $ne: '' };
+    } else {
+      // Apply individual filters only if no filterType is specified
+      if (status) filter.status = status;
+      if (paymentStatus) filter.paymentStatus = paymentStatus;
+    }
     
+    // Enhanced search functionality
     if (search) {
-      filter.$or = [
-        { 'userDetails.name': { $regex: search, $options: 'i' } },
-        { 'userDetails.email': { $regex: search, $options: 'i' } },
-        // Remove regex from _id search or handle it differently
-        search.match(/^[0-9a-fA-F]{24}$/) ? { _id: search } : null
-      ].filter(Boolean); // Remove null entries
+      const searchRegex = { $regex: search, $options: 'i' };
+      const searchConditions = [
+        { 'userDetails.name': searchRegex },
+        { 'userDetails.email': searchRegex },
+        { 'shippingInfo.phoneNumber': searchRegex },
+        { 'items.productDetails.name': searchRegex }
+      ];
+      
+      // If search looks like an order ID (last 6 chars)
+      if (/^[a-f0-9]{6}$/i.test(search)) {
+        searchConditions.push({ 
+          $expr: { 
+            $eq: [
+              { $substr: [{ $toString: "$_id" }, -6, 6] },
+              search.toLowerCase()
+            ]
+          }
+        });
+      }
+      
+      filter.$or = searchConditions;
     }
 
     // Calculate pagination values
     const skip = (page - 1) * limit;
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
-    // Execute queries
-    const orders = await Order.find(filter)
+    // Execute query - no need to populate productDetails since it's embedded
+    const ordersQuery = Order.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Order.countDocuments(filter);
+    const [orders, total] = await Promise.all([
+      ordersQuery.exec(),
+      Order.countDocuments(filter)
+    ]);
+
+    // Get new order count for notifications if needed
+    let newOrderCount = 0;
+    if (page == 1 && !filterType && !status && !paymentStatus && !search) {
+      newOrderCount = await Order.countDocuments({
+        storeId: req.store._id,
+        status: 'pending',
+        transportationCharge: 0
+      });
+    }
 
     res.status(200).json({ 
       success: true, 
@@ -209,6 +249,7 @@ const getOrders = async (req, res) => {
       page: parseInt(page),
       pages: Math.ceil(total / limit),
       limit: parseInt(limit),
+      ...(newOrderCount > 0 && { newOrderCount }), // Only include if > 0
       message: 'Orders fetched successfully' 
     });
   } catch (error) {

@@ -27,6 +27,7 @@ import ContractorNotifications from "./pages/contractor.pages/contractornotifica
 import UserProfile from "./pages/user.pages/Userprofile";
 import InterestSentHistory from "./pages/user.pages/Interesthistory";
 import StoreRegistration from "./pages/Store.pages/Storeregistration";
+import OrderConfirmation from "./pages/user.pages/orderconfirmation";
 import StoreLoginPage from "./pages/Store.pages/StoreLogin";
 import StoreLayout from "./pages/Store.pages/StoreLayout";
 import StoreDashboard from "./pages/Store.pages/Storedashboard";
@@ -71,7 +72,8 @@ function App() {
           <Route path="/contractors/:JOBTYPE" element={ <Contractors /> } />
           <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           <Route path="/store/:storeId" element={user ? <StoreProfile/>: <Loginuser />} />
-          <Route path="/cart" element={user ? <Cart/>: <Cart />} /> 
+          <Route path="/cart" element={user ? <Cart/>: <Loginuser />} /> 
+          <Route path="/confirmation" element={user ? <OrderConfirmation/>: <Loginuser />} /> 
           
           {/* Store Routes */}
           <Route path="/storeregistration" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreRegistration />} />
