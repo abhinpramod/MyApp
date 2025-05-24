@@ -4,7 +4,8 @@ const {
   createOrder,
   getOrders,
   updateTransportationCharge,
-  rejectOrder
+  rejectOrder,
+  getnotifications
 } = require('../controllers/order.controller');
 const { protectRouteuser, protectRoutestore } = require('../middleware/authmiddleware');
 
@@ -19,5 +20,7 @@ router.patch('/:orderId/transportation', protectRoutestore, updateTransportation
 
 // Reject order
 router.patch('/:orderId/reject', protectRoutestore, rejectOrder);
+
+router.get('/notifications', protectRoutestore,getnotifications );
 
 module.exports = router;

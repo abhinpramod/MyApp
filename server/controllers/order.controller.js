@@ -150,6 +150,18 @@ const createOrder = async (req, res) => {
   }
 };
 
+const getnotifications = async (req, res) => {
+  try {
+    const notifications = await Order.find({ storeId: req.store._id, status: 'pending',transportationCharge :0 });
+    count = notifications.length;
+    console.log('countof notifications  ',count);
+    res.status(200).json( count );
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+}
+
 // Get orders with filtering and pagination
 const getOrders = async (req, res) => {
   try {
@@ -230,7 +242,8 @@ const updateTransportationCharge = async (req, res) => {
       },
       { 
         transportationCharge: Number(transportationCharge),
-        totalAmount: await calculateTotalAmount(orderId, Number(transportationCharge))
+        totalAmount: await calculateTotalAmount(orderId, Number(transportationCharge)),
+        deleverychargeadded: true
       },
       { new: true }
     );
@@ -320,5 +333,6 @@ module.exports = {
   createOrder,
   getOrders,
   updateTransportationCharge,
-  rejectOrder
+  rejectOrder,
+getnotifications
 };

@@ -367,7 +367,7 @@ const Orders = () => {
               </Button>
               {[
                 "pending",
-                "processing",
+                "new orders",
                 "shipped",
                 "delivered",
                 "cancelled",

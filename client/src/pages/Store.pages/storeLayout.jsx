@@ -57,9 +57,9 @@ const StoreDashboard = () => {
   // Fetch notification count
   const fetchNotificationCount = async () => {
     try {
-      setNotificationCount(2)
-      const response = await axiosInstance.get("/store/notifications/count");
-      // setNotificationCount(response.data.count);
+      const response = await axiosInstance.get("/orders/notifications");
+      console.log("Notification count:", response.data);
+      setNotificationCount(response.data);
     } catch (error) {
       console.error("Error fetching notification count:", error);
     }
@@ -112,7 +112,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <LayoutDashboard />
+              <LayoutDashboard className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Dashboard</span>
             </Link>
             <Link
@@ -121,7 +121,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <User />
+              <User className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Profile</span>
             </Link>
             <Link
@@ -130,7 +130,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <PackagePlus />
+              <PackagePlus className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Manage Products</span>
             </Link>
             
@@ -158,7 +158,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <History />
+              <History className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Order History</span>
             </Link>
             <Link
@@ -167,7 +167,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               } hover:bg-gray-800`}
             >
-              <Settings />
+              <Settings className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Settings</span>
             </Link>
           </nav>
@@ -179,7 +179,7 @@ const StoreDashboard = () => {
                 isSidebarOpen ? "justify-start" : "justify-center"
               }`}
             >
-              <LogOut />
+              <LogOut className="w-5 h-5" />
               <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Logout</span>
             </Button>
           </div>
@@ -189,25 +189,35 @@ const StoreDashboard = () => {
         <div className="flex flex-col flex-1">
           {/* Navbar */}
           <header
-            className={`bg-white shadow-md w-full fixed top-0 h-16 flex items-center px-6 justify-between z-40 transition-all duration-300 ${
+            className={`bg-white shadow-md fixed top-0 h-16 flex items-center justify-between z-40 transition-all duration-300 ${
               isSidebarOpen ? "left-64" : "left-20"
             }`}
+            style={{
+              width: isSidebarOpen ? 'calc(100% - 16rem)' : 'calc(100% - 5rem)',
+              padding: '0 1.5rem'
+            }}
           >
             <h1 className="text-lg font-semibold text-gray-800">Store Dashboard</h1>
+            
             <div className="flex items-center space-x-4">
-              <button 
-                className="flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors relative"
+              {/* Notification Button with Badge */}
+              <button
+                className="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                 onClick={() => navigate("/store/notifications")}
               >
-                <BellRing className="w-5 h-5 text-gray-800" />
+                <BellRing className="w-5 h-5 text-gray-700" />
+                
+                {/* Notification Count Badge */}
                 {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
+                    {notificationCount > 9 ? "9+" : notificationCount}
                   </span>
                 )}
               </button>
-              <button 
-                className="flex items-center p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors" 
+              
+              {/* Home Button */}
+              <button
+                className="p-2 rounded-full hover:bg-gray-200 transition-colors"
                 onClick={() => navigate("/")}
               >
                 <Home className="w-5 h-5 text-gray-800" />
