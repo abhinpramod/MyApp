@@ -30,8 +30,8 @@ const StoreProfile = () => {
   const [description, setDescription] = useState("");
 
   // Fetch store data and products
-  useEffect(() => {
-    const fetchData = async () => {
+
+  const fetchData = async () => {
       try {
         setLoading(true);
         
@@ -41,6 +41,7 @@ const StoreProfile = () => {
           { withCredentials: true }
         );
         setStoreData(storeResponse.data);
+        console.log(storeResponse.data);
         setProfileImagePreview(storeResponse.data.profilePicture);
         setDescription(storeResponse.data.description);
 
@@ -56,6 +57,8 @@ const StoreProfile = () => {
         setLoading(false);
       }
     };
+  useEffect(() => {
+    
 
     fetchData();
   }, [paramStoreId, isOwnerView]);
@@ -127,6 +130,7 @@ const StoreProfile = () => {
 
       setStoreData(prev => ({ ...prev, description: newDescription }));
       toast.success('Description updated successfully');
+      fetchData();
       setLoading(false);
     } catch (error) {
       setLoading(false);

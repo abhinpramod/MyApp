@@ -29,6 +29,8 @@
     "@react-aria/visually-hidden": "3.8.19",
     "@react-types/shared": "3.27.0",
     "@reduxjs/toolkit": "^2.6.0",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.0",
     "@tailwindcss/vite": "^4.0.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

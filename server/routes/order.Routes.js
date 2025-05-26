@@ -5,7 +5,7 @@ const {
   getOrders,
   updateTransportationCharge,
   rejectOrder,
-  getnotifications,getOrdersforconfirmation
+  getnotifications,getOrdersforconfirmation,rejectOrderByCustomer
 } = require('../controllers/order.controller');
 const { protectRouteuser, protectRoutestore } = require('../middleware/authmiddleware');
 
@@ -26,5 +26,13 @@ router.get('/notifications', protectRoutestore,getnotifications );
 router.get ('/pending-confirmation',protectRouteuser, getOrdersforconfirmation);
 
 router.post('/confirm')
+
+
+
+router.patch(
+  '/:orderId/customer-reject',
+  protectRouteuser,
+  rejectOrderByCustomer
+);
 
 module.exports = router;

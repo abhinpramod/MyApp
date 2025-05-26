@@ -18,7 +18,10 @@ const Navbar = (isOwnerView) => {
     { name: "About", path: "/about" },
   ];
 
-  // Determine profile picture based on who is logged in
+  // Determine if any account is logged in
+  const isLoggedIn = user || contractor || store;
+  
+  // Determine profile picture if logged in
   const profilePicture = 
     user?.profileImage || 
     contractor?.profilePicture || 
@@ -60,12 +63,18 @@ const Navbar = (isOwnerView) => {
               }
               className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              {profilePicture ? (
-                <img
-                  src={profilePicture || "/avatar.png"}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full"
-                />
+              {isLoggedIn ? (
+                profilePicture ? (
+                  <img
+                    src={profilePicture}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={20} className="text-gray-600" />
+                  </div>
+                )
               ) : (
                 <User size={24} />
               )}
@@ -74,7 +83,7 @@ const Navbar = (isOwnerView) => {
 
           {/* Mobile Menu Button and Profile Icon */}
           <div className="lg:hidden flex items-center gap-4">
-            {/* Mobile Profile Icon - same as desktop but always visible */}
+            {/* Mobile Profile Icon */}
             <Link
               to={
                 user ? "/userprofile" :
@@ -84,12 +93,18 @@ const Navbar = (isOwnerView) => {
               }
               className="text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              {profilePicture ? (
-                <img
-                  src={profilePicture || "/avatar.png"}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full"
-                />
+              {isLoggedIn ? (
+                profilePicture ? (
+                  <img
+                    src={profilePicture}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={16} className="text-gray-600" />
+                  </div>
+                )
               ) : (
                 <User size={24} />
               )}

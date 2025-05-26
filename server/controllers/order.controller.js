@@ -277,6 +277,76 @@ const getOrdersforconfirmation = async (req, res) => {
   }
   
 }
+
+const rejectOrderByCustomer = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { rejectionReason } = req.body;
+    const userId = req.user._id;
+
+    // Validate input
+    if (!rejectionReason || rejectionReason.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid rejection reason (minimum 10 characters)'
+      });
+    }
+
+    // Find the order - must belong to user and have delivery charge added
+    const order = await Order.findOne({
+      _id: orderId,
+      userId,
+      deleverychargeadded: true,
+      status: 'pending'
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found or not eligible for rejection'
+      });
+    }
+
+    // Update order status and details
+    order.status = 'cancelled';
+    order.rejectionReason = rejectionReason.trim();
+    order.cancelledBy = 'customer';
+    order.cancelledAt = new Date();
+    
+    // If payment was already made, mark for refund
+    if (order.paymentStatus === 'paid') {
+      order.paymentStatus = 'refund_pending';
+    }
+
+    await order.save();
+
+    // Notify store owner
+    await sendEmail(
+      order.storeDetails.email, // Assuming store email is in storeDetails
+      'Order Rejected by Customer',
+      `Order #${order._id.toString().slice(-6)} was rejected by customer. Reason: ${rejectionReason}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Order rejected successfully',
+      data: {
+        orderId: order._id,
+        status: order.status,
+        cancelledAt: order.cancelledAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Customer order rejection error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject order',
+      error: error.message
+    });
+  }
+};
+
 // Update transportation charge
 const updateTransportationCharge = async (req, res) => {
   try {
@@ -392,5 +462,6 @@ module.exports = {
   updateTransportationCharge,
   rejectOrder,
 getnotifications,
-getOrdersforconfirmation
+getOrdersforconfirmation,
+rejectOrderByCustomer
 };
