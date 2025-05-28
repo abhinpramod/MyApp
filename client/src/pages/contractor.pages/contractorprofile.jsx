@@ -209,7 +209,7 @@ const DynamicProfile = () => {
       toast.success("Profile picture updated successfully");
     } catch (error) {
       console.error("Error uploading profile picture:", error);
-      toast.error("Failed to update profile picture");
+      toast.error(error.response?.data?.msg || "Failed to update profile picture");
     } finally {
       setIsLoading(false);
     }
