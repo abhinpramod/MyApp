@@ -8,7 +8,7 @@ const sendEmail = require('../lib/nodemailer');
 // Create new order
 const createOrder = async (req, res) => {
   try {
-    const { storeId, items, totalAmount, shippingInfo, paymentMethod = 'cod' } = req.body;
+    const { storeId, items, totalAmount, shippingInfo,  } = req.body;
     const userId = req.user._id;
 
     // Basic validation
@@ -112,9 +112,8 @@ const createOrder = async (req, res) => {
         totalAmount: calculatedTotal,
         transportationCharge: 0, // Initialize as 0
         shippingInfo,
-        paymentMethod,
         status: 'pending',
-        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+        // paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
         storeDetails: {
           storeName: store.storeName,
           city: store.city,
@@ -398,6 +397,38 @@ const updateTransportationCharge = async (req, res) => {
   }
 };
 
+// controllers/orderController.js
+const confirmOrder = async (req, res) => {
+  const { orderIds, paymentMethod = 'cod' } = req.body;
+
+  try {
+    // Validate input
+    if (!orderIds || !Array.isArray(orderIds)) {
+      return res.status(400).json({ message: 'Invalid order IDs' });
+    }
+
+    // Update orders
+    const updatePromises = orderIds.map(orderId => 
+      Order.findByIdAndUpdate(orderId, {
+        status: 'confirmed',
+        paymentMethod,
+        deleverystatus: 'pending',
+        ...(paymentMethod === 'cod' && { paymentStatus: 'pending' }), 
+        updatedAt: new Date()
+      }, { new: true })
+    );
+
+    const updatedOrders = await Promise.all(updatePromises);
+    
+    res.json({
+      message: 'Orders confirmed successfully',
+      orders: updatedOrders
+    });
+  } catch (error) {
+    console.error('Order confirmation error:', error);
+    res.status(500).json({ message: 'Failed to confirm orders' });
+  }
+};
 // Reject order
 const rejectOrder = async (req, res) => {
   try {
@@ -463,5 +494,5 @@ module.exports = {
   rejectOrder,
 getnotifications,
 getOrdersforconfirmation,
-rejectOrderByCustomer
+rejectOrderByCustomer,confirmOrder
 };

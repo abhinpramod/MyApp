@@ -70,9 +70,13 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["cod", "online", "wallet"],
-      default: "cod",
+      enum: ["cod", "online"],
     },
+      paymentDetails: {
+    paymentId: String,
+    paymentMethod: String,
+    paymentDate: Date
+  },
     shippingInfo: {
       phoneNumber: {
         type: String,
@@ -102,6 +106,12 @@ const OrderSchema = new mongoose.Schema(
         },
         landmark: String,
       },
+    },
+
+    deleverystatus: {
+      type: String,
+      enum: ["pending", "delivered","out for delivery"],
+      default: "pending",
     },
     // Store snapshot for reference
     storeDetails: {

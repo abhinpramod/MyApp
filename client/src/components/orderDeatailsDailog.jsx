@@ -40,7 +40,7 @@ const OrderDetailsDialog = ({
   isMobile,
   rejectionReason,
   setRejectionReason,
-  confirmOrder,
+  confirmOrder,  // This now triggers payment method selection
   rejectOrder
 }) => {
   return (
@@ -88,10 +88,12 @@ const OrderDetailsDialog = ({
 
             <OrderItems selectedOrder={selectedOrder} isMobile={isMobile} />
             
-            <RejectionSection 
-              rejectionReason={rejectionReason}
-              setRejectionReason={setRejectionReason}
-            />
+            {selectedOrder.status === 'pending' && (
+              <RejectionSection 
+                rejectionReason={rejectionReason}
+                setRejectionReason={setRejectionReason}
+              />
+            )}
           </Box>
         )}
       </DialogContent>
@@ -102,97 +104,121 @@ const OrderDetailsDialog = ({
         p: 2,
         bgcolor: 'background.default'
       }}>
-        <Button
-          onClick={() => confirmOrder(selectedOrder._id)}
-          color="primary"
-          variant="contained"
-          startIcon={<ConfirmIcon />}
-          sx={{
-            borderRadius: 5,
-            px: 3,
-            fontWeight: 'bold'
-          }}
-        >
-          Confirm Order
-        </Button>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        {selectedOrder?.status === 'pending' ? (
+          <>
+            <Button
+              onClick={() => confirmOrder(selectedOrder._id)}
+              color="primary"
+              variant="contained"
+              startIcon={<ConfirmIcon />}
+              sx={{
+                borderRadius: 5,
+                px: 3,
+                fontWeight: 'bold'
+              }}
+            >
+              Confirm Order
+            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                onClick={() => setIsDetailOpen(false)}
+                variant="outlined"
+                sx={{ borderRadius: 5 }}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={rejectOrder}
+                color="error"
+                variant="contained"
+                disabled={!rejectionReason}
+                startIcon={<RejectIcon />}
+                sx={{
+                  borderRadius: 5,
+                  px: 3,
+                  fontWeight: 'bold'
+                }}
+              >
+                Reject Order
+              </Button>
+            </Box>
+          </>
+        ) : (
           <Button
             onClick={() => setIsDetailOpen(false)}
-            variant="outlined"
+            variant="contained"
             sx={{ borderRadius: 5 }}
           >
             Close
           </Button>
-          <Button
-            onClick={rejectOrder}
-            color="error"
-            variant="contained"
-            disabled={!rejectionReason}
-            startIcon={<RejectIcon />}
-            sx={{
-              borderRadius: 5,
-              px: 3,
-              fontWeight: 'bold'
-            }}
-          >
-            Reject Order
-          </Button>
-        </Box>
+        )}
       </DialogActions>
     </Dialog>
   );
 };
 
-const OrderSummary = ({ selectedOrder }) => (
-  <Box sx={{ 
-    display: 'flex', 
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 2,
-    mb: 3,
-    p: 2,
-    bgcolor: 'background.paper',
-    borderRadius: 2,
-    boxShadow: 1
-  }}>
-    <Box>
-      <Typography variant="subtitle2" color="textSecondary">Status</Typography>
-      <Chip
-        label={selectedOrder.status.toUpperCase()}
-        color="warning"
-        icon={<CheckCircleIcon />}
-        sx={{ fontWeight: 'bold' }}
-      />
+const OrderSummary = ({ selectedOrder }) => {
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'confirmed': return 'success';
+      case 'rejected': return 'error';
+      case 'shipped': return 'info';
+      case 'delivered': return 'secondary';
+      default: return 'warning';
+    }
+  };
+
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 2,
+      mb: 3,
+      p: 2,
+      bgcolor: 'background.paper',
+      borderRadius: 2,
+      boxShadow: 1
+    }}>
+      <Box>
+        <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+        <Chip
+          label={selectedOrder.status.toUpperCase()}
+          color={getStatusColor(selectedOrder.status)}
+          icon={<CheckCircleIcon />}
+          sx={{ fontWeight: 'bold' }}
+        />
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" color="textSecondary">Payment</Typography>
+        <Chip
+          label={selectedOrder.paymentStatus.toUpperCase()}
+          color={selectedOrder.paymentStatus === 'paid' ? 'success' : 'warning'}
+          icon={<PaymentIcon />}
+          sx={{ fontWeight: 'bold' }}
+        />
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" color="textSecondary">Method</Typography>
+        <Typography sx={{ fontWeight: 'bold' }}>
+          {selectedOrder.paymentMethod?.toUpperCase()}
+        </Typography>
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" color="textSecondary">Transport</Typography>
+        <Typography sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
+          ₹{selectedOrder.transportationCharge}
+        </Typography>
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" color="textSecondary">Total</Typography>
+        <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          ₹{selectedOrder.totalAmount}
+        </Typography>
+      </Box>
     </Box>
-    <Box>
-      <Typography variant="subtitle2" color="textSecondary">Payment</Typography>
-      <Chip
-        label={selectedOrder.paymentStatus.toUpperCase()}
-        color={selectedOrder.paymentStatus === 'paid' ? 'success' : 'warning'}
-        icon={<PaymentIcon />}
-        sx={{ fontWeight: 'bold' }}
-      />
-    </Box>
-    <Box>
-      <Typography variant="subtitle2" color="textSecondary">Method</Typography>
-      <Typography sx={{ fontWeight: 'bold' }}>
-        {selectedOrder.paymentMethod.toUpperCase()}
-      </Typography>
-    </Box>
-    <Box>
-      <Typography variant="subtitle2" color="textSecondary">Transport</Typography>
-      <Typography sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
-        ₹{selectedOrder.transportationCharge}
-      </Typography>
-    </Box>
-    <Box>
-      <Typography variant="subtitle2" color="textSecondary">Total</Typography>
-      <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-        ₹{selectedOrder.totalAmount}
-      </Typography>
-    </Box>
-  </Box>
-);
+  );
+};
 
 const StoreDetails = ({ selectedOrder }) => (
   <Paper elevation={0} sx={{ p: 2, borderRadius: 2, bgcolor: 'background.paper' }}>

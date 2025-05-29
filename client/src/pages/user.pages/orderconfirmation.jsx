@@ -12,11 +12,23 @@ import {
   useMediaQuery,
   ThemeProvider,
   createTheme,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel
 } from '@mui/material';
 import OrdersTable from '../../components/ordersTable';
 import OrderDetailsDialog from '../../components/orderDeatailsDailog';
 import PageHeader from '../../components/pageHeader';
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -37,6 +49,9 @@ const OrderConfirmationPage = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [paymentMethodDialogOpen, setPaymentMethodDialogOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
+  const [orderToConfirm, setOrderToConfirm] = useState(null);
   const isMobile = useMediaQuery('(max-width:600px)');
   const navigate = useNavigate();
 
@@ -61,16 +76,80 @@ const OrderConfirmationPage = () => {
     setIsDetailOpen(true);
   };
 
-  const confirmOrder = async (orderId) => {
+  const handlePaymentMethodSelection = (orderId) => {
+    const order = orders.find(o => o._id === orderId);
+    if (!order) return toast.error("Order not found");
+    
+    setOrderToConfirm(order);
+    setPaymentMethodDialogOpen(true);
+  };
+
+  const handlePaymentMethodClose = () => {
+    setPaymentMethodDialogOpen(false);
+    setSelectedPaymentMethod('cod');
+    setOrderToConfirm(null);
+  };
+
+// In the confirmOrder function of OrderConfirmationPage.jsx
+const confirmOrder = async () => {
+  if (!orderToConfirm) return;
+  
+  setPaymentMethodDialogOpen(false);
+  
+  if (selectedPaymentMethod === 'online') {
     try {
-      await axios.post('/api/orders/confirm', { orderIds: [orderId] });
+      const res = await axiosInstance.post('/payments/create-checkout-session', { 
+        orderId: orderToConfirm._id 
+      });
+      
+      // Open Stripe checkout in new tab
+      const newWindow = window.open(res.data.url, '_blank');
+      
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Fallback if popup is blocked
+        window.location.href = res.data.url;
+      }
+      
+      // Poll for payment completion
+      const checkPaymentStatus = setInterval(async () => {
+        try {
+          const response = await axiosInstance.get(`/orders/${orderToConfirm._id}`);
+          if (response.data.order.paymentStatus === 'paid') {
+            clearInterval(checkPaymentStatus);
+            toast.success('Payment successful!');
+            setOrders(orders.filter(order => order._id !== orderToConfirm._id));
+            setIsDetailOpen(false);
+            navigate('/payment-success', { 
+              state: { orderId: orderToConfirm._id } 
+            });
+          }
+        } catch (error) {
+          console.error('Error checking payment status:', error);
+        }
+      }, 3000);
+      
+    } catch (error) {
+      toast.error('Stripe checkout failed');
+      console.error(error);
+    }
+  } else {
+    try {
+      await axiosInstance.post('/orders/confirm', { 
+        orderIds: [orderToConfirm._id] 
+      });
       toast.success('Order confirmed successfully');
-      setOrders(orders.filter(order => order._id !== orderId));
+      setOrders(orders.filter(order => order._id !== orderToConfirm._id));
       setIsDetailOpen(false);
     } catch (error) {
       toast.error('Failed to confirm order');
+      console.error(error);
     }
-  };
+  }
+  
+  // Reset states
+  setSelectedPaymentMethod('cod');
+  setOrderToConfirm(null);
+};
 
   const rejectOrder = async () => {
     if (!rejectionReason) {
@@ -129,9 +208,45 @@ const OrderConfirmationPage = () => {
             isMobile={isMobile}
             rejectionReason={rejectionReason}
             setRejectionReason={setRejectionReason}
-            confirmOrder={confirmOrder}
+            confirmOrder={handlePaymentMethodSelection} // Updated to show payment method dialog
             rejectOrder={rejectOrder}
           />
+
+          {/* Payment Method Selection Dialog */}
+          <Dialog open={paymentMethodDialogOpen} onClose={handlePaymentMethodClose}>
+            <DialogTitle>Select Payment Method</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Please choose how you would like to pay for this order.
+              </DialogContentText>
+              <FormControl component="fieldset" sx={{ mt: 2 }}>
+                <FormLabel component="legend">Payment Options</FormLabel>
+                <RadioGroup
+                  value={selectedPaymentMethod}
+                  onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                >
+                  <FormControlLabel 
+                    value="cod" 
+                    control={<Radio />} 
+                    label="Cash on Delivery (COD)" 
+                  />
+                  <FormControlLabel 
+                    value="online" 
+                    control={<Radio />} 
+                    label="Pay Online (Credit/Debit Card)" 
+                  />
+                </RadioGroup>
+              </FormControl>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handlePaymentMethodClose} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={confirmOrder} color="primary" variant="contained">
+                Continue
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </ThemeProvider>
     </>

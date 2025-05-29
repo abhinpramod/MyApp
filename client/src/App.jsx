@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import React from "react";
 import Home from "./pages/Home";
+import PaymentSuccess from "./components/PaymentSuccess ";
 import Contractors from "./pages/user.pages/Contractors";
 import Stores from "./pages/user.pages/Stores";
 import About from "./pages/About";
@@ -63,6 +64,7 @@ function App() {
           <Route path="/about" element={<About />} />
           
           {/* User Routes */}
+<Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/userprofile" element={user ? <UserProfile /> : <Loginuser />} />
           <Route path="/InterestSentHistory" element={user ? <InterestSentHistory /> : <Loginuser />} />
           <Route path="/stores" element={user ? <Stores /> : <Loginuser />} />
