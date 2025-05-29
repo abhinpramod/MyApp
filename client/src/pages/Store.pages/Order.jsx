@@ -10,6 +10,7 @@ import {
   FiTruck,
   FiDollarSign,
   FiAlertCircle,
+  FiCheckCircle,
 } from "react-icons/fi";
 import {
   Dialog,
@@ -53,7 +54,7 @@ const Orders = () => {
     paymentStatus: "",
     search: "",
   });
-  const [filterType, setFilterType] = useState(""); // 'new', 'rejected', or ''
+  const [filterType, setFilterType] = useState(""); // 'new', 'rejected', 'to-be-delivered' or ''
   const [sort, setSort] = useState({ field: "createdAt", order: "desc" });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -62,6 +63,7 @@ const Orders = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
+  const [toBeDeliveredCount, setToBeDeliveredCount] = useState(0);
 
   // Confirmation dialog states
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -113,9 +115,18 @@ const Orders = () => {
         console.error("Error fetching notification count:", error);
       }
     };
+    const fetchToBeDeliveredCount = async () => {
+      try {
+        const response = await axiosInstance.get("/orders/to-be-delivered");
+        setToBeDeliveredCount(response.data);
+      } catch (error) {
+        console.error("Error fetching to-be-delivered count:", error);
+      }
+    }
 
     fetchOrders();
     fetchNotificationCount();
+    fetchToBeDeliveredCount();
   }, [pagination.page, pagination.limit, filters, sort, filterType]);
 
   const openConfirmDialog = (
@@ -306,6 +317,18 @@ const Orders = () => {
       );
     }
 
+    // Check for to-be-delivered orders
+    if (order.deleverystatus === 'pending') {
+      return (
+        <Chip
+          label="To Be Delivered"
+          color="info"
+          size="small"
+          icon={<FiTruck size={14} />}
+        />
+      );
+    }
+
     // Regular status badges
     const statusColors = {
       pending: "warning",
@@ -417,6 +440,18 @@ const Orders = () => {
               >
                 Rejected Orders
               </Button>
+              <Badge badgeContent={toBeDeliveredCount} color="error">
+
+              <Button
+                onClick={() => handleFilterType("to-be-delivered")}
+                variant={filterType === "to-be-delivered" ? "contained" : "outlined"}
+                size="small"
+                color={filterType === "to-be-delivered" ? "info" : "inherit"}
+                startIcon={<FiTruck size={14} />}
+              >
+                To Be Delivered
+              </Button>
+              </Badge>
               
               <Button
                 onClick={() => setFilterType("")}

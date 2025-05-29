@@ -5,7 +5,7 @@ const {
   getOrders,
   updateTransportationCharge,
   rejectOrder,
-  getnotifications,getOrdersforconfirmation,rejectOrderByCustomer,confirmOrder
+  getnotifications,getOrdersforconfirmation,rejectOrderByCustomer,confirmOrder,tobedelevercount
 } = require('../controllers/order.controller');
 const { protectRouteuser, protectRoutestore } = require('../middleware/authmiddleware');
 
@@ -34,5 +34,7 @@ router.patch(
   protectRouteuser,
   rejectOrderByCustomer
 );
+
+router.get('/to-be-delivered',protectRoutestore, tobedelevercount);
 
 module.exports = router;

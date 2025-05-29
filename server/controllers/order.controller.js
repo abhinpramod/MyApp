@@ -161,6 +161,18 @@ const getnotifications = async (req, res) => {
   }
 }
 
+const tobedelevercount = async (req, res) => {
+  try {
+    const notifications = await Order.find({ storeId: req.store._id, deleverystatus: 'pending',deleverychargeadded:true,paymentMethod:'online'||'cod' });
+    count = notifications.length;
+    console.log('countof notifications  ',count);
+    res.status(200).json( count );
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+}
+
 // Get orders with filtering and pagination
 const getOrders = async (req, res) => {
   try {
@@ -494,5 +506,6 @@ module.exports = {
   rejectOrder,
 getnotifications,
 getOrdersforconfirmation,
-rejectOrderByCustomer,confirmOrder
+rejectOrderByCustomer,confirmOrder,
+tobedelevercount
 };

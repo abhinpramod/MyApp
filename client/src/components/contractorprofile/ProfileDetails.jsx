@@ -6,7 +6,7 @@ import {
   Button
 } from "@mui/material";
 import { Save, Pencil } from "lucide-react";
-import Switch from "../../ui/switch";
+import Switch from "../../components/ui/switch";
 import DetailItem from "./DetailItem";
 
 const ProfileDetails = ({
