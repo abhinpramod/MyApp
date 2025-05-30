@@ -2,7 +2,7 @@
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const Order = require('../model/Orders.model');
-
+const {updateProductStock} = require('../lib/stockUpdater');
 exports.createCheckoutSession = async (req, res) => {
   const { orderId } = req.body;
 
@@ -55,6 +55,8 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
+// controllers/paymentController.js
+
 exports.verifyPayment = async (req, res) => {
   const { orderId } = req.body;
 
@@ -64,17 +66,22 @@ exports.verifyPayment = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // In case webhook hasn't processed yet, we can verify directly
-    if (order.paymentStatus !== 'paid') {
-      await Order.findByIdAndUpdate(orderId, {
+    // Update product stock
+    await updateProductStock(order.items);
+
+    // Update order status
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
         paymentStatus: 'paid',
         status: 'confirmed',
         paymentMethod: 'online',
         deleverystatus: 'pending'
-      });
-    }
+      },
+      { new: true }
+    );
 
-    res.json({ success: true });
+    res.json({ success: true, order: updatedOrder });
   } catch (error) {
     console.error('Payment verification error:', error);
     res.status(500).json({ message: 'Payment verification failed' });

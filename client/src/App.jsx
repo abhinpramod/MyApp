@@ -75,7 +75,7 @@ function App() {
           <Route path="/contractor/contractorprofileforuser/:contractorId" element={user ? <ContractorProfile /> : <Loginuser />} />
           <Route path="/store/:storeId" element={user ? <StoreProfile/>: <Loginuser />} />
           <Route path="/cart" element={user ? <Cart/>: <Loginuser />} /> 
-          <Route path="/confirmation" element={user ? <OrderConfirmation/>: <Loginuser />} /> 
+          <Route path="/orders" element={user ? <OrderConfirmation/>: <Loginuser />} /> 
           
           {/* Store Routes */}
           <Route path="/storeregistration" element={store ? <Navigate to="/store/storeDashboard" /> : <StoreRegistration />} />

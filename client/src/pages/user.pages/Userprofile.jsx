@@ -111,6 +111,10 @@ const UserProfile = () => {
     navigate("/Cart");
   };
 
+  const handleshoworders = () => {
+    navigate("/orders");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -140,6 +144,7 @@ const UserProfile = () => {
                 <MenuItem onClick={handleAccountInfo}>History</MenuItem>
                 <MenuItem onClick={handleshowcart}>cart</MenuItem>
                 <MenuItem onClick={handleOpenDialog}>Logout</MenuItem>
+                <MenuItem onClick={handleshoworders}>orders</MenuItem>
               </Menu>
             </div>
 

@@ -4,6 +4,8 @@ const Product = require('../model/products.model');
 const User = require('../model/user.model');
 const Store = require('../model/store.model');
 const sendEmail = require('../lib/nodemailer');
+const { updateProductStock } = require('../lib/stockUpdater');
+
 
 // Create new order
 const createOrder = async (req, res) => {
@@ -271,6 +273,24 @@ const getOrders = async (req, res) => {
     });
   }
 };
+
+const cheakpaymetstatus = async (req, res) => {
+  const { orderId } = req.params;
+  try {
+    const orders = await Order.find({ _id: orderId});
+    res.status(200).json({ 
+      success: true, 
+      orders,
+      message: 'Orders fetched successfully' 
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Internal server error' 
+    });
+  }
+}
 const getOrdersforconfirmation = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user._id, status: 'pending' ,deleverychargeadded:true });
@@ -410,6 +430,8 @@ const updateTransportationCharge = async (req, res) => {
 };
 
 // controllers/orderController.js
+// controllers/orderController.js
+
 const confirmOrder = async (req, res) => {
   const { orderIds, paymentMethod = 'cod' } = req.body;
 
@@ -419,15 +441,39 @@ const confirmOrder = async (req, res) => {
       return res.status(400).json({ message: 'Invalid order IDs' });
     }
 
-    // Update orders
+    // Get all orders with their items
+    const orders = await Order.find({ _id: { $in: orderIds } });
+
+    // Check stock availability first
+    for (const order of orders) {
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (!product || product.stock < item.quantity) {
+          return res.status(400).json({ 
+            message: `Insufficient stock for product ${item.productDetails.name}`,
+            productId: item.productId
+          });
+        }
+      }
+    }
+
+    // Update product stock for all items in all orders
+    const allItems = orders.flatMap(order => order.items);
+    await updateProductStock(allItems);
+
+    // Update orders status
     const updatePromises = orderIds.map(orderId => 
-      Order.findByIdAndUpdate(orderId, {
-        status: 'confirmed',
-        paymentMethod,
-        deleverystatus: 'pending',
-        ...(paymentMethod === 'cod' && { paymentStatus: 'pending' }), 
-        updatedAt: new Date()
-      }, { new: true })
+      Order.findByIdAndUpdate(
+        orderId, 
+        {
+          status: 'confirmed',
+          paymentMethod,
+          deleverystatus: 'pending',
+          ...(paymentMethod === 'cod' && { paymentStatus: 'pending' }), 
+          updatedAt: new Date()
+        }, 
+        { new: true }
+      )
     );
 
     const updatedOrders = await Promise.all(updatePromises);
@@ -507,5 +553,6 @@ module.exports = {
 getnotifications,
 getOrdersforconfirmation,
 rejectOrderByCustomer,confirmOrder,
-tobedelevercount
+tobedelevercount,
+cheakpaymetstatus
 };
