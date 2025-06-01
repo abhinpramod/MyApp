@@ -2,7 +2,9 @@
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const Order = require('../model/Orders.model');
-const {updateProductStock} = require('../lib/stockUpdater');
+// const Order = require('../model/order.model');
+const Product = require('../model/products.model');
+const {updateProductStock}=require('../lib/stockUpdater');
 exports.createCheckoutSession = async (req, res) => {
   const { orderId } = req.body;
 
@@ -57,6 +59,8 @@ exports.createCheckoutSession = async (req, res) => {
 
 // controllers/paymentController.js
 
+
+
 exports.verifyPayment = async (req, res) => {
   const { orderId } = req.body;
 
@@ -81,9 +85,23 @@ exports.verifyPayment = async (req, res) => {
       { new: true }
     );
 
-    res.json({ success: true, order: updatedOrder });
+    res.json({ 
+      success: true, 
+      order: updatedOrder 
+    });
   } catch (error) {
     console.error('Payment verification error:', error);
-    res.status(500).json({ message: 'Payment verification failed' });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+    if (error.message.includes('insufficient stock')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    res.status(500).json({ 
+      message: 'Payment verification failed', 
+      error: error.message 
+    });
   }
 };

@@ -5,6 +5,7 @@ const User = require('../model/user.model');
 const Store = require('../model/store.model');
 const sendEmail = require('../lib/nodemailer');
 const { updateProductStock } = require('../lib/stockUpdater');
+const mongoose = require('mongoose');
 
 
 // Create new order
@@ -175,7 +176,6 @@ const tobedelevercount = async (req, res) => {
   }
 }
 
-// Get orders with filtering and pagination
 const getOrders = async (req, res) => {
   try {
     const { 
@@ -183,8 +183,9 @@ const getOrders = async (req, res) => {
       limit = 10, 
       status, 
       paymentStatus, 
+      paymentMethod,
       search,
-      filterType, // 'new' or 'rejected'
+      filterType, // 'new', 'rejected', 'to-be-delivered', 'out-for-delivery', 'delivered'
       sortBy = 'createdAt', 
       sortOrder = 'desc' 
     } = req.query;
@@ -199,10 +200,17 @@ const getOrders = async (req, res) => {
     } else if (filterType === 'rejected') {
       filter.status = 'cancelled';
       filter.rejectionReason = { $exists: true, $ne: '' };
+    } else if (filterType === 'to-be-delivered') {
+      filter.deleverystatus = 'pending';
+    } else if (filterType === 'out-for-delivery') {
+      filter.deleverystatus = 'out-for-delivery';
+    } else if (filterType === 'delivered') {
+      filter.deleverystatus = 'delivered';
     } else {
       // Apply individual filters only if no filterType is specified
       if (status) filter.status = status;
       if (paymentStatus) filter.paymentStatus = paymentStatus;
+      if (paymentMethod) filter.paymentMethod = paymentMethod;
     }
     
     // Enhanced search functionality
@@ -234,7 +242,7 @@ const getOrders = async (req, res) => {
     const skip = (page - 1) * limit;
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
-    // Execute query - no need to populate productDetails since it's embedded
+    // Execute query
     const ordersQuery = Order.find(filter)
       .sort(sort)
       .skip(skip)
@@ -245,16 +253,6 @@ const getOrders = async (req, res) => {
       Order.countDocuments(filter)
     ]);
 
-    // Get new order count for notifications if needed
-    let newOrderCount = 0;
-    if (page == 1 && !filterType && !status && !paymentStatus && !search) {
-      newOrderCount = await Order.countDocuments({
-        storeId: req.store._id,
-        status: 'pending',
-        transportationCharge: 0
-      });
-    }
-
     res.status(200).json({ 
       success: true, 
       orders,
@@ -262,14 +260,112 @@ const getOrders = async (req, res) => {
       page: parseInt(page),
       pages: Math.ceil(total / limit),
       limit: parseInt(limit),
-      ...(newOrderCount > 0 && { newOrderCount }), // Only include if > 0
       message: 'Orders fetched successfully' 
     });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error fetching orders   :', error);
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Internal server error' 
+    });
+  }
+};
+
+// Get count of new orders (pending with no transportation charge)
+const getNewOrderCount = async (req, res) => {
+  try {
+    const count = await Order.countDocuments({
+      storeId: req.store._id,
+      status: 'pending',
+      transportationCharge: 0
+    });
+    res.status(200).json(count);
+  } catch (error) {
+    console.error('Error fetching new order count:', error);
+    res.status(500).json(0);
+  }
+};
+
+// Get count of to-be-delivered orders
+const getToBeDeliveredCount = async (req, res) => {
+  try {
+    const count = await Order.countDocuments({
+      storeId: req.store._id,
+      deleverystatus: 'pending'
+    });
+    res.status(200).json(count);
+  } catch (error) {
+    console.error('Error fetching to-be-delivered count:', error);
+    res.status(500).json(0);
+  }
+};
+
+// Get count of out-for-delivery orders
+const getOutForDeliveryCount = async (req, res) => {
+  try {
+    const count = await Order.countDocuments({
+      storeId: req.store._id,
+      deleverystatus: 'out-for-delivery'
+    });
+    res.status(200).json(count);
+  } catch (error) {
+    console.error('Error fetching out-for-delivery count:', error);
+    res.status(500).json(0);
+  }
+};
+
+// Update delivery status
+const updateDeliveryStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID'
+      });
+    }
+
+    const validStatuses = ['pending', 'out-for-delivery', 'delivered'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid delivery status'
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { deleverystatus: status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // If status is delivered, also update the main order status
+    if (status === 'delivered') {
+      await Order.findByIdAndUpdate(
+        orderId,
+        { status: 'delivered' }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      order: updatedOrder,
+      message: 'Delivery status updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating delivery status:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error'
     });
   }
 };
@@ -432,46 +528,59 @@ const updateTransportationCharge = async (req, res) => {
 // controllers/orderController.js
 // controllers/orderController.js
 
-const confirmOrder = async (req, res) => {
+const  confirmOrder = async (req, res) => {
   const { orderIds, paymentMethod = 'cod' } = req.body;
 
   try {
     // Validate input
-    if (!orderIds || !Array.isArray(orderIds)) {
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
       return res.status(400).json({ message: 'Invalid order IDs' });
     }
 
-    // Get all orders with their items
-    const orders = await Order.find({ _id: { $in: orderIds } });
+    // Get orders with items
+    const orders = await Order.find({ 
+      _id: { $in: orderIds },
+      status: { $ne: 'confirmed' }
+    });
 
-    // Check stock availability first
+    if (orders.length !== orderIds.length) {
+      return res.status(400).json({ message: 'Some orders not found or already confirmed' });
+    }
+
+    // Check stock availability
+    const productIds = [...new Set(orders.flatMap(order => 
+      order.items.map(item => item.productId)
+    ))];
+    
+    const products = await Product.find({ _id: { $in: productIds } });
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
     for (const order of orders) {
       for (const item of order.items) {
-        const product = await Product.findById(item.productId);
+        const product = productMap.get(item.productId.toString());
         if (!product || product.stock < item.quantity) {
-          return res.status(400).json({ 
-            message: `Insufficient stock for product ${item.productDetails.name}`,
+          return res.status(400).json({
+            message: `Insufficient stock for ${item.productDetails?.name || 'product'}`,
             productId: item.productId
           });
         }
       }
     }
 
-    // Update product stock for all items in all orders
-    const allItems = orders.flatMap(order => order.items);
-    await updateProductStock(allItems);
+    // Update all product stocks
+    await updateProductStock(orders.flatMap(order => order.items));
 
-    // Update orders status
-    const updatePromises = orderIds.map(orderId => 
+    // Update orders
+    const updatePromises = orders.map(order => 
       Order.findByIdAndUpdate(
-        orderId, 
+        order._id,
         {
           status: 'confirmed',
           paymentMethod,
           deleverystatus: 'pending',
-          ...(paymentMethod === 'cod' && { paymentStatus: 'pending' }), 
+          paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
           updatedAt: new Date()
-        }, 
+        },
         { new: true }
       )
     );
@@ -479,12 +588,21 @@ const confirmOrder = async (req, res) => {
     const updatedOrders = await Promise.all(updatePromises);
     
     res.json({
-      message: 'Orders confirmed successfully',
+      success: true,
+      message: `Confirmed ${orders.length} orders`,
       orders: updatedOrders
     });
   } catch (error) {
     console.error('Order confirmation error:', error);
-    res.status(500).json({ message: 'Failed to confirm orders' });
+    
+    if (error.message.includes('insufficient stock')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    res.status(500).json({ 
+      message: 'Failed to confirm orders',
+      error: error.message 
+    });
   }
 };
 // Reject order
@@ -554,5 +672,6 @@ getnotifications,
 getOrdersforconfirmation,
 rejectOrderByCustomer,confirmOrder,
 tobedelevercount,
-cheakpaymetstatus
+cheakpaymetstatus,
+updateDeliveryStatus
 };

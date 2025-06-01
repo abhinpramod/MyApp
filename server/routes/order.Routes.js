@@ -5,7 +5,8 @@ const {
   getOrders,
   updateTransportationCharge,
   rejectOrder,
-  getnotifications,getOrdersforconfirmation,rejectOrderByCustomer,confirmOrder,tobedelevercount,cheakpaymetstatus
+  getnotifications,getOrdersforconfirmation,rejectOrderByCustomer,confirmOrder,tobedelevercount,cheakpaymetstatus,
+  updateDeliveryStatus
 } = require('../controllers/order.controller');
 const { protectRouteuser, protectRoutestore } = require('../middleware/authmiddleware');
 
@@ -38,5 +39,7 @@ router.get('/:orderId',protectRoutestore,cheakpaymetstatus
  );
 
 router.get('/to-be-delivered',protectRoutestore, tobedelevercount);
+
+router.patch('/:orderId/delivery-status',protectRoutestore, updateDeliveryStatus);
 
 module.exports = router;

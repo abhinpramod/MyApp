@@ -11,6 +11,7 @@ import {
   FiDollarSign,
   FiAlertCircle,
   FiCheckCircle,
+  FiPackage,
 } from "react-icons/fi";
 import {
   Dialog,
@@ -52,9 +53,10 @@ const Orders = () => {
   const [filters, setFilters] = useState({
     status: "",
     paymentStatus: "",
+    paymentMethod: "",
     search: "",
   });
-  const [filterType, setFilterType] = useState(""); // 'new', 'rejected', 'to-be-delivered' or ''
+  const [filterType, setFilterType] = useState(""); // 'new', 'rejected', 'to-be-delivered', 'out-for-delivery', 'delivered' or ''
   const [sort, setSort] = useState({ field: "createdAt", order: "desc" });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,6 +66,7 @@ const Orders = () => {
   const [isRejecting, setIsRejecting] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [toBeDeliveredCount, setToBeDeliveredCount] = useState(0);
+  const [outForDeliveryCount, setOutForDeliveryCount] = useState(0);
 
   // Confirmation dialog states
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -87,6 +90,9 @@ const Orders = () => {
           ...(!filterType && filters.paymentStatus && {
             paymentStatus: filters.paymentStatus,
           }),
+          ...(!filterType && filters.paymentMethod && {
+            paymentMethod: filters.paymentMethod,
+          }),
           ...(filters.search && { search: filters.search }),
           sortBy: sort.field,
           sortOrder: sort.order,
@@ -107,26 +113,23 @@ const Orders = () => {
       }
     };
 
-    const fetchNotificationCount = async () => {
+    const fetchNotificationCounts = async () => {
       try {
-        const response = await axiosInstance.get("/orders/notifications");
-        setNewOrderCount(response.data);
+        const [newOrders, toBeDelivered, outForDelivery] = await Promise.all([
+          axiosInstance.get("/orders/notifications"),
+          axiosInstance.get("/orders/to-be-delivered"),
+          // axiosInstance.get("/orders/out-for-delivery"),
+        ]);
+        setNewOrderCount(newOrders.data);
+        setToBeDeliveredCount(toBeDelivered.data);
+        setOutForDeliveryCount(outForDelivery.data);
       } catch (error) {
-        console.error("Error fetching notification count:", error);
+        console.error("Error fetching notification counts:", error);
       }
     };
-    const fetchToBeDeliveredCount = async () => {
-      try {
-        const response = await axiosInstance.get("/orders/to-be-delivered");
-        setToBeDeliveredCount(response.data);
-      } catch (error) {
-        console.error("Error fetching to-be-delivered count:", error);
-      }
-    }
 
     fetchOrders();
-    fetchNotificationCount();
-    fetchToBeDeliveredCount();
+    fetchNotificationCounts();
   }, [pagination.page, pagination.limit, filters, sort, filterType]);
 
   const openConfirmDialog = (
@@ -158,7 +161,7 @@ const Orders = () => {
 
   const handleFilterType = (type) => {
     setFilterType(filterType === type ? "" : type);
-    setFilters(prev => ({ ...prev, status: "", paymentStatus: "" }));
+    setFilters(prev => ({ ...prev, status: "", paymentStatus: "", paymentMethod: "" }));
   };
 
   const handleStatusFilter = (status) => {
@@ -170,6 +173,12 @@ const Orders = () => {
   const handlePaymentStatusFilter = (paymentStatus) => {
     setFilterType("");
     setFilters((prev) => ({ ...prev, paymentStatus }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handlePaymentMethodFilter = (paymentMethod) => {
+    setFilterType("");
+    setFilters((prev) => ({ ...prev, paymentMethod }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -292,6 +301,51 @@ const Orders = () => {
     );
   };
 
+  const updateDeliveryStatus = async (status) => {
+    if (!selectedOrder) return;
+
+    try {
+      setIsUpdating(true);
+      await axiosInstance.patch(`/orders/${selectedOrder._id}/delivery-status`, {
+        status,
+      });
+      toast.success(`Order marked as ${status}`);
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === selectedOrder._id
+            ? {
+                ...order,
+                deleverystatus: status,
+                status: status === "delivered" ? "delivered" : order.status,
+              }
+            : order
+        )
+      );
+
+      closeDialog();
+    } catch (error) {
+      console.error(`Error updating delivery status to ${status}:`, error);
+      toast.error(`Failed to update delivery status`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const confirmDeliveryStatusUpdate = (status) => {
+    const statusText = status === "out-for-delivery" 
+      ? "Out for Delivery" 
+      : status.charAt(0).toUpperCase() + status.slice(1);
+      
+    openConfirmDialog(
+      () => updateDeliveryStatus(status),
+      `Mark as ${statusText}`,
+      `Are you sure you want to mark this order as ${statusText}?`,
+      `Mark as ${statusText}`,
+      status === "delivered" ? "success" : "primary"
+    );
+  };
+
   const getStatusBadge = (order) => {
     // Check for new orders (pending and transportationCharge = 0)
     if (order.status === 'pending' && order.transportationCharge === 0) {
@@ -317,14 +371,36 @@ const Orders = () => {
       );
     }
 
-    // Check for to-be-delivered orders
-    if (order.deleverystatus === 'pending') {
+    // Check delivery status
+    if (order.deleverystatus === 'out-for-delivery') {
       return (
         <Chip
-          label="To Be Delivered"
+          label="Out for Delivery"
           color="info"
           size="small"
           icon={<FiTruck size={14} />}
+        />
+      );
+    }
+
+    if (order.deleverystatus === 'pending') {
+      return (
+        <Chip
+          label="To Be Delivere"
+          color="info"
+          size="small"
+          icon={<FiPackage size={14} />}
+        />
+      );
+    }
+
+    if (order.deleverystatus === 'delivered') {
+      return (
+        <Chip
+          label="Delivered"
+          color="success"
+          size="small"
+          icon={<FiCheckCircle size={14} />}
         />
       );
     }
@@ -358,6 +434,21 @@ const Orders = () => {
       <Chip
         label={paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
         color={paymentColors[paymentStatus] || "default"}
+        size="small"
+      />
+    );
+  };
+
+  const getPaymentMethodBadge = (paymentMethod) => {
+    const methodColors = {
+      cod: "warning",
+      online: "success",
+      wallet: "info",
+    };
+    return (
+      <Chip
+        label={paymentMethod === 'cod' ? 'COD' : paymentMethod?.charAt(0).toUpperCase() + paymentMethod?.slice(1)}
+        color={methodColors[paymentMethod] || "default"}
         size="small"
       />
     );
@@ -440,19 +531,42 @@ const Orders = () => {
               >
                 Rejected Orders
               </Button>
+
               <Badge badgeContent={toBeDeliveredCount} color="error">
+                <Button
+                  onClick={() => handleFilterType("to-be-delivere")}
+                  variant={filterType === "to-be-delivered" ? "contained" : "outlined"}
+                  size="small"
+                  color={filterType === "to-be-delivere" ? "info" : "inherit"}
+                  startIcon={<FiPackage size={14} />}
+                >
+                  To Be Delivered
+
+                </Button>
+              </Badge>
+
+              <Badge badgeContent={outForDeliveryCount} color="error">
+                <Button
+                  onClick={() => handleFilterType("out-for-delivery")}
+                  variant={filterType === "out-for-delivery" ? "contained" : "outlined"}
+                  size="small"
+                  color={filterType === "out-for-delivery" ? "info" : "inherit"}
+                  startIcon={<FiTruck size={14} />}
+                >
+                  Out for Delivery
+                </Button>
+              </Badge>
 
               <Button
-                onClick={() => handleFilterType("to-be-delivered")}
-                variant={filterType === "to-be-delivered" ? "contained" : "outlined"}
+                onClick={() => handleFilterType("delivered")}
+                variant={filterType === "delivered" ? "contained" : "outlined"}
                 size="small"
-                color={filterType === "to-be-delivered" ? "info" : "inherit"}
-                startIcon={<FiTruck size={14} />}
+                color={filterType === "delivered" ? "success" : "inherit"}
+                startIcon={<FiCheckCircle size={14} />}
               >
-                To Be Delivered
+                Delivered
               </Button>
-              </Badge>
-              
+
               <Button
                 onClick={() => setFilterType("")}
                 variant={filterType === "" ? "contained" : "outlined"}
@@ -462,73 +576,62 @@ const Orders = () => {
                 All Orders
               </Button>
             </Box>
+          </Box>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mr: 1, alignSelf: 'center' }}>
+              Status:
+            </Typography>
+            {["", "pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
               <Button
-                onClick={() => handleStatusFilter("")}
-                variant={filters.status === "" ? "contained" : "outlined"}
+                key={status || "all"}
+                onClick={() => handleStatusFilter(status)}
+                variant={filters.status === status ? "contained" : "outlined"}
                 size="small"
-                color={filters.status === "" ? "primary" : "inherit"}
+                color={filters.status === status ? "primary" : "inherit"}
                 disabled={!!filterType}
               >
-                All Statuses
+                {status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Statuses"}
               </Button>
-              {[
-                "pending",
-                "processing",
-                "shipped",
-                "delivered",
-                "cancelled",
-              ].map((status) => (
-                <Button
-                  key={status}
-                  onClick={() => handleStatusFilter(status)}
-                  variant={filters.status === status ? "contained" : "outlined"}
-                  size="small"
-                  color={filters.status === status ? "primary" : "inherit"}
-                  disabled={!!filterType}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              ))}
-            </Box>
+            ))}
+          </Box>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mr: 1, alignSelf: 'center' }}>
+              Payment:
+            </Typography>
+            {["", "pending", "paid", "failed", "refunded"].map((paymentStatus) => (
               <Button
-                onClick={() => handlePaymentStatusFilter("")}
-                variant={
-                  filters.paymentStatus === "" ? "contained" : "outlined"
-                }
+                key={paymentStatus || "all"}
+                onClick={() => handlePaymentStatusFilter(paymentStatus)}
+                variant={filters.paymentStatus === paymentStatus ? "contained" : "outlined"}
                 size="small"
-                color={filters.paymentStatus === "" ? "primary" : "inherit"}
+                color={filters.paymentStatus === paymentStatus ? "primary" : "inherit"}
                 disabled={!!filterType}
               >
-                All Payments
+                {paymentStatus ? paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1) : "All Payments"}
               </Button>
-              {["pending", "paid", "failed", "refunded"].map(
-                (paymentStatus) => (
-                  <Button
-                    key={paymentStatus}
-                    onClick={() => handlePaymentStatusFilter(paymentStatus)}
-                    variant={
-                      filters.paymentStatus === paymentStatus
-                        ? "contained"
-                        : "outlined"
-                    }
-                    size="small"
-                    color={
-                      filters.paymentStatus === paymentStatus
-                        ? "primary"
-                        : "inherit"
-                    }
-                    disabled={!!filterType}
-                  >
-                    {paymentStatus.charAt(0).toUpperCase() +
-                      paymentStatus.slice(1)}
-                  </Button>
-                )
-              )}
-            </Box>
+            ))}
+          </Box>
+
+          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mr: 1, alignSelf: 'center' }}>
+              Method:
+            </Typography>
+            {["", "cod", "online", "wallet"].map((paymentMethod) => (
+              <Button
+                key={paymentMethod || "all"}
+                onClick={() => handlePaymentMethodFilter(paymentMethod)}
+                variant={filters.paymentMethod === paymentMethod ? "contained" : "outlined"}
+                size="small"
+                color={filters.paymentMethod === paymentMethod ? "primary" : "inherit"}
+                disabled={!!filterType}
+              >
+                {paymentMethod ? 
+                  (paymentMethod === 'cod' ? 'COD' : paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)) 
+                  : "All Methods"}
+              </Button>
+            ))}
           </Box>
         </Paper>
 
@@ -600,6 +703,7 @@ const Orders = () => {
                       </TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>Payment</TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>Method</TableCell>
                       <TableCell align="right" sx={{ fontWeight: "bold" }}>
                         Actions
                       </TableCell>
@@ -640,6 +744,9 @@ const Orders = () => {
                         <TableCell>{getStatusBadge(order)}</TableCell>
                         <TableCell>
                           {getPaymentStatusBadge(order.paymentStatus)}
+                        </TableCell>
+                        <TableCell>
+                          {getPaymentMethodBadge(order.paymentMethod)}
                         </TableCell>
                         <TableCell align="right">
                           <Button
@@ -810,13 +917,7 @@ const Orders = () => {
                         <Typography variant="body2" color="textSecondary">
                           Payment Method:
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          fontWeight="medium"
-                          textTransform="capitalize"
-                        >
-                          {selectedOrder.paymentMethod}
-                        </Typography>
+                        {getPaymentMethodBadge(selectedOrder.paymentMethod)}
                       </Box>
                       <Box
                         sx={{
@@ -919,6 +1020,39 @@ const Orders = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
+              {/* Delivery Actions */}
+              {selectedOrder.status !== "cancelled" && (
+                <Box sx={{ mt: 3, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Delivery Actions
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {selectedOrder.deleverystatus !== 'out-for-delivery' && selectedOrder.deleverystatus !== 'delivered' && (
+                      <Button
+                        variant="contained"
+                        color="info"
+                        startIcon={<FiTruck />}
+                        onClick={() => confirmDeliveryStatusUpdate('out-for-delivery')}
+                        disabled={isUpdating}
+                      >
+                        Mark as Out for Delivery
+                      </Button>
+                    )}
+                    {selectedOrder.deleverystatus !== 'delivered' && (
+                      <Button
+                        variant="contained"
+                        color="success"
+                        startIcon={<FiCheckCircle />}
+                        onClick={() => confirmDeliveryStatusUpdate('delivered')}
+                        disabled={isUpdating}
+                      >
+                        Mark as Delivered
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              )}
 
               {/* Rejection Section */}
               {selectedOrder.status !== "cancelled" && (
