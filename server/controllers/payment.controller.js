@@ -70,7 +70,6 @@ exports.verifyPayment = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Update product stock
     await updateProductStock(order.items);
 
     // Update order status

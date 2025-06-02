@@ -1,11 +1,8 @@
 const Product = require('../model/products.model');
 
-/**
- * Updates stock for multiple products
- * @param {Array} items - Array of order items with productId and quantity
- * @param {string} [operation='decrement'] - 'decrement' or 'increment'
- */
+
 const updateProductStock = async (items, operation = 'decrement') => {
+  console.log( "this is the iteams ",items,".............");
   const bulkOps = items.map(item => ({
     updateOne: {
       filter: { 

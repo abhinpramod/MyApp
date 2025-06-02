@@ -439,20 +439,31 @@ const Orders = () => {
     );
   };
 
-  const getPaymentMethodBadge = (paymentMethod) => {
-    const methodColors = {
-      cod: "warning",
-      online: "success",
-      wallet: "info",
-    };
+const getPaymentMethodBadge = (paymentMethod) => {
+  const methodColors = {
+    cod: "warning",
+    online: "success",
+    wallet: "info",
+  };
+  
+  if (!paymentMethod) {
     return (
       <Chip
-        label={paymentMethod === 'cod' ? 'COD' : paymentMethod?.charAt(0).toUpperCase() + paymentMethod?.slice(1)}
-        color={methodColors[paymentMethod] || "default"}
+        label="Not Paid Yet"
+        color="error"
         size="small"
       />
     );
-  };
+  }
+  
+  return (
+    <Chip
+      label={paymentMethod === 'cod' ? 'COD' : paymentMethod?.charAt(0).toUpperCase() + paymentMethod?.slice(1)}
+      color={methodColors[paymentMethod] || "default"}
+      size="small"
+    />
+  );
+};
 
   const handlePageChange = (event, value) => {
     setPagination((prev) => ({ ...prev, page: value }));
@@ -1020,37 +1031,38 @@ const Orders = () => {
               </TableContainer>
 
               {/* Delivery Actions */}
-              {selectedOrder.status !== "cancelled" && (
-                <Box sx={{ mt: 3, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Delivery Actions
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    {selectedOrder.deleverystatus !== 'out-for-delivery' && selectedOrder.deleverystatus !== 'delivered' && (
-                      <Button
-                        variant="contained"
-                        color="info"
-                        startIcon={<FiTruck />}
-                        onClick={() => confirmDeliveryStatusUpdate('out-for-delivery')}
-                        disabled={isUpdating}
-                      >
-                        Mark as Out for Delivery
-                      </Button>
-                    )}
-                    {selectedOrder.deleverystatus !== 'delivered' && (
-                      <Button
-                        variant="contained"
-                        color="success"
-                        startIcon={<FiCheckCircle />}
-                        onClick={() => confirmDeliveryStatusUpdate('delivered')}
-                        disabled={isUpdating}
-                      >
-                        Mark as Delivered
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              )}
+            {selectedOrder.status !== "cancelled" && selectedOrder.transportationCharge > 0 && (
+  <Box sx={{ mt: 3, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+    <Typography variant="subtitle2" gutterBottom>
+      Delivery Actions
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      {selectedOrder.deleverystatus !== 'out-for-delivery' && 
+       selectedOrder.deleverystatus !== 'delivered' && (
+        <Button
+          variant="contained"
+          color="info"
+          startIcon={<FiTruck />}
+          onClick={() => confirmDeliveryStatusUpdate('out-for-delivery')}
+          disabled={isUpdating}
+        >
+          Mark as Out for Delivery
+        </Button>
+      )}
+      {selectedOrder.deleverystatus === 'out-for-delivery' && (
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<FiCheckCircle />}
+          onClick={() => confirmDeliveryStatusUpdate('delivered')}
+          disabled={isUpdating}
+        >
+          Mark as Delivered
+        </Button>
+      )}
+    </Box>
+  </Box>
+)}
 
               {/* Rejection Section */}
               {selectedOrder.status !== "cancelled" && (

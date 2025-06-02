@@ -59,7 +59,8 @@ const StoreDashboard = () => {
     try {
       const response = await axiosInstance.get("/orders/notifications");
       console.log("Notification count:", response.data);
-      setNotificationCount(response.data);
+      const response2=await axiosInstance.get("/orders/to-be-deliver");
+      setNotificationCount(response.data+response2.data);
     } catch (error) {
       console.error("Error fetching notification count:", error);
     }
@@ -203,7 +204,7 @@ const StoreDashboard = () => {
               {/* Notification Button with Badge */}
               <button
                 className="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
-                onClick={() => navigate("/store/notifications")}
+                onClick={() => navigate("/store/orders")}
               >
                 <BellRing className="w-5 h-5 text-gray-700" />
                 
