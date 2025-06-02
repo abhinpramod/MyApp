@@ -168,7 +168,7 @@ const tobedelevercount = async (req, res) => {
   try {
     const notifications = await Order.find({ storeId: req.store._id, deleverystatus: 'pending',deleverychargeadded:true,paymentMethod:'online'||'cod' });
     count = notifications.length;
-    console.log('countof notifications  ',count);
+    console.log('countof notifications...  ',count);
     res.status(200).json( count );
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -190,22 +190,43 @@ const getOrders = async (req, res) => {
       sortOrder = 'desc' 
     } = req.query;
 
+    // Validate storeId
+    if (!req.store || !req.store._id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Store ID is required' 
+      });
+    }
+
     // Build filter object
     const filter = { storeId: req.store._id };
     
-    // Handle filterType first (takes precedence over individual filters)
-    if (filterType === 'new') {
-      filter.status = 'pending';
-      filter.transportationCharge = 0;
-    } else if (filterType === 'rejected') {
-      filter.status = 'cancelled';
-      filter.rejectionReason = { $exists: true, $ne: '' };
-    } else if (filterType === 'to-be-delivered') {
-      filter.deleverystatus = 'pending';
-    } else if (filterType === 'out-for-delivery') {
-      filter.deleverystatus = 'out-for-delivery';
-    } else if (filterType === 'delivered') {
-      filter.deleverystatus = 'delivered';
+    // Handle filterType
+    if (filterType) {
+      switch(filterType) {
+        case 'new':
+          filter.status = 'pending';
+          filter.transportationCharge = 0;
+          break;
+        case 'rejected':
+          filter.status = 'cancelled';
+          filter.rejectionReason = { $exists: true, $ne: '' };
+          break;
+        case 'to-be-delivered':
+          filter.deleverystatus = 'pending';
+          filter.transportationCharge = { $gt: 0 };
+          filter.paymentStatus = 'paid';
+          break;
+        case 'out-for-delivery':
+          filter.deleverystatus = 'out-for-delivery';
+          break;
+        case 'delivered':
+          filter.deleverystatus = 'delivered';
+          break;
+        default:
+          // Unknown filterType - ignore it
+          break;
+      }
     } else {
       // Apply individual filters only if no filterType is specified
       if (status) filter.status = status;
@@ -263,7 +284,7 @@ const getOrders = async (req, res) => {
       message: 'Orders fetched successfully' 
     });
   } catch (error) {
-    console.error('Error fetching orders   :', error);
+    console.error('Error fetching orders:', error);
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Internal server error' 
@@ -272,47 +293,11 @@ const getOrders = async (req, res) => {
 };
 
 // Get count of new orders (pending with no transportation charge)
-const getNewOrderCount = async (req, res) => {
-  try {
-    const count = await Order.countDocuments({
-      storeId: req.store._id,
-      status: 'pending',
-      transportationCharge: 0
-    });
-    res.status(200).json(count);
-  } catch (error) {
-    console.error('Error fetching new order count:', error);
-    res.status(500).json(0);
-  }
-};
+
 
 // Get count of to-be-delivered orders
-const getToBeDeliveredCount = async (req, res) => {
-  try {
-    const count = await Order.countDocuments({
-      storeId: req.store._id,
-      deleverystatus: 'pending'
-    });
-    res.status(200).json(count);
-  } catch (error) {
-    console.error('Error fetching to-be-delivered count:', error);
-    res.status(500).json(0);
-  }
-};
 
-// Get count of out-for-delivery orders
-const getOutForDeliveryCount = async (req, res) => {
-  try {
-    const count = await Order.countDocuments({
-      storeId: req.store._id,
-      deleverystatus: 'out-for-delivery'
-    });
-    res.status(200).json(count);
-  } catch (error) {
-    console.error('Error fetching out-for-delivery count:', error);
-    res.status(500).json(0);
-  }
-};
+
 
 // Update delivery status
 const updateDeliveryStatus = async (req, res) => {
@@ -380,7 +365,7 @@ const cheakpaymetstatus = async (req, res) => {
       message: 'Orders fetched successfully' 
     });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error fetching orders ...:', error);
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Internal server error' 
@@ -396,7 +381,7 @@ const getOrdersforconfirmation = async (req, res) => {
       message: 'Orders fetched successfully' 
     });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    // console.error('Error fetching orders:', error);
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Internal server error' 

@@ -115,14 +115,14 @@ const Orders = () => {
 
     const fetchNotificationCounts = async () => {
       try {
-        const [newOrders, toBeDelivered, outForDelivery] = await Promise.all([
+        const [newOrders, toBeDelivered] = await Promise.all([
           axiosInstance.get("/orders/notifications"),
-          axiosInstance.get("/orders/to-be-delivered"),
+          axiosInstance.get("/orders/to-be-deliver"),
           // axiosInstance.get("/orders/out-for-delivery"),
         ]);
         setNewOrderCount(newOrders.data);
         setToBeDeliveredCount(toBeDelivered.data);
-        setOutForDeliveryCount(outForDelivery.data);
+        // setOutForDeliveryCount(outForDelivery.data);
       } catch (error) {
         console.error("Error fetching notification counts:", error);
       }
@@ -512,16 +512,16 @@ const Orders = () => {
             </Box>
 
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              <Badge badgeContent={newOrderCount} color="error">
-                <Button
-                  onClick={() => handleFilterType("new")}
-                  variant={filterType === "new" ? "contained" : "outlined"}
-                  size="small"
-                  color={filterType === "new" ? "primary" : "inherit"}
-                >
-                  New Orders
-                </Button>
-              </Badge>
+             <Badge badgeContent={newOrderCount} color="error" overlap="circular" anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+  <Button
+    onClick={() => handleFilterType("new")}
+    variant={filterType === "new" ? "contained" : "outlined"}
+    size="small"
+    color={filterType === "new" ? "primary" : "inherit"}
+  >
+    New Orders
+  </Button>
+</Badge>
               
               <Button
                 onClick={() => handleFilterType("rejected")}
@@ -532,19 +532,17 @@ const Orders = () => {
                 Rejected Orders
               </Button>
 
-              <Badge badgeContent={toBeDeliveredCount} color="error">
-                <Button
-                  onClick={() => handleFilterType("to-be-delivere")}
-                  variant={filterType === "to-be-delivered" ? "contained" : "outlined"}
-                  size="small"
-                  color={filterType === "to-be-delivere" ? "info" : "inherit"}
-                  startIcon={<FiPackage size={14} />}
-                >
-                  To Be Delivered
-
-                </Button>
-              </Badge>
-
+             <Badge badgeContent={toBeDeliveredCount} color="error" overlap="circular" anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+  <Button
+    onClick={() => handleFilterType("to-be-delivered")}
+    variant={filterType === "to-be-delivered" ? "contained" : "outlined"}
+    size="small"
+    color={filterType === "to-be-delivered" ? "info" : "inherit"}
+    startIcon={<FiPackage size={14} />}
+  >
+    To Be Delivered
+  </Button>
+</Badge>
               <Badge badgeContent={outForDeliveryCount} color="error">
                 <Button
                   onClick={() => handleFilterType("out-for-delivery")}

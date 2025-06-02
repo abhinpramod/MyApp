@@ -35,10 +35,10 @@ router.patch(
   protectRouteuser,
   rejectOrderByCustomer
 );
-router.get('/:orderId',protectRoutestore,cheakpaymetstatus
- );
+// router.get('/:orderId',protectRoutestore,cheakpaymetstatus
+//  );
 
-router.get('/to-be-delivered',protectRoutestore, tobedelevercount);
+router.get('/to-be-deliver',protectRoutestore, tobedelevercount);
 
 router.patch('/:orderId/delivery-status',protectRoutestore, updateDeliveryStatus);
 
