@@ -390,6 +390,24 @@ const getOrdersforconfirmation = async (req, res) => {
   
 }
 
+const getOrdersuser = async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.user._id });
+    res.status(200).json({ 
+      success: true, 
+      orders,
+      message: 'Orders fetched successfully' 
+    });
+  } catch (error) {
+    // console.error('Error fetching orders:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Internal server error' 
+    });
+  }
+  
+}
+
 const rejectOrderByCustomer = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -658,5 +676,6 @@ getOrdersforconfirmation,
 rejectOrderByCustomer,confirmOrder,
 tobedelevercount,
 cheakpaymetstatus,
-updateDeliveryStatus
+updateDeliveryStatus,
+getOrdersuser
 };
