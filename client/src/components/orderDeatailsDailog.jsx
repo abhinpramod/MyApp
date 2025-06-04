@@ -183,7 +183,7 @@ const OrderSummary = ({ selectedOrder }) => {
       <Box>
         <Typography variant="subtitle2" color="textSecondary">Status</Typography>
         <Chip
-          label={selectedOrder.status.toUpperCase()}
+          label={selectedOrder.deleverystatus.toUpperCase()}
           color={getStatusColor(selectedOrder.status)}
           icon={<CheckCircleIcon />}
           sx={{ fontWeight: 'bold' }}

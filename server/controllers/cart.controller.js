@@ -1,6 +1,7 @@
   const Cart = require("../model/cart");
   const Product = require("../model/products.model");
   const Store = require("../model/store.model");
+  const mongoose = require("mongoose");
 
   // Get user's cart with populated product and store details (returns combined cart)
   const getCart = async (req, res) => {
@@ -231,95 +232,139 @@
   };
 
   // Remove item from cart
-  const removeCartItem = async (req, res) => {
+const removeCartItem = async (req, res) => {
     try {
-      const { productId } = req.body;
-      const userId = req.user._id;
+        const { productId } = req.body;
+        const userId = req.user._id;
 
-      // Find all carts for user
-      const carts = await Cart.find({ userId });
-
-      // Find which cart contains the product
-      let targetCart = null;
-      
-      for (const cart of carts) {
-        const itemIndex = cart.items.findIndex(item => 
-          item.productId.equals(productId)
-        );
-        if (itemIndex !== -1) {
-          targetCart = cart;
-          break;
+        // Validate input
+        if (!productId) {
+            return res.status(400).json({
+                success: false,
+                message: "Product ID is required"
+            });
         }
-      }
 
-      if (!targetCart) {
-        return res.status(404).json({ 
-          success: false, 
-          message: "Item not found in any cart" 
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Product ID format"
+            });
+        }
+
+        console.log(`Attempting to remove product ${productId} from user ${userId}'s cart`);
+
+        // Find all carts for user
+        const carts = await Cart.find({ userId });
+        
+        if (!carts || carts.length === 0) {
+            console.log(`No carts found for user ${userId}`);
+            return res.status(404).json({
+                success: false,
+                message: "No carts found for user"
+            });
+        }
+
+        // Find which cart contains the product
+        let targetCart = null;
+        let itemFound = false;
+
+        for (const cart of carts) {
+            const itemIndex = cart.items.findIndex(item => 
+                item.productId.equals(productId)
+            );
+            
+            if (itemIndex !== -1) {
+                targetCart = cart;
+                itemFound = true;
+                console.log(`Found product in cart ${cart._id}`);
+                break;
+            }
+        }
+
+        if (!itemFound) {
+            console.log(`Product ${productId} not found in any cart for user ${userId}`);
+            return res.status(404).json({
+                success: false,
+                message: "Item not found in any cart"
+            });
+        }
+
+        // Remove the item
+        targetCart.items = targetCart.items.filter(
+            item => !item.productId.equals(productId)
+        );
+
+        // Recalculate totals
+        targetCart.totalPrice = targetCart.items.reduce(
+            (sum, item) => sum + (item.basePrice * item.quantity), 0
+        );
+        targetCart.totalSavings = targetCart.items.reduce(
+            (sum, item) => sum + (item.savings || 0), 0
+        );
+
+        // If cart is empty after removal, delete it
+        if (targetCart.items.length === 0) {
+            console.log(`Cart ${targetCart._id} is empty after removal - deleting`);
+            await Cart.findByIdAndDelete(targetCart._id);
+        } else {
+            await targetCart.save();
+            console.log(`Cart ${targetCart._id} updated successfully`);
+        }
+
+        // Return updated combined cart
+        const updatedCarts = await Cart.find({ userId })
+            .populate({
+                path: "items.productId",
+                model: "Product",
+                select: "name price images description" // Specify fields you need
+            })
+            .populate({
+                path: "storeId",
+                model: "Store",
+                select: "name logo" // Specify fields you need
+            });
+
+        const combinedItems = updatedCarts.flatMap(cart => 
+            cart.items.map(item => ({
+                ...item.toObject(),
+                productId: item.productId._id,
+                productDetails: item.productId,
+                storeId: cart.storeId._id,
+                storeDetails: cart.storeId
+            }))
+        );
+
+        const totalPrice = updatedCarts.reduce(
+            (sum, cart) => sum + cart.totalPrice, 0
+        );
+        const totalSavings = updatedCarts.reduce(
+            (sum, cart) => sum + (cart.totalSavings || 0), 0
+        );
+
+        console.log(`Successfully removed product ${productId} for user ${userId}`);
+
+        res.status(200).json({
+            success: true,
+            cart: {
+                _id: "combined_cart",
+                userId,
+                items: combinedItems,
+                totalPrice,
+                totalSavings
+            },
+            message: "Item removed from cart successfully"
         });
-      }
-
-      // Remove the item
-      targetCart.items = targetCart.items.filter(
-        item => !item.productId.equals(productId)
-      );
-
-      // Recalculate totals
-      targetCart.totalPrice = targetCart.items.reduce(
-        (sum, item) => sum + item.basePrice * item.quantity, 0
-      );
-      targetCart.totalSavings = targetCart.items.reduce(
-        (sum, item) => sum + (item.savings || 0), 0
-      );
-
-      // If cart is empty after removal, delete it
-      if (targetCart.items.length === 0) {
-        await Cart.findByIdAndDelete(targetCart._id);
-      } else {
-        await targetCart.save();
-      }
-
-      // Return updated combined cart
-      const updatedCarts = await Cart.find({ userId })
-        .populate({
-          path: "items.productId",
-          model: "Product",
-        })
-        .populate({
-          path: "storeId",
-          model: "Store",
-        });
-
-      const combinedItems = updatedCarts.flatMap(cart => 
-        cart.items.map(item => ({
-          ...item.toObject(),
-          productId: item.productId._id,
-          productDetails: item.productId,
-          storeId: cart.storeId._id,
-          storeDetails: cart.storeId
-        }))
-      );
-
-      const totalPrice = updatedCarts.reduce((sum, cart) => sum + cart.totalPrice, 0);
-      const totalSavings = updatedCarts.reduce((sum, cart) => sum + (cart.totalSavings || 0), 0);
-
-      res.status(200).json({
-        success: true,
-        cart: {
-          _id: "combined_cart",
-          userId,
-          items: combinedItems,
-          totalPrice,
-          totalSavings
-        },
-        message: "Item removed from cart"
-      });
 
     } catch (error) {
-      console.error("Error removing cart item:", error);
-      res.status(500).json({ success: false, message: "Server Error" });
+        console.error("Error removing cart item:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
     }
-  };
+};
 
   // Clear entire cart (all store-specific carts)
   const clearCart = async (req, res) => {

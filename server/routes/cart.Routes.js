@@ -21,10 +21,10 @@ router.get('/stores', protectRouteuser, getCartStores);
 router.post('/add-to-cart', protectRouteuser, addToCart);
 
 // Update cart item quantity
-router.put('/items', protectRouteuser, updateCartItem);
+router.put('/update', protectRouteuser, updateCartItem);
 
 // Remove item from cart
-router.delete('/items', protectRouteuser, removeCartItem);
+router.delete('/remove', protectRouteuser, removeCartItem);
 
 // Remove all items from a specific store
 router.post ('/remove-store',

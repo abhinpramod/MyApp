@@ -142,11 +142,11 @@ const ShoppingCartUI = () => {
   };
 
   // Remove item from cart
-  const handleRemoveProduct = async (productId) => {
+const handleRemoveProduct = async (productId) => {
     try {
       setIsMutating(true);
-      const { data } = await axiosInstance.post('/cart/remove', {
-        productId
+      const { data } = await axiosInstance.delete('/cart/remove', {
+        data: { productId }  // Note the 'data' property here
       });
       
       if (data.cart) {
@@ -175,7 +175,7 @@ const ShoppingCartUI = () => {
     } finally {
       setIsMutating(false);
     }
-  };
+};
 
   // Clear entire cart
   const handleClearCart = async () => {
