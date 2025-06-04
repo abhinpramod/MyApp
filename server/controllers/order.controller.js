@@ -166,7 +166,7 @@ const getnotifications = async (req, res) => {
 
 const tobedelevercount = async (req, res) => {
   try {
-    const notifications = await Order.find({ storeId: req.store._id, deleverystatus: 'pending',deleverychargeadded:true,paymentMethod:'online'||'cod' });
+    const notifications = await Order.find({ storeId: req.store._id, deleverystatus: 'pending',deleverychargeadded:true });
     count = notifications.length;
     console.log('countof notifications...  ',count);
     res.status(200).json( count );
@@ -215,7 +215,8 @@ const getOrders = async (req, res) => {
         case 'to-be-delivered':
           filter.deleverystatus = 'pending';
           filter.transportationCharge = { $gt: 0 };
-          filter.paymentStatus = 'paid';
+          // filter.paymentStatus = 'paid';
+          
           break;
         case 'out-for-delivery':
           filter.deleverystatus = 'out-for-delivery';

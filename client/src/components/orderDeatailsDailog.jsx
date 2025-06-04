@@ -162,7 +162,7 @@ const OrderSummary = ({ selectedOrder }) => {
     switch(status) {
       case 'confirmed': return 'success';
       case 'rejected': return 'error';
-      case 'shipped': return 'info';
+      case 'out-for-delivery': return 'info';
       case 'delivered': return 'secondary';
       default: return 'warning';
     }

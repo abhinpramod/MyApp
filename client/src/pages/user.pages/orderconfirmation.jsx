@@ -517,7 +517,7 @@ const OrderCard = ({
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Chip
-              label={order.status.toUpperCase()}
+              label={order.deleverystatus .toUpperCase()}
               color={getStatusColor(order.status)}
               icon={getStatusIcon(order.status)}
               size="small"
