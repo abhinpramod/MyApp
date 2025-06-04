@@ -31,6 +31,6 @@ router.post ('/remove-store',
 protectRouteuser, removeStoreFromCart);
 
 // Clear entire cart
-router.delete('/', protectRouteuser, clearCart);
+router.delete('/clear', protectRouteuser, clearCart);
  
 module.exports = router;

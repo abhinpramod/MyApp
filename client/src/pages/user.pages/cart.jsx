@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import {
   ShoppingCart, 
   Trash2, 
-  Edit2, 
   Plus, 
   Minus,
   Store,
@@ -36,7 +35,6 @@ const ShoppingCartUI = () => {
   const [cart, setCart] = useState({ items: [], totalPrice: 0 });
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -142,11 +140,11 @@ const ShoppingCartUI = () => {
   };
 
   // Remove item from cart
-const handleRemoveProduct = async (productId) => {
+  const handleRemoveProduct = async (productId) => {
     try {
       setIsMutating(true);
       const { data } = await axiosInstance.delete('/cart/remove', {
-        data: { productId }  // Note the 'data' property here
+        data: { productId }
       });
       
       if (data.cart) {
@@ -175,7 +173,7 @@ const handleRemoveProduct = async (productId) => {
     } finally {
       setIsMutating(false);
     }
-};
+  };
 
   // Clear entire cart
   const handleClearCart = async () => {
@@ -239,55 +237,55 @@ const handleRemoveProduct = async (productId) => {
     }
   };
 
- const handlePlaceOrder = async () => {
-  try {
-    setIsMutating(true);
-    
-    // Prepare items with basePrice
-    const orderItems = filteredItems.map(item => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      basePrice: item.basePrice, // Make sure this is included
-      price: item.appliedPrice || item.basePrice
-    }));
+  const handlePlaceOrder = async () => {
+    try {
+      setIsMutating(true);
+      
+      // Prepare items with basePrice
+      const orderItems = filteredItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        basePrice: item.basePrice,
+        price: item.appliedPrice || item.basePrice
+      }));
 
-    // Calculate totals
-    const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const transportationCharge = 0;
-    const totalAmount = subtotal + transportationCharge;
+      // Calculate totals
+      const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const transportationCharge = 0;
+      const totalAmount = subtotal + transportationCharge;
 
-    const orderData = {
-      storeId: selectedStore,
-      items: orderItems,
-      totalAmount,
-      shippingInfo: {
-        phoneNumber: shippingInfo.phoneNumber,
-        address: {
-          country: shippingInfo.country,
-          state: shippingInfo.state,
-          city: shippingInfo.city,
-          pincode: shippingInfo.pincode,
-          buildingAddress: shippingInfo.buildingAddress,
-          landmark: shippingInfo.landmark || ''
-        }
-      },
-      paymentMethod: 'cod'
-    };
+      const orderData = {
+        storeId: selectedStore,
+        items: orderItems,
+        totalAmount,
+        shippingInfo: {
+          phoneNumber: shippingInfo.phoneNumber,
+          address: {
+            country: shippingInfo.country,
+            state: shippingInfo.state,
+            city: shippingInfo.city,
+            pincode: shippingInfo.pincode,
+            buildingAddress: shippingInfo.buildingAddress,
+            landmark: shippingInfo.landmark || ''
+          }
+        },
+        paymentMethod: 'cod'
+      };
 
-    const { data } = await axiosInstance.post('/orders/create', orderData);
-    
-    if (data.success) {
-      await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
-      navigate(`/orders/${data.order._id}`);
-      toast.success("Order placed successfully!");
+      const { data } = await axiosInstance.post('/orders/create', orderData);
+      
+      if (data.success) {
+        await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
+        navigate(`/orders/${data.order._id}`);
+        toast.success("Order placed successfully!");
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error(error.response?.data?.message || "Failed to place order");
+    } finally {
+      setIsMutating(false);
     }
-  } catch (error) {
-    console.error("Error placing order:", error);
-    toast.error(error.response?.data?.message || "Failed to place order");
-  } finally {
-    setIsMutating(false);
-  }
-};
+  };
 
   const handleCheckout = async () => {
     try {
@@ -354,6 +352,11 @@ const handleRemoveProduct = async (productId) => {
     return sum + (price * quantity);
   }, 0);
 
+  // Calculate total quantity
+  const totalQuantity = cart.items.reduce((sum, item) => {
+    return sum + (Number(item.quantity) || 0);
+  }, 0);
+
   // Loading state
   if (isLoading) {
     return (
@@ -395,20 +398,25 @@ const handleRemoveProduct = async (productId) => {
           <ShoppingCart className="w-6 h-6" />
           Shopping Cart
           {cart.items.length > 0 && (
-            <Badge className="ml-2">
-              {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}
-            </Badge>
+            <>
+              <Badge className="ml-2">
+                {totalQuantity} {totalQuantity === 1 ? 'item' : 'items'}
+              </Badge>
+              <span className="ml-2 font-normal text-base">
+                (₹{grandTotal.toFixed(2)})
+              </span>
+            </>
           )}
         </h1>
       </div>
 
-      {/* Edit Controls */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+      {/* Clear Cart Button */}
+      <div className="flex justify-end mb-6">
         <Button
           variant="ghost"
           onClick={handleClearCart}
           disabled={!cart.items.length || isMutating}
-          className="gap-2 w-full sm:w-auto"
+          className="gap-2"
         >
           {isMutating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -416,25 +424,6 @@ const handleRemoveProduct = async (productId) => {
             <Trash2 className="w-4 h-4" />
           )}
           Clear Cart
-        </Button>
-        
-        <Button 
-          variant={isEditing ? 'default' : 'outline'} 
-          onClick={() => setIsEditing(!isEditing)}
-          className="gap-2 w-full sm:w-auto"
-          disabled={!cart.items.length}
-        >
-          {isEditing ? (
-            <>
-              <Check className="w-4 h-4" />
-              Done Editing
-            </>
-          ) : (
-            <>
-              <Edit2 className="w-4 h-4" />
-              Edit Cart
-            </>
-          )}
         </Button>
       </div>
 
@@ -501,67 +490,56 @@ const handleRemoveProduct = async (productId) => {
                     </p>
                   </div>
                   <div className="ml-0 sm:ml-4 flex items-center w-full sm:w-auto justify-between sm:justify-normal">
-                    {isEditing ? (
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-normal">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuantityChange(item.productId, item.quantity - 1);
-                          }}
-                          disabled={isMutating}
-                          className="flex-shrink-0"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleQuantityChange(item.productId, parseInt(e.target.value) || 1);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-16 text-center mx-2"
-                          min="1"
-                          disabled={isMutating}
-                        />
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuantityChange(item.productId, item.quantity + 1);
-                          }}
-                          disabled={isMutating}
-                          className="flex-shrink-0"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveProduct(item.productId);
-                          }}
-                          disabled={isMutating}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="text-right">
-                        <p className="font-medium">
-                          ₹{(Number(item.basePrice) * Number(item.quantity)).toFixed(2)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {item.quantity} {item.quantity > 1 ? 'units' : 'unit'}
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-normal">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuantityChange(item.productId, item.quantity - 1);
+                        }}
+                        disabled={isMutating}
+                        className="flex-shrink-0"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleQuantityChange(item.productId, parseInt(e.target.value) || 1);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-16 text-center mx-2"
+                        min="1"
+                        disabled={isMutating}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuantityChange(item.productId, item.quantity + 1);
+                        }}
+                        disabled={isMutating}
+                        className="flex-shrink-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveProduct(item.productId);
+                        }}
+                        disabled={isMutating}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -615,8 +593,13 @@ const handleRemoveProduct = async (productId) => {
               </div>
               <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full mt-4" size="lg" onClick={handleCheckout}>
-                    Proceed to Checkout
+                  <Button 
+                    className="w-full mt-4" 
+                    size="lg" 
+                    onClick={handleCheckout}
+                    disabled={!selectedStore}
+                  >
+                    {!selectedStore ? "Select a store to checkout" : "Proceed to Checkout"}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md sm:max-w-lg">
