@@ -10,7 +10,7 @@ const InterestCard = ({ interest, onMarkAsSeen }) => {
     try {
       await axiosInstance.patch(`/contractor/mark-interest-seen/${interest}`);
       toast.success("Marked as seen");
-      //   onMarkAsSeen(interest.id);
+        onMarkAsSeen(interest.id);
     } catch (error) {
       console.error("Error marking interest as seen:", error);
       toast.error("Failed to mark as seen");

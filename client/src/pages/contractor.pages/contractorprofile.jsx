@@ -239,7 +239,7 @@ const DynamicProfile = () => {
 
     try {
       setIsLoading(true);
-      await axiosInstance.post(`/user/contractor/interest/${profileContractorId}`, formData);
+      await axiosInstance.post(`/user/contractor/interest/${profileContractorId}`, {formData,contractor});
       toast.success("Interest expressed successfully!");
       setShowInterestDialog(false);
       setFormData({

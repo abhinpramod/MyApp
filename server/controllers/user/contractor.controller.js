@@ -108,10 +108,12 @@ const fetchContractorById = async (req, res) => {
 // Add Interests Controller
 const addInterests = async (req, res) => {
   const contractorId = req.params.id;
-  const { phoneNumber, address, expectedDate, jobTypes } = req.body.formData;
-  const {contractor} = req.body;
+  const contractor = req.body.contractor;
   const { _id, name, email } = req.user;
+  console.log('request bodey',req.body);
+  const { phoneNumber, address, expectedDate, jobTypes } = req.body.formData;
   console.log(_id);
+
 
   try {
     const newinterests = new Intrests({
