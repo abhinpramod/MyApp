@@ -625,7 +625,20 @@ const removeStoreFromCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+const storecart = async (req, res) => {
+  const storeId = req.store._id
 
+  try {
+    
+    const carts = await Cart.find({ storeId })
+      .populate('userId', 'name email') // populate user info
+      .populate('items.productId', 'name image price'); // populate product info
+    
+    res.json(carts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
   module.exports = {
     getCart,
     updateCartItem,
@@ -633,5 +646,6 @@ const removeStoreFromCart = async (req, res) => {
     clearCart,
     getCartStores,
     addToCart,
-    removeStoreFromCart
+    removeStoreFromCart,
+    storecart
   };

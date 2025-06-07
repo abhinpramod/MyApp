@@ -7,9 +7,10 @@ const {
   removeCartItem, 
   clearCart, 
   getCartStores,
-  removeStoreFromCart 
+  removeStoreFromCart ,
+  storecart
 } = require("../controllers/cart.controller");
-const { protectRouteuser } = require("../middleware/authmiddleware");  
+const { protectRouteuser,protectRoutestore } = require("../middleware/authmiddleware");  
 
 // Get cart contents
 router.get('/', protectRouteuser, getCart);
@@ -33,4 +34,6 @@ protectRouteuser, removeStoreFromCart);
 // Clear entire cart
 router.delete('/clear', protectRouteuser, clearCart);
  
+router.get("/store", protectRoutestore, storecart);
+
 module.exports = router;
