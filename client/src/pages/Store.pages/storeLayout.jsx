@@ -160,7 +160,7 @@ const StoreDashboard = () => {
               } hover:bg-gray-800`}
             >
               <History className="w-5 h-5" />
-              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>Order History</span>
+              <span className={`ml-3 ${isSidebarOpen ? "block" : "hidden"}`}>cartData</span>
             </Link>
             <Link
               to="/store/storesettings"
