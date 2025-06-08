@@ -52,7 +52,6 @@ const ShoppingCartUI = () => {
   const [userData, setUserData] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
 
-  // Fetch cart data and user shipping info
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -97,7 +96,6 @@ const ShoppingCartUI = () => {
     fetchData();
   }, []);
 
-  // Update item quantity
   const handleQuantityChange = async (productId, newQuantity) => {
     const quantity = Number(newQuantity);
     if (quantity < 1) return;
@@ -139,7 +137,6 @@ const ShoppingCartUI = () => {
     }
   };
 
-  // Remove item from cart
   const handleRemoveProduct = async (productId) => {
     try {
       setIsMutating(true);
@@ -175,7 +172,6 @@ const ShoppingCartUI = () => {
     }
   };
 
-  // Clear entire cart
   const handleClearCart = async () => {
     try {
       setIsMutating(true);
@@ -222,7 +218,6 @@ const ShoppingCartUI = () => {
         }
       });
       
-      // Refresh user data after saving
       const { data: userData } = await axiosInstance.get('/user/check');
       setUserData(userData);
       
@@ -241,43 +236,63 @@ const ShoppingCartUI = () => {
     try {
       setIsMutating(true);
       
-      // Prepare items with basePrice
-      const orderItems = filteredItems.map(item => ({
+      // Prepare all items in cart
+      const orderItems = cart.items.map(item => ({
         productId: item.productId,
         quantity: item.quantity,
         basePrice: item.basePrice,
-        price: item.appliedPrice || item.basePrice
+        price: item.appliedPrice || item.basePrice,
+        storeId: item.productDetails?.storeId || item.storeId
       }));
 
-      // Calculate totals
-      const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const transportationCharge = 0;
-      const totalAmount = subtotal + transportationCharge;
+      // Group items by store
+      const itemsByStore = {};
+      orderItems.forEach(item => {
+        const storeId = item.storeId;
+        if (!itemsByStore[storeId]) {
+          itemsByStore[storeId] = [];
+        }
+        itemsByStore[storeId].push(item);
+      });
 
-      const orderData = {
-        storeId: selectedStore,
-        items: orderItems,
-        totalAmount,
-        shippingInfo: {
-          phoneNumber: shippingInfo.phoneNumber,
-          address: {
-            country: shippingInfo.country,
-            state: shippingInfo.state,
-            city: shippingInfo.city,
-            pincode: shippingInfo.pincode,
-            buildingAddress: shippingInfo.buildingAddress,
-            landmark: shippingInfo.landmark || ''
-          }
-        },
-        paymentMethod: 'cod'
-      };
+      // Create orders for each store
+      const orderPromises = Object.entries(itemsByStore).map(async ([storeId, storeItems]) => {
+        const subtotal = storeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const totalAmount = subtotal;
 
-      const { data } = await axiosInstance.post('/orders/create', orderData);
+        const orderData = {
+          storeId,
+          items: storeItems,
+          totalAmount,
+          shippingInfo: {
+            phoneNumber: shippingInfo.phoneNumber,
+            address: {
+              country: shippingInfo.country,
+              state: shippingInfo.state,
+              city: shippingInfo.city,
+              pincode: shippingInfo.pincode,
+              buildingAddress: shippingInfo.buildingAddress,
+              landmark: shippingInfo.landmark || ''
+            }
+          },
+          paymentMethod: 'cod'
+        };
+
+        const { data } = await axiosInstance.post('/orders/create', orderData);
+        return data.order;
+      });
+
+      const orders = await Promise.all(orderPromises);
       
-      if (data.success) {
-        await axiosInstance.post('/cart/remove-store', { storeId: selectedStore });
-        navigate(`/orders/${data.order._id}`);
-        toast.success("Order placed successfully!");
+      // Clear the entire cart after successful order placement
+      await axiosInstance.delete('/cart/clear');
+      setCart({ items: [], totalPrice: 0 });
+      setStores([]);
+      
+      // Navigate to orders page or first order's details
+      if (orders.length > 0) {
+        navigate('/orders');
+        toast.success(`Successfully placed ${orders.length} order${orders.length > 1 ? 's' : ''}!`);
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -292,9 +307,8 @@ const ShoppingCartUI = () => {
       setIsMutating(true);
       setIsCheckoutOpen(true);
       
-      // Check if user has complete shipping info
-      const response = await axiosInstance.get('/user/check');
-      const userData = response.data;
+      const { data: userData } = await axiosInstance.get('/user/check');
+      setUserData(userData);
       
       const hasCompleteAddress = userData?.address?.country && 
                                 userData?.address?.state && 
@@ -303,9 +317,7 @@ const ShoppingCartUI = () => {
                                 userData?.address?.buildingAddress;
 
       setCheckoutStep(hasCompleteAddress ? 3 : 1);
-      setUserData(userData);
       
-      // Update shipping info if address exists
       if (userData?.address) {
         setShippingInfo(prev => ({
           ...prev,
@@ -326,7 +338,6 @@ const ShoppingCartUI = () => {
     }
   };
 
-  // Filter items by store and ensure productDetails exists
   const filteredItems = (selectedStore
     ? cart.items.filter(item => 
         item.productDetails?.storeId === selectedStore || 
@@ -335,29 +346,20 @@ const ShoppingCartUI = () => {
     : cart.items
   ).filter(item => item.productDetails);
 
-  // Calculate store-specific total
   const calculateStoreTotal = (storeId) => {
-    return filteredItems
-      .reduce((sum, item) => {
-        const price = Number(item.basePrice) || 0;
-        const quantity = Number(item.quantity) || 0;
-        return sum + (price * quantity);
-      }, 0);
+    return cart.items
+      .filter(item => item.productDetails?.storeId === storeId || item.storeId === storeId)
+      .reduce((sum, item) => sum + (Number(item.basePrice) * Number(item.quantity)), 0);
   };
 
-  // Calculate grand total
   const grandTotal = cart.items.reduce((sum, item) => {
-    const price = Number(item.basePrice) || 0;
-    const quantity = Number(item.quantity) || 0;
-    return sum + (price * quantity);
+    return sum + (Number(item.basePrice) * Number(item.quantity));
   }, 0);
 
-  // Calculate total quantity
   const totalQuantity = cart.items.reduce((sum, item) => {
-    return sum + (Number(item.quantity) || 0);
+    return sum + (Number(item.quantity)) || 0;
   }, 0);
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -366,7 +368,6 @@ const ShoppingCartUI = () => {
     );
   }
 
-  // Error state (if cart is undefined due to error)
   if (!cart) {
     return (
       <div className="container mx-auto p-4 max-w-6xl">
@@ -385,7 +386,6 @@ const ShoppingCartUI = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
-      {/* Header */}
       <div className="flex items-center mb-6">
         <Button 
           variant="ghost" 
@@ -410,24 +410,24 @@ const ShoppingCartUI = () => {
         </h1>
       </div>
 
-      {/* Clear Cart Button */}
       <div className="flex justify-end mb-6">
         <Button
           variant="ghost"
           onClick={handleClearCart}
           disabled={!cart.items.length || isMutating}
-          className="gap-2"
+          className="group relative flex items-center justify-center gap-2"
         >
           {isMutating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Trash2 className="w-4 h-4" />
           )}
-          Clear Cart
+          <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+            Clear Cart
+          </span>
         </Button>
       </div>
 
-      {/* Store Filter */}
       {cart.items.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
           <Button
@@ -462,7 +462,6 @@ const ShoppingCartUI = () => {
         </div>
       )}
 
-      {/* Cart Items */}
       <div className="space-y-6">
         {filteredItems.length > 0 ? (
           <Card>
@@ -530,7 +529,7 @@ const ShoppingCartUI = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive flex-shrink-0"
+                        className="text-destructive hover:text-destructive flex-shrink-0 group relative"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveProduct(item.productId);
@@ -538,6 +537,9 @@ const ShoppingCartUI = () => {
                         disabled={isMutating}
                       >
                         <Trash2 className="h-4 w-4" />
+                        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
+                          Remove
+                        </span>
                       </Button>
                     </div>
                   </div>
@@ -565,14 +567,13 @@ const ShoppingCartUI = () => {
         )}
       </div>
 
-      {/* Order Summary */}
       {filteredItems.length > 0 && (
         <Card className="mt-6">
           <CardContent>
             <h1 className='text-2xl font-bold mb-4'>
               {selectedStore 
                 ? `Order Summary (${stores.find(s => s._id === selectedStore)?.storeName})`
-                : "Order Summary"}
+                : "Order Summary (All Stores)"}
             </h1>
             <div className="space-y-4">
               <div className="flex justify-between">
@@ -597,9 +598,8 @@ const ShoppingCartUI = () => {
                     className="w-full mt-4" 
                     size="lg" 
                     onClick={handleCheckout}
-                    disabled={!selectedStore}
                   >
-                    {!selectedStore ? "Select a store to checkout" : "Proceed to Checkout"}
+                    Proceed to Checkout
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md sm:max-w-lg">
@@ -611,7 +611,6 @@ const ShoppingCartUI = () => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="py-4">
-                    {/* Step 1: Review Order */}
                     {checkoutStep === 1 && (
                       <>
                         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -643,14 +642,12 @@ const ShoppingCartUI = () => {
                       </>
                     )}
 
-                    {/* Step 2: Shipping Options */}
                     {checkoutStep === 2 && (
                       <div className="space-y-4">
                         {userData?.address?.buildingAddress && (
                           <div className="p-4 bg-gray-50 rounded-lg">
                             <h4 className="font-medium mb-2">Shipping Options</h4>
                             
-                            {/* Option 1: Use existing address */}
                             <div 
                               className="p-3 border rounded-md mb-3 cursor-pointer hover:bg-gray-100"
                               onClick={() => {
@@ -679,7 +676,6 @@ const ShoppingCartUI = () => {
                               </div>
                             </div>
                             
-                            {/* Option 2: Add new address */}
                             <div 
                               className="p-3 border rounded-md cursor-pointer hover:bg-gray-100"
                               onClick={() => setShowAddressForm(true)}
@@ -799,7 +795,6 @@ const ShoppingCartUI = () => {
                       </div>
                     )}
 
-                    {/* Step 3: Confirm Order */}
                     {checkoutStep === 3 && (
                       <>
                         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -862,7 +857,6 @@ const ShoppingCartUI = () => {
         </Card>
       )}
 
-      {/* Product Detail Dialog */}
       {selectedProduct && (
         <ProductDetailDialog
           product={{
