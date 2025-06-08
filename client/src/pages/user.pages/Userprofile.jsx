@@ -375,7 +375,7 @@ const UserProfile = () => {
           </Button>
           <Button 
             onClick={handleLogout}
-            className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg"
+            className="px-4 py-2 hover:text-white  text-white hover:bg-red-600 rounded-lg"
             autoFocus
           >
             Logout
