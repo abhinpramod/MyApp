@@ -7,6 +7,8 @@ import {
   Box,
   CircularProgress,
   Typography,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import Navbar from "../../components/Navbar";
 import axiosInstance from "../../lib/axios";
@@ -15,75 +17,77 @@ import StoreHeader from "../../components/store/StoreHeader";
 import StoreDetails from "../../components/store/StoreDetails";
 import ProductCard from "../../components/products/ProductCard";
 import ProductDetailDialog from "../../components/products/ProductDetailDialog";
+import ReviewSection from "../../components/store/ReviewSection";
 
 const StoreProfile = () => {
   const { storeId: paramStoreId } = useParams();
-  
+  const [activeTab, setActiveTab] = useState(0);
   const isOwnerView = !paramStoreId;
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [storeData, setStoreData] = useState(null);
   const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
   const [description, setDescription] = useState("");
 
-  // Fetch store data and products
-
   const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch store data
-        const storeResponse = await axiosInstance.get(
-          isOwnerView ? '/store/profile' : `/store/store/${paramStoreId}`,
-          { withCredentials: true }
-        );
-        setStoreData(storeResponse.data);
-        console.log(storeResponse.data);
-        setProfileImagePreview(storeResponse.data.profilePicture);
-        setDescription(storeResponse.data.description);
+    try {
+      setLoading(true);
+      
+      // Fetch store data
+      const storeResponse = await axiosInstance.get(
+        isOwnerView ? '/store/profile' : `/store/store/${paramStoreId}`,
+        { withCredentials: true }
+      );
+      setStoreData(storeResponse.data);
+      setProfileImagePreview(storeResponse.data.profilePicture);
+      setDescription(storeResponse.data.description);
 
-        // Fetch products
-        const productsResponse = await axiosInstance.get(
-          isOwnerView ? '/store/products' : `/store/${paramStoreId}/products`,
-          { withCredentials: true }
+      // Fetch products
+      const productsResponse = await axiosInstance.get(
+        isOwnerView ? '/store/products' : `/store/${paramStoreId}/products`,
+        { withCredentials: true }
+      );
+      setProducts(productsResponse.data.products);
+
+      // Fetch reviews if not owner view
+      if (!isOwnerView) {
+        const reviewsResponse = await axiosInstance.get(
+          `/reviews/${paramStoreId}`
         );
-        setProducts(productsResponse.data.products);
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to fetch data');
-      } finally {
-        setLoading(false);
+        setReviews(reviewsResponse.data);
       }
-    };
-  useEffect(() => {
-    
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to fetch data');
+      console.error('Failed to fetch data', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [paramStoreId, isOwnerView]);
 
   const handleAddToCart = async (cartItem) => {
-      console.log("Adding to cart:", cartItem);
-      const { product, storeId,quantity } = cartItem;
-      const productId = product._id;
-      const productname = product.name;
+    console.log("Adding to cart:", cartItem);
+    const { product, storeId, quantity } = cartItem;
+    const productId = product._id;
+    const productname = product.name;
 
-       // setIsAddingToCart(true);
-       try {
-         await axiosInstance.post("/cart/add-to-cart", {
-           productId, storeId,quantity
-         });
-   
-         toast.success(`${quantity} ${productname} added to cart successfully`);
-    setSelectedProduct(null);
-   
-       } catch (error) {
-         console.error("Failed to add product to cart", error);
-         toast.error("Failed to add product to cart");
-       } finally {
-         // setIsAddingToCart(false);
-       }
+    try {
+      await axiosInstance.post("/cart/add-to-cart", {
+        productId, storeId, quantity
+      });
+      toast.success(`${quantity} ${productname} added to cart successfully`);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error("Failed to add product to cart", error);
+      toast.error("Failed to add product to cart");
+    }
   };
 
   const handleImageChange = (e) => {
@@ -138,6 +142,18 @@ const StoreProfile = () => {
     }
   };
 
+  const handleAddReview = async (reviewData) => {
+    try {
+      await axiosInstance.post(`/reviews/${paramStoreId}`, reviewData, {
+        withCredentials: true,
+      });
+      toast.success('Review submitted successfully');
+      fetchData(); // Refresh data to show new review
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to submit review');
+    }
+  };
+
   if (loading) {
     return (
       <Box className="flex justify-center items-center h-screen">
@@ -177,27 +193,45 @@ const StoreProfile = () => {
 
         <Divider className="my-6" />
 
-        {/* Products Section */}
-        <Box className="mb-8">
-          <Typography variant="h6" className="font-semibold mb-4">
-            Our Products
-          </Typography>
-          
-          {products.length === 0 ? (
-            <Typography>No products available</Typography>
-          ) : (
-            <Grid container spacing={3}>
-              {products.map((product) => (
-                <Grid item key={product._id} xs={12} sm={6} md={4} lg={3}>
-                  <ProductCard 
-                    product={product} 
-                    onClick={() => setSelectedProduct(product)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Box>
+        {/* Tabs */}
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, newValue) => setActiveTab(newValue)}
+          className="mb-6"
+        >
+          <Tab label="Products" />
+          {!isOwnerView && <Tab label="Reviews" />}
+        </Tabs>
+
+        {/* Tab Content */}
+        {activeTab === 0 ? (
+          <Box className="mb-8">
+            <Typography variant="h6" className="font-semibold mb-4">
+              Our Products
+            </Typography>
+            
+            {products.length === 0 ? (
+              <Typography>No products available</Typography>
+            ) : (
+              <Grid container spacing={3}>
+                {products.map((product) => (
+                  <Grid item key={product._id} xs={12} sm={6} md={4} lg={3}>
+                    <ProductCard 
+                      product={product} 
+                      onClick={() => setSelectedProduct(product)}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Box>
+        ) : (
+          <ReviewSection 
+            reviews={reviews}
+            storeId={paramStoreId}
+            onSubmitReview={handleAddReview}
+          />
+        )}
       </Box>
 
       <ProductDetailDialog

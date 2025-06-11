@@ -1,5 +1,14 @@
-// components/store/StoreHeader.jsx
-import { Avatar, Box, Button, Chip, IconButton, Typography, TextField } from "@mui/material";
+import { 
+  Avatar, 
+  Box, 
+  Button, 
+  Chip, 
+  IconButton, 
+  Typography, 
+  TextField,
+  Rating,
+  Tooltip
+} from "@mui/material";
 import { Camera, Edit, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -73,6 +82,36 @@ const StoreHeader = ({
         className="mt-3 capitalize px-3 py-1"
         sx={{ fontWeight: 500, borderRadius: 1 }}
       />
+
+      {/* Rating Display - Only shown for customer view */}
+      {!isOwnerView && (
+        <Box className="flex flex-col items-center mt-3">
+          {storeData.averageRating > 0 ? (
+            <>
+              <Tooltip title={`Average rating: ${storeData.averageRating.toFixed(1)}`}>
+                <Box className="flex items-center">
+                  <Rating 
+                    value={storeData.averageRating} 
+                    precision={0.1} 
+                    readOnly 
+                    size="medium"
+                  />
+                  <Typography variant="body1" className="ml-2 font-medium">
+                    {storeData.averageRating.toFixed(1)}
+                  </Typography>
+                </Box>
+              </Tooltip>
+              <Typography variant="body2" className="text-gray-600 mt-1">
+                ({storeData.totalReviews} review{storeData.totalReviews !== 1 ? 's' : ''})
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body2" className="text-gray-500">
+              No ratings yet
+            </Typography>
+          )}
+        </Box>
+      )}
       
       <DescriptionSection 
         isOwnerView={isOwnerView}

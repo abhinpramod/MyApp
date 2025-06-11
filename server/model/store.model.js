@@ -44,15 +44,16 @@ const storeSchema = new mongoose.Schema(
       required: false,
     },
     gstDocument: {
-      type: String, // URL to GST document stored in Cloudinary
+      type: String,
       required: false,
     },
     storeLicense: {
-      type: String, // URL to store license document stored in Cloudinary
+      type: String,
       required: false,
     },
     approvelstatus: {
-      type: String ,enum :["Pending", "Approved", "Rejected"],
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
     isBlocked: {
@@ -71,14 +72,27 @@ const storeSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    
     description: {
       type: String,
       required: false,
     },
+    // New review fields
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
+    reviews: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Review'
+    }]
   },
   { timestamps: true }
 );
 
-const Store = mongoose.model("Store", storeSchema);
-module.exports = Store;
+module.exports = mongoose.model("Store", storeSchema);
