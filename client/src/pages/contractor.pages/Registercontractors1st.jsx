@@ -1,5 +1,6 @@
+// RegisterContractorStep1.js
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button, Box, Grid } from "@mui/material";
 import { motion } from "framer-motion";
 import axiosInstance from "../../lib/axios";
@@ -11,11 +12,8 @@ import FormFields from "../../components/Register/Registerformfields";
 import OTPModal from "../../components/Register/Otpmodal";
 import RightSection from "../../components/Register/Rightsidesection";
 
- 
-
 export default function RegisterContractorStep1() {
   const navigate = useNavigate();
-  const login=false
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [registrationData, setRegistrationData] = useState({});
@@ -52,6 +50,8 @@ export default function RegisterContractorStep1() {
 
   const validate = () => {
     const tempErrors = {};
+    let isValid = true;
+
     const requiredFields = [
       "companyName",
       "contractorName",
@@ -69,34 +69,44 @@ export default function RegisterContractorStep1() {
     requiredFields.forEach((field) => {
       if (!form[field] || (Array.isArray(form[field]) && form[field].length === 0)) {
         tempErrors[field] = `${field.replace(/([A-Z])/g, " $1")} is required`;
+        isValid = false;
       }
     });
 
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       tempErrors.email = "Valid Email is required";
+      isValid = false;
     }
+
     if (form.phone && !/^[0-9]{10}$/.test(form.phone)) {
       tempErrors.phone = "Phone Number must be 10 digits";
+      isValid = false;
     }
+
     if (form.password && form.password.length < 6) {
       tempErrors.password = "Password must be at least 6 characters";
-    } 
-   
+      isValid = false;
+    }
+
     if (form.confirmPassword !== form.password) {
       tempErrors.confirmPassword = "Passwords must match";
+      isValid = false;
     }
 
     setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    return isValid;
   };
 
   const handleChange = (e) => {
-    setErrors({});
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleJobTypesChange = (e) => {
@@ -105,24 +115,23 @@ export default function RegisterContractorStep1() {
       ...prev,
       jobTypes: value,
     }));
+    if (errors.jobTypes) {
+      setErrors(prev => ({ ...prev, jobTypes: undefined }));
+    }
   };
 
   useEffect(() => {
-    console.log('jobTypes');
-    
-  const  fectchjobtypes = async () => {
-    try {
-      const response = await axiosInstance.get("/contractor/jobtypes");
-      setJobTypes(response.data);
-      console.log(response.data);
-      
-    } catch (error) {
-      console.error("Error fetching job types:", error);
-    }
-  }
-  console.log(jobTypes);
-  fectchjobtypes();
-      
+    const fetchJobTypes = async () => {
+      try {
+        const response = await axiosInstance.get("/contractor/jobtypes");
+        setJobTypes(response.data);
+      } catch (error) {
+        console.error("Error fetching job types:", error);
+        // Fallback to default job types if API fails
+        setJobTypes(["plumbing", "electrical", "carpentry", "painting"]);
+      }
+    };
+    fetchJobTypes();
   }, []);
 
   const handleCountryChange = (e) => {
@@ -134,6 +143,9 @@ export default function RegisterContractorStep1() {
       state: { code: "", name: "" },
       city: "",
     }));
+    if (errors.country) {
+      setErrors(prev => ({ ...prev, country: undefined }));
+    }
   };
 
   const handleStateChange = (e) => {
@@ -144,6 +156,9 @@ export default function RegisterContractorStep1() {
       state: { code: stateCode, name: selectedState.name },
       city: "",
     }));
+    if (errors.state) {
+      setErrors(prev => ({ ...prev, state: undefined }));
+    }
   };
 
   const handleCityChange = (e) => {
@@ -151,31 +166,46 @@ export default function RegisterContractorStep1() {
       ...prev,
       city: e.target.value,
     }));
+    if (errors.city) {
+      setErrors(prev => ({ ...prev, city: undefined }));
+    }
   };
 
   const handleSubmit = async (e) => {
-    console.log(form);
-    
     e.preventDefault();
-    if (validate()) {
-      try {
-        const payload = {
-          ...form,
-          country: form.country.name,
-          state: form.state.name,
-          city: form.city,
-        };
-        const res = await axiosInstance.post("/contractor/register1ststep", payload);
-        if (res.status === 200) {
-          toast.success(res.data.msg);
-          setRegistrationData(payload);
-          setShowOtpModal(true);
-        } else {
-          toast.error("Registration failed. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error during registration:", error);
-        toast.error(error.response?.data?.msg || "Failed to register contractor");
+    if (!validate()) {
+      // Show first error as toast
+      const firstErrorKey = Object.keys(errors)[0];
+      if (firstErrorKey) {
+        toast.error(errors[firstErrorKey]);
+      }
+      return;
+    }
+
+    try {
+      const payload = {
+        ...form,
+        country: form.country.name,
+        state: form.state.name,
+        city: form.city,
+      };
+      const res = await axiosInstance.post("/contractor/register1ststep", payload);
+      if (res.status === 200) {
+        toast.success(res.data.msg);
+        setRegistrationData(payload);
+        setShowOtpModal(true);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+      const errorMessage = error.response?.data?.msg || "Failed to register contractor";
+      toast.error(errorMessage);
+      
+      if (error.response?.data?.errors) {
+        const serverErrors = {};
+        error.response.data.errors.forEach(err => {
+          serverErrors[err.param] = err.msg;
+        });
+        setErrors(serverErrors);
       }
     }
   };
@@ -199,6 +229,11 @@ export default function RegisterContractorStep1() {
 
   const verifyOtp = async () => {
     const otpValue = otp.join("");
+    if (otpValue.length !== 6) {
+      toast.error("Please enter a complete 6-digit OTP");
+      return;
+    }
+
     try {
       const res = await axiosInstance.post("/contractor/verify-otp", {
         ...registrationData,
@@ -217,21 +252,68 @@ export default function RegisterContractorStep1() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <Navbar type={'contractor'} login={'register'} />
-      <Box  sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#e5e7eb"   }}>
-        <Grid className="oklch(0.278 0.033 256.848)" container sx={{ maxWidth: "screen", width: "100%",   display: "flex", height: "100%" }}>
-          <Grid margin={1} item xs={12} md={6} sx={{ p: 4 }}>
-            <FormFields form={form} errors={errors} handleChange={handleChange} handleJobTypesChange={handleJobTypesChange} jobTypes={jobTypes} states={states} cities={cities} handleCountryChange={handleCountryChange} handleStateChange={handleStateChange} handleCityChange={handleCityChange} />
-            <Button type="submit" variant="contained" size="large" sx={{ mt: 2, borderRadius: "8px", background: "#4f46e5", "&:hover": { background: "#4338ca" } }} onClick={handleSubmit}>
+      <Box sx={{ 
+        minHeight: "100vh", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        bgcolor: "#e5e7eb",
+        padding: { xs: "16px", md: "0" }
+      }}>
+        <Grid container sx={{ 
+          maxWidth: "lg", 
+          width: "100%", 
+          height: "100%",
+          borderRadius: { xs: 0, md: 2 },
+          overflow: "hidden",
+          boxShadow: { xs: "none", md: 3 }
+        }}>
+          <Grid item xs={12} md={6} sx={{ 
+            p: { xs: 2, md: 4 },
+            bgcolor: "background.paper"
+          }}>
+            <FormFields 
+              form={form} 
+              errors={errors} 
+              handleChange={handleChange} 
+              handleJobTypesChange={handleJobTypesChange} 
+              jobTypes={jobTypes} 
+              states={states} 
+              cities={cities} 
+              handleCountryChange={handleCountryChange} 
+              handleStateChange={handleStateChange} 
+              handleCityChange={handleCityChange} 
+            />
+            <Button 
+              fullWidth
+              type="submit" 
+              variant="contained" 
+              size="large" 
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                borderRadius: "8px", 
+                background: "#4f46e5", 
+                "&:hover": { background: "#4338ca" },
+                height: "48px"
+              }} 
+              onClick={handleSubmit}
+            >
               Submit
             </Button>
-            <div className="mt-6 sm:hidden text-center">
-            <a href="/contractor/Logincontractors" className="text-gray-700 text-sm hover:underline">
-              Login
-            </a>
-          </div>
+            <Box sx={{ textAlign: "center", display: { xs: "block", md: "none" } }}>
+              <a href="/contractor/Logincontractors" className="text-gray-700 text-sm hover:underline">
+                Already have an account? Login
+              </a>
+            </Box>
           </Grid>
-          <Grid item md={0.03} sx={{ display: { xs: "none", md: "block" }, bgcolor: "#e5e7eb" }}></Grid>
-          <Grid className="bg-oklch(0.278 0.033 256.848)" item xs={12} md={5.8} sx={{ display: { xs: "none", md: "block" },  p: 4 }}>
+          <Grid item xs={12} md={6} sx={{ 
+            display: { xs: "none", md: "flex" },
+            alignItems: "center",
+            justifyContent: "center",
+            p: 4,
+            bgcolor: "#f9fafb"
+          }}>
             <RightSection />
           </Grid>
         </Grid>

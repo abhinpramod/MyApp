@@ -1,4 +1,4 @@
-// components/FormFields.js
+// components/Register/Registerformfields.js
 import React from "react";
 import {
   TextField,
@@ -31,17 +31,13 @@ const FormFields = ({
       >
         Register as Contractor
       </Typography>
-      {[
-        "companyName",
-        "contractorName",
-        "email",
-        "phone",
-        "numberOfEmployees",
-      ].map((field) => (
-        <Box key={field} sx={{ position: "relative", mb: 2 }}>
+      
+      {/* Text Input Fields */}
+      {["companyName", "contractorName", "email", "phone", "numberOfEmployees"].map((field) => (
+        <Box key={field} sx={{ mb: 2 }}>
           <TextField
             fullWidth
-            type="text"
+            type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
             name={field}
             value={form[field]}
             onChange={handleChange}
@@ -60,7 +56,8 @@ const FormFields = ({
         </Box>
       ))}
 
-<FormControl fullWidth sx={{ mb: 2 }}>
+      {/* Job Types Select */}
+      <FormControl fullWidth sx={{ mb: 2 }}>
         <InputLabel id="jobTypes-label">Job Types</InputLabel>
         <Select
           labelId="jobTypes-label"
@@ -74,24 +71,24 @@ const FormFields = ({
           sx={{
             borderRadius: "8px",
           }}
+          renderValue={(selected) => selected.join(", ")}
         >
           {jobTypes.map((option) => (
-            <MenuItem key={option._id} value={option.name}>
-              {option.name}
+            <MenuItem key={option._id || option} value={option.name || option}>
+              {option.name || option}
             </MenuItem>
           ))}
         </Select>
         {errors.jobTypes && (
-          <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+          <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
             {errors.jobTypes}
           </Typography>
         )}
       </FormControl>
 
-     
-
+      {/* Password Fields */}
       {["password", "confirmPassword"].map((field) => (
-        <Box key={field} sx={{ position: "relative", mb: 2 }}>
+        <Box key={field} sx={{ mb: 2 }}>
           <TextField
             fullWidth
             type="password"
@@ -113,7 +110,8 @@ const FormFields = ({
         </Box>
       ))}
 
-      <Box sx={{ display: "flex", gap: 2 }}>
+      {/* Location Fields */}
+      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
         <FormControl fullWidth>
           <InputLabel id="country-label">Country</InputLabel>
           <Select
@@ -124,9 +122,7 @@ const FormFields = ({
             fullWidth
             variant="outlined"
             error={!!errors.country}
-            sx={{
-              borderRadius: "8px",
-            }}
+            sx={{ borderRadius: "8px" }}
           >
             {Country.getAllCountries().map((country) => (
               <MenuItem key={country.isoCode} value={country.isoCode}>
@@ -135,7 +131,7 @@ const FormFields = ({
             ))}
           </Select>
           {errors.country && (
-            <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
               {errors.country}
             </Typography>
           )}
@@ -152,9 +148,7 @@ const FormFields = ({
             fullWidth
             variant="outlined"
             error={!!errors.state}
-            sx={{
-              borderRadius: "8px",
-            }}
+            sx={{ borderRadius: "8px" }}
           >
             {states.map((state) => (
               <MenuItem key={state.isoCode} value={state.isoCode}>
@@ -163,7 +157,7 @@ const FormFields = ({
             ))}
           </Select>
           {errors.state && (
-            <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
               {errors.state}
             </Typography>
           )}
@@ -180,9 +174,7 @@ const FormFields = ({
             fullWidth
             variant="outlined"
             error={!!errors.city}
-            sx={{
-              borderRadius: "8px",
-            }}
+            sx={{ borderRadius: "8px" }}
           >
             {cities.map((city) => (
               <MenuItem key={city.name} value={city.name}>
@@ -191,16 +183,14 @@ const FormFields = ({
             ))}
           </Select>
           {errors.city && (
-            <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
               {errors.city}
             </Typography>
           )}
-
-          
         </FormControl>
       </Box>
     </>
   );
 };
 
-export default FormFields;
+export default FormFields; 
