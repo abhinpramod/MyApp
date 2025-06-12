@@ -84,7 +84,7 @@ const StoreHeader = ({
       />
 
       {/* Rating Display - Only shown for customer view */}
-      {!isOwnerView && (
+       
         <Box className="flex flex-col items-center mt-3">
           {storeData.averageRating > 0 ? (
             <>
@@ -111,7 +111,7 @@ const StoreHeader = ({
             </Typography>
           )}
         </Box>
-      )}
+      
       
       <DescriptionSection 
         isOwnerView={isOwnerView}

@@ -11,7 +11,6 @@ import FormFields from "../../components/Register/Registerformfields";
 import OTPModal from "../../components/Register/Otpmodal";
 import RightSection from "../../components/Register/Rightsidesection";
 
-const jobTypes = ["plumbing","electrical", "carpentry", "painting"];
  
 
 export default function RegisterContractorStep1() {
@@ -81,7 +80,8 @@ export default function RegisterContractorStep1() {
     }
     if (form.password && form.password.length < 6) {
       tempErrors.password = "Password must be at least 6 characters";
-    }
+    } 
+   
     if (form.confirmPassword !== form.password) {
       tempErrors.confirmPassword = "Passwords must match";
     }
