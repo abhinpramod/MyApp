@@ -91,18 +91,18 @@ const Navbar = (isOwnerView) => {
                 store ? "/store/storeprofile" :
                 "/loginuser"
               }
-              className="text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+              className="py-1 text-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               {isLoggedIn ? (
                 profilePicture ? (
                   <img
                     src={profilePicture}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User size={16} className="text-gray-600" />
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={20} className="text-gray-600" />
                   </div>
                 )
               ) : (

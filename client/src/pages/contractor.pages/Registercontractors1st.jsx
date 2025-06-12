@@ -174,11 +174,8 @@ export default function RegisterContractorStep1() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
-      // Show first error as toast
-      const firstErrorKey = Object.keys(errors)[0];
-      if (firstErrorKey) {
-        toast.error(errors[firstErrorKey]);
-      }
+  
+    
       return;
     }
 

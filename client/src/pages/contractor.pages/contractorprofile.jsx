@@ -109,6 +109,7 @@ const DynamicProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [jobTypes, setJobTypes] = useState([]);
   const [showInterestDialog, setShowInterestDialog] = useState(false);
+
   const [formData, setFormData] = useState({
     phoneNumber: "",
     address: "",
@@ -116,7 +117,7 @@ const DynamicProfile = () => {
     jobTypes: [],
   });
   const [errors, setErrors] = useState({});
-  const [availability, setAvailability] = useState(false);
+const [availability, setAvailability] = useState(false);
   const [profilePic, setProfilePic] = useState("");
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const [newProjectMedia, setNewProjectMedia] = useState([]);
@@ -357,23 +358,23 @@ const DynamicProfile = () => {
   };
 
   // Handle confirm availability change
-  const handleConfirmAvailability = async () => {
-    try {
-      setIsLoading(true);
-      await axiosInstance.put("/contractor/update-availability", {
-        availability: tempAvailability
-      });
-      setAvailability(tempAvailability);
-      setConfirmAvailabilityOpen(false);
-      toast.success(`Availability set to ${tempAvailability ? 'Available' : 'Not Available'}`);
-    } catch (error) {
-      console.error("Error updating availability:", error);
-      toast.error("Failed to update availability");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+const handleConfirmAvailability = async () => {
+  try {
+    setIsLoading(true);
+    const newAvailability = !availability; // Toggle the current value
+    await axiosInstance.put("/contractor/update-availability", {
+      availability: newAvailability
+    });
+    setAvailability(newAvailability);
+    setConfirmAvailabilityOpen(false);
+    toast.success(`Availability set to ${newAvailability ? 'Available' : 'Not Available'}`);
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    toast.error("Failed to update availability");
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Upload project media
   const uploadProjectMedia = async (files) => {
     const formData = new FormData();
@@ -623,13 +624,13 @@ const DynamicProfile = () => {
               <span className="font-medium">Availability:</span>
               {isOwnerView ? (
                 <>
-                  <Switch
-                    checked={availability}
-                    onChange={(e) => {
-                      setTempAvailability(e.target.checked);
-                      setConfirmAvailabilityOpen(true);
-                    }}
-                  />
+                <Switch
+  checked={availability}
+  onCheckedChange={(newValue) => {
+    setConfirmAvailabilityOpen(true);
+    // No need to set tempAvailability anymore
+  }}
+/>
                   <span className={availability ? "text-green-600" : "text-red-600"}>
                     {availability ? "Available" : "Not Available"}
                   </span>
