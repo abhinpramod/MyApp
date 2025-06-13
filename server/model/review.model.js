@@ -28,6 +28,6 @@ const reviewSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Prevent duplicate reviews from same user
-reviewSchema.index({ store: 1, user: 1 }, { unique: true });
+// reviewSchema.index({ store: 1, user: 1 }, { unique: true });
 
 module.exports = mongoose.model("Review", reviewSchema);

@@ -20,6 +20,7 @@ exports.createReview = async (req, res) => {
     // }
 
     // Create new review
+    console.log(storeId, userId, userName, rating, comment);
     const review = new Review({
       store: storeId,
       user: userId,
@@ -27,6 +28,15 @@ exports.createReview = async (req, res) => {
       rating,
       comment
     });
+
+
+    console.log("Review being created:", {
+  store: storeId,
+  user: userId,
+  userName,
+  rating,
+  comment
+});
 
     await review.save();
 
@@ -44,6 +54,7 @@ exports.createReview = async (req, res) => {
     res.status(201).json(review);
   } catch (error) {
     res.status(500).json({ message: error.message });
+    console.error(error);
   }
 };
 
