@@ -20,7 +20,6 @@ exports.createReview = async (req, res) => {
     // }
 
     // Create new review
-    console.log(storeId, userId, userName, rating, comment);
     const review = new Review({
       store: storeId,
       user: userId,
@@ -30,13 +29,7 @@ exports.createReview = async (req, res) => {
     });
 
 
-    console.log("Review being created:", {
-  store: storeId,
-  user: userId,
-  userName,
-  rating,
-  comment
-});
+  
 
     await review.save();
 
