@@ -42,7 +42,6 @@ const login = async (req, res) => {
 // Register Controller
 const register = async (req, res) => {
   const { email, password, name, uniqueId,phone } = req.body;
-  console.log(req.body);
 
   try {
     if (!name || !email || !password) {
@@ -69,11 +68,9 @@ const register = async (req, res) => {
 
     await sendEmail(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
 
-    console.log(email, otp);
 
     res.status(200).json({ msg: "OTP sent to your email for verification" });
   } catch (error) {
-    console.log("Error from register:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
@@ -81,9 +78,6 @@ const register = async (req, res) => {
 // Verify OTP Controller
 const verifyOTP = async (req, res) => {
   const { email, otp, password, uniqueId, phone,name } = req.body;
-  console.log(req.body);
-  
-  console.log(email, otp);
 
   try {
     // Validate input
@@ -116,7 +110,6 @@ const verifyOTP = async (req, res) => {
     // Clear temporary data
     await OTP.deleteOne({ email });
 
-    console.log("OTP deleted");
 
     res.status(200).json({ msg: "Registration successful" ,user:newUser});
   } catch (error) {
@@ -131,7 +124,6 @@ const logout = async (req, res) => {
     res.clearCookie("jwt");
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
-    console.log("Error from logout:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };

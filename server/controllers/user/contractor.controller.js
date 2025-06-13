@@ -93,11 +93,9 @@ const fetchAllContractors = async (req, res) => {
 // Fetch Contractor by ID Controller
 const fetchContractorById = async (req, res) => {
   const _id = req.params.id;
-  console.log("in control", _id);
 
   try {
     const data = await Contractor.findOne({ _id });
-    console.log(data);
     res.status(200).json(data);
   } catch (error) {
     console.error("fectchcontractors error:", error);
@@ -110,9 +108,7 @@ const addInterests = async (req, res) => {
   const contractorId = req.params.id;
   const contractor = req.body.contractor;
   const { _id, name, email } = req.user;
-  console.log('request bodey',req.body);
   const { phoneNumber, address, expectedDate, jobTypes } = req.body.formData;
-  console.log(_id);
 
 
   try {
@@ -147,7 +143,6 @@ const addInterests = async (req, res) => {
 const fetchAllInterests = async (req, res) => {
   try {
     const data = await Intrests.find({userId : req.user._id});
-    console.log(data);
     res.status(200).json(data);
   } catch (error) {
     console.error("fectchcontractors error:", error);

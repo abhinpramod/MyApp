@@ -5,7 +5,6 @@ import { CheckCheck } from "lucide-react";
 
 const InterestCard = ({ interest, onMarkAsSeen }) => {
   const handleMarkAsSeen = async (interest) => {
-    console.log("Interest ID:", interest);
 
     try {
       await axiosInstance.patch(`/contractor/mark-interest-seen/${interest}`);

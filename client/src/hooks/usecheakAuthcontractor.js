@@ -12,7 +12,6 @@ const useAuthCheckcontractor = () => {
     const checkAuth = async () => {
       try {
         const res = await axiosInstance.get("/contractor/check");
-        console.log(res);
         if (res.status === 200) {
           dispatch(logincontractor(res.data));
         } else {

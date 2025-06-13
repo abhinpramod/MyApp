@@ -5,7 +5,6 @@ import { loginstore, logoutstore } from "../redux/storeslice";
 import toast from "react-hot-toast";
 
 const useAuthCheckstore = () => {
-  console.log("useAuthCheck for store");
   const [loadingstore, setLoadingstore] = useState(true);
   const dispatch = useDispatch();
 
@@ -13,7 +12,6 @@ const useAuthCheckstore = () => {
     const checkAuth = async () => {
       try {
         const res = await axiosInstance.get("/store/check");
-        console.log(res);
         if (res.status === 200) {
           dispatch(loginstore(res.data));
           
@@ -22,7 +20,6 @@ const useAuthCheckstore = () => {
           dispatch(logoutstore());
           // axiosInstance.post("/store/logout");
         }
-        console.log("store", res.data);
       } catch (error) {
 
 

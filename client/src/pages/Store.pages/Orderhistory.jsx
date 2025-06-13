@@ -34,7 +34,6 @@ const CartAnalyticsDashboard = ({ storeId }) => {
     const fetchCartData = async () => {
       try {
         const response = await axiosInstance.get("/cart/store");
-        console.log(response);
         setCartData(response.data);
       } catch (err) {
         setError(err.message);

@@ -48,7 +48,6 @@ function App() {
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
   const { store } = useSelector((state) => state.store);
-  console.log(user, contractor, store);
 
   if (loading || loadingstore || loadinguser) {
     return <div className="flex items-center justify-center h-screen"><Loader className="animate-spin" /></div>;

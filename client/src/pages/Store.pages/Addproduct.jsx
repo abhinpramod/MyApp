@@ -76,7 +76,6 @@ const ProductManagement = () => {
       const response = await axiosInstance.get('/products/product-categories', {
         withCredentials: true
       });
-      console.log(response.data.data);
       setProductCategories(response.data.data);
     } catch (err) {
       console.error('Failed to fetch product categories', err);

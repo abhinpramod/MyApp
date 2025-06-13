@@ -5,7 +5,6 @@ const cloudinary = require("../../lib/cloudinary");
 // Check User Controller
 const checkUser = async (req, res) => {
   const { _id } = req.user;
-  console.log(_id);
   try {
     const user = await User.findOne({ _id });
     res.status(200).json(user);

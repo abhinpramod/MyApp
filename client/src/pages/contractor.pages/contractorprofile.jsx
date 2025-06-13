@@ -152,7 +152,6 @@ const [availability, setAvailability] = useState(false);
 
         setContractor(data);
         setProjects(data.projects || []);
-        console.log(data.projects);
         setJobTypes(data.jobTypes || []);
         setAvailability(data.availability || false);
         setProfilePic(data.profilePicture || "");

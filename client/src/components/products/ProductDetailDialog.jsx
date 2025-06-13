@@ -28,7 +28,6 @@ const ProductDetailDialog = ({
   const handleStoreClick = (storeId) => {
     return (e) => {
       e.stopPropagation();
-      console.log("Navigating to store:", storeId);
       navigate(`/store/${product.storeId}`);
     };
   };

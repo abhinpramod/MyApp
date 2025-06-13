@@ -9,7 +9,6 @@ const contractorSlice = createSlice({
   initialState,
   reducers: {
     logincontractor: (state, action) => {
-      console.log("contractor Data Received in Redux:", action.payload); 
       state.contractor = action.payload;
     },
     logoutcontractor: (state) => {

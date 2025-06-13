@@ -47,7 +47,6 @@ const StoreDashboard = () => {
   };
 
   const handleLogout = () => {
-    console.log("Logout clicked");  
     navigate("/");
     axiosInstance.post("/store/logout");
     handleCloseDialog();
@@ -58,7 +57,6 @@ const StoreDashboard = () => {
   const fetchNotificationCount = async () => {
     try {
       const response = await axiosInstance.get("/orders/notifications");
-      console.log("Notification count:", response.data);
       const response2=await axiosInstance.get("/orders/to-be-deliver");
       setNotificationCount(response.data+response2.data);
     } catch (error) {

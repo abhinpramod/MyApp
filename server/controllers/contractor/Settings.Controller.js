@@ -2,7 +2,6 @@
 const Contractor = require("../../model/contractors.model.js");
 
 const updateAvailability = async (req, res) => {
-  console.log("updateAvailability");
 
   try {
     const { availability } = req.body;
@@ -13,7 +12,6 @@ const updateAvailability = async (req, res) => {
       { availability },
       { new: true }
     );
-    console.log(contractor);
 
     res
       .status(200)
@@ -27,7 +25,6 @@ const updateAvailability = async (req, res) => {
 const updateemployeesnumber = async (req, res) => {
   try {
     const { numberOfEmployees } = req.body;
-    console.log(numberOfEmployees);
     const contractor = await Contractor.findByIdAndUpdate(
       req.contractor._id, // Assuming you're using authentication middleware
       { numberOfEmployees },
@@ -51,7 +48,6 @@ const updateemployeesnumber = async (req, res) => {
 const updateDescription = async (req, res) => {
   try {
     const { description } = req.body;
-    console.log(description);
     const contractor = await Contractor.findByIdAndUpdate(
       req.contractor._id, // Assuming you're using authentication middleware
       { description },

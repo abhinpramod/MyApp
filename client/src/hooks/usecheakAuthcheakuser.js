@@ -12,7 +12,6 @@ const useAuthCheckuser = () => {
     const checkAuth = async () => {
       try {
         const res = await axiosInstance.get("/user/check");
-        console.log(res);
         if (res?.status === 200) {
           dispatch(loginuser(res.data));
         } else {

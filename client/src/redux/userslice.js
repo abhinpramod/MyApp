@@ -9,7 +9,6 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     loginuser: (state, action) => {
-      console.log("user Data Received in Redux:", action.payload); 
       state.user = action.payload;
     },
     logoutuser: (state) => {

@@ -25,7 +25,6 @@ const fectchintrestes = async (req, res) => {
 
 const markseen = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
 
   try {
     const interest = await interests.findOneAndUpdate(

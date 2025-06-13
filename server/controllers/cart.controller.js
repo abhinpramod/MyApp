@@ -77,15 +77,15 @@
         model: "Product",
       });
 
-      // Debug logs
-      console.log("Looking for productId:", productId);
-      console.log("User has carts:", carts.length);
-      carts.forEach((cart, i) => {
-        console.log(`Cart ${i} has ${cart.items.length} items`);
-        cart.items.forEach((item, j) => {
-          console.log(`Item ${j} productId:`, item.productId?._id?.toString());
-        });
-      });
+      // // Debug logs
+      // console.log("Looking for productId:", productId);
+      // console.log("User has carts:", carts.length);
+      // carts.forEach((cart, i) => {
+      //   console.log(`Cart ${i} has ${cart.items.length} items`);
+      //   cart.items.forEach((item, j) => {
+      //     console.log(`Item ${j} productId:`, item.productId?._id?.toString());
+      //   });
+      // });
 
       // Find which cart contains the product
       let targetCart = null;
@@ -252,13 +252,11 @@ const removeCartItem = async (req, res) => {
             });
         }
 
-        console.log(`Attempting to remove product ${productId} from user ${userId}'s cart`);
 
         // Find all carts for user
         const carts = await Cart.find({ userId });
         
         if (!carts || carts.length === 0) {
-            console.log(`No carts found for user ${userId}`);
             return res.status(404).json({
                 success: false,
                 message: "No carts found for user"
@@ -277,13 +275,11 @@ const removeCartItem = async (req, res) => {
             if (itemIndex !== -1) {
                 targetCart = cart;
                 itemFound = true;
-                console.log(`Found product in cart ${cart._id}`);
                 break;
             }
         }
 
         if (!itemFound) {
-            console.log(`Product ${productId} not found in any cart for user ${userId}`);
             return res.status(404).json({
                 success: false,
                 message: "Item not found in any cart"
@@ -305,11 +301,9 @@ const removeCartItem = async (req, res) => {
 
         // If cart is empty after removal, delete it
         if (targetCart.items.length === 0) {
-            console.log(`Cart ${targetCart._id} is empty after removal - deleting`);
             await Cart.findByIdAndDelete(targetCart._id);
         } else {
             await targetCart.save();
-            console.log(`Cart ${targetCart._id} updated successfully`);
         }
 
         // Return updated combined cart
@@ -342,7 +336,6 @@ const removeCartItem = async (req, res) => {
             (sum, cart) => sum + (cart.totalSavings || 0), 0
         );
 
-        console.log(`Successfully removed product ${productId} for user ${userId}`);
 
         res.status(200).json({
             success: true,
@@ -573,7 +566,6 @@ const removeStoreFromCart = async (req, res) => {
   try {
     const { storeId } = req.body;
     const userId = req.user._id;
-    console.log(storeId,"and the",userId);
 
     const cart = await Cart.findOneAndDelete({ userId, storeId });
 

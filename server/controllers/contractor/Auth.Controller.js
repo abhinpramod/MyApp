@@ -9,7 +9,6 @@ const cloudinary = require("../../lib/cloudinary");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  console.log("email", email);
 
   try {
     const contractor = await Contractor.findOne({ email });
@@ -33,7 +32,6 @@ const login = async (req, res) => {
 
 const registerstep1 = async (req, res) => {
  
-  console.log(req.body);
   const {
     email,
     password,
@@ -83,13 +81,11 @@ const registerstep1 = async (req, res) => {
     await otpRecord.save();
 
     // Send OTP to email
-    console.log(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
 
     await sendEmail(email, "Your OTP for Verification", `Your OTP is: ${otp}`);
 
     res.status(200).json({ msg: "OTP sent to your email for verification" });
   } catch (error) {
-    console.log("Error from register:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
@@ -132,11 +128,9 @@ const verifyOTP = async (req, res) => {
       });
       await contractor.save();
   
-      console.log("New contractor saved:", contractor);
   
       // Clear temporary data
       await OTP.deleteOne({ email });
-      console.log("Temporary data deleted for email:", email);
   
       res.status(200).json({
         message: "Contractor registered successfully, wait for admin approval",
@@ -154,7 +148,6 @@ const logoutcontractor = (req, res) => {
     res.clearCookie("jwt");
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
-    console.log("Error from logoutcontractor:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
@@ -162,10 +155,8 @@ const logoutcontractor = (req, res) => {
 // controllers/authMiddleware.js
 const checkAuth = (req, res) => {
     try {
-      console.log("controll", req.contractor);
       res.status(200).json(req.contractor);
     } catch (error) {
-      console.log("error from checkAuth", error.message);
       res.status(500).json({ msg: error.message });
     }
   };
@@ -175,14 +166,10 @@ const checkAuth = (req, res) => {
  
   
   const registerstep2 = async (req, res) => {
-    console.log("registerstep2");
-    console.log("Files received:", req.files);
   
     try {
-      console.log("params", req.params);
       const { id } = req.params;
       const { gstNumber } = req.body;
-      console.log("params id", id);
   
       // Check if the contractor exists
       const contractor = await Contractor.findById(id);

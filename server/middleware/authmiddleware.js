@@ -4,7 +4,6 @@ const user = require("../model/user.model");
 const store = require("../model/store.model");
 
 const protectRoutecontractor = async (req, res, next) => {
-  console.log("protectRoute middleware triggered");
 
   try {
     const token = req.cookies?.jwt; // Ensure token is read properly
@@ -12,14 +11,11 @@ const protectRoutecontractor = async (req, res, next) => {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
 
-    console.log("Received token:", token);
 
     const decoded = jwt.verify(token, process.env.JwT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
-  console.log( "gwet",decoded);
-console.log(decoded.Id);
 
     const contractordata = await contractor.findById(decoded.Id);
     if (!contractordata) {
@@ -38,7 +34,6 @@ console.log(decoded.Id);
   }
 };
 const protectRouteuser = async (req, res, next) => {
-  console.log("protectRoute middleware triggered user ");
 
   try {
     const token = req.cookies?.jwt; // Ensure token is read properly
@@ -46,14 +41,11 @@ const protectRouteuser = async (req, res, next) => {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
 
-    console.log("Received token:", token);
 
     const decoded = jwt.verify(token, process.env.JwT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
-  console.log( "gwet",decoded);
-console.log(decoded.Id);
 
     const userdata = await user.findById(decoded.Id);
     if (!userdata) {
@@ -72,7 +64,6 @@ console.log(decoded.Id);
   }
 };
 const protectRoutestore = async (req, res, next) => {
-  console.log("protectRoute middleware triggered store ... ");
 
   try {
     const token = req.cookies?.jwt; // Ensure token is read properly
@@ -80,14 +71,11 @@ const protectRoutestore = async (req, res, next) => {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
 
-    console.log("Received token:", token);
 
     const decoded = jwt.verify(token, process.env.JwT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
-  console.log( "gwet",decoded);
-console.log(decoded.Id);
 
     const storedata = await store.findById(decoded.Id);
     if (!storedata) {

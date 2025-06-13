@@ -134,7 +134,6 @@ const ProductsPage = () => {
 
   const handleAddToCart = async (cartItem) => {
    // Prevent triggering the card click event
-   console.log("Adding to cart:", cartItem);
    const { product, storeId,quantity } = cartItem;
    const productId = product._id;
    const productname = product.name;

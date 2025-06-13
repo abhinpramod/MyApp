@@ -9,7 +9,6 @@ const storeSlice = createSlice({
   initialState,
   reducers: {
     loginstore: (state, action) => {
-      console.log("store Data Received in Redux:", action.payload); 
       state.store = action.payload;
     },
     logoutstore: (state) => {

@@ -3,11 +3,8 @@ const Contractor = require("../../model/contractors.model.js");
 const cloudinary = require("../../lib/cloudinary");
 
 const registerstep2 = async (req, res) => {
-  console.log("registerstep2");
-  console.log("Files received:", req.files);
 
   try {
-    console.log("contract id",req.contractor);
     
     const  id  = req.contractor._id;   
     const { gstNumber } = req.body;

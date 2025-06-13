@@ -73,7 +73,6 @@ const StoreProfile = () => {
   }, [paramStoreId, isOwnerView]);
 
   const handleAddToCart = async (cartItem) => {
-    console.log("Adding to cart:", cartItem);
     const { product, storeId, quantity } = cartItem;
     const productId = product._id;
     const productname = product.name;

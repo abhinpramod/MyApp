@@ -178,7 +178,6 @@ exports.updateProduct = async (req, res) => {
 
 // Get all products for a store
 exports.getStoreProducts = async (req, res) => {
-  console.log(req.store ,'this from the ');
   try {
     const store = req.store;
     const { page = 1, limit = 10, search = '', filter = 'all' } = req.query;
@@ -380,7 +379,6 @@ exports.fetchAllProducts = async (req, res) => {
       pages: Math.ceil(total / limitNum),
       hasMore: skip + products.length < total
     });
-    console.log("products", products[2]?.bulkPricing);
 
   } catch (error) {
     console.error("Error fetching products:", error);

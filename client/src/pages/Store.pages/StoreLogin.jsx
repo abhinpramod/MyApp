@@ -62,7 +62,6 @@ const storeLoginPage = () => {
           toast.success(res.data.msg || "Login successful!");
           navigate("/");
           dispatch(loginstore(res.data));
-          // console.log(res.data);
           setLoading(false);
         }
 

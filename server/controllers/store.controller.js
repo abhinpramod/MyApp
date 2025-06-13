@@ -45,8 +45,6 @@ const verifyOtp = async (req, res) => {
 
 const registerStore = async (req, res) => {
   try {
-    console.log("Request Body:", req.body);
-    console.log("Request Files:", req.files);
 
     if (!req.files || !req.files.gstDocument || !req.files.storeLicense) {
       return res
@@ -74,7 +72,6 @@ const registerStore = async (req, res) => {
     // Upload GST Document to Cloudinary
     if (req.files["gstDocument"] && req.files["gstDocument"][0]) {
       const gstFile = req.files["gstDocument"][0];
-      console.log("GST File:", gstFile);
       const result = await cloudinary.uploader.upload(
         `data:${gstFile.mimetype};base64,${gstFile.buffer.toString("base64")}`,
         { folder: "store_docs" }
@@ -85,7 +82,6 @@ const registerStore = async (req, res) => {
     // Upload Store License to Cloudinary
     if (req.files["storeLicense"] && req.files["storeLicense"][0]) {
       const licenseFile = req.files["storeLicense"][0];
-      console.log("License File:", licenseFile);
       const result = await cloudinary.uploader.upload(
         `data:${licenseFile.mimetype};base64,${licenseFile.buffer.toString(
           "base64"
@@ -176,13 +172,9 @@ const login = async (req, res) => {
 };
 
 const checkstore = (req, res) => {
-  console.log("checkAuth middleware triggered");
   try {
-    console.log("controll", req.store);
     res.status(200).json(req.store);
-    console.log(req.store);
   } catch (error) {
-    console.log("error from checkAuth", error.message);
     res.status(500).json({ msg: error.message });
   }
 };
@@ -201,10 +193,8 @@ const getStoreProfile = async (req, res) => {
 };
 
 const getStoreById = async (req, res) => {
-  console.log(req.params.storeId, "storeid");
   try {
     const store = await Store.findById(req.params.storeId);
-    console.log(store);
     if (!store) {
       return res.status(404).json({ error: "Store not found" });
     }
