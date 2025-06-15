@@ -14,10 +14,12 @@ const orderRoutes = require("./routes/order.Routes");
 const paymentRoutes = require("./routes/payment.routes");
 const reviewRoutes = require("./routes/review.Routes");
 // const webhookRoute = require("./routes/webhook.routes"); 
+const authRoutes = require("./routes/auth.Routes"); 
 const testimonialsRoutes = require("./routes/testimonials.routes");
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser())
+app.use("api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/contractor", contractorRoutes);
 app.use("/api/store", storeRoutes);

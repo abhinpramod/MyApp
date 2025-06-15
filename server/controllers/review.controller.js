@@ -14,10 +14,7 @@ exports.createReview = async (req, res) => {
       return res.status(404).json({ message: "Store not found" });
     }
 
-    // // Prevent store owners from reviewing their own store
-    // if (store.owner.toString() === userId.toString()) {
-    //   return res.status(400).json({ message: "Cannot review your own store" });
-    // }
+ 
 
     // Create new review
     const review = new Review({

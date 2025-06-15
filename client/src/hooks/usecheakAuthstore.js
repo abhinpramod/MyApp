@@ -30,8 +30,7 @@ const useAuthCheckstore = () => {
                   axiosInstance.post("/contractor/logout");
           
         }
-        // toast.error(error.response.data.msg);
-        // axiosInstance.post("/store/logout");
+
 
 
         dispatch(logoutstore());
