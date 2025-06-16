@@ -3,13 +3,11 @@ import { TextField, Button, Box, Paper, Typography, Avatar,IconButton } from "@m
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
 import { useSelector } from "react-redux";
-import useAuthCheck from "../../hooks/usecheakAuthcontractor";
 import { useNavigate } from "react-router-dom";
 import { Loader, Upload } from "lucide-react";
 import Navbar from "../../components/Register/Registernav";
 const ContractorVerificationStep2 = () => {
   const Navigate = useNavigate();
-  const { loading } = useAuthCheck(); // Check authentication status
   const contractor = useSelector((state) => state.contractor.contractor); // Get contractor from Redux
   const [isloading, setisLoading] = useState(false);
 
@@ -84,9 +82,7 @@ const ContractorVerificationStep2 = () => {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-screen">
-  <Loader className="size-10 animate-spin" />
-</div>;
+
   if (!contractor) return <Typography>Error: No contractor data found.</Typography>;
  
   if (isloading) return <div className="flex items-center justify-center h-screen">

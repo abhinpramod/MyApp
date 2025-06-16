@@ -72,8 +72,7 @@ const Navbar = (isOwnerView) => {
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User size={20} className="text-gray-600" />
-                  </div>
+                 <img src="/avatar.png" alt="" />                  </div>
                 )
               ) : (
                 <User size={24} />
@@ -96,13 +95,13 @@ const Navbar = (isOwnerView) => {
               {isLoggedIn ? (
                 profilePicture ? (
                   <img
-                    src={profilePicture}
+                    src={profilePicture || "/avatar.png"}
                     alt="Profile"
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User size={20} className="text-gray-600" />
+                       <img src="/avatar.png" alt="" />  
                   </div>
                 )
               ) : (

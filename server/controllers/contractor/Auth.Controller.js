@@ -76,6 +76,7 @@ const registerstep1 = async (req, res) => {
 
     // Generate and save OTP
     const otp = generateOTP();
+    console.log(otp)
     await OTP.deleteOne({ email }); // Delete existing OTP
     const otpRecord = new OTP({ email, otp });
     await otpRecord.save();

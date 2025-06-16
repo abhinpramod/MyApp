@@ -19,7 +19,6 @@ import {
   BriefcaseBusiness,
 } from "lucide-react";
 import Button from "@/components/ui/button";
-import useAuthCheck from "../../hooks/usecheakAuthcontractor";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutcontractor } from "../../redux/contractorslice";
 import { toast } from "react-hot-toast";
@@ -43,7 +42,6 @@ const ContractorDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { loading } = useAuthCheck();
 
   // Toggle sidebar
   const toggleSidebar = () => {
