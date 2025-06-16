@@ -81,7 +81,7 @@ const ContractorNotifications = () => {
         View and manage your projects.
       </p>
       {interests.length === 0 && (
-        <p className="text-gray-500 mt-6 text-center">No projects found.</p>
+        <p className="text-gray-500 mt-6 text-center">No notifications found.</p>
       )}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {interests.map((interest) => (
