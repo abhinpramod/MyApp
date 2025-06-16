@@ -24,6 +24,7 @@ import Dashboard from "./pages/contractor.pages/contractordashboard";
 import useAuthCheckcontractor from "./hooks/usecheakAuthcontractor";
 import useAuthCheckuser from "./hooks/usecheakAuthcheakuser";
 import useAuthCheckstore from "./hooks/usecheakAuthstore";
+import useAuthCheck from "./hooks/useAuthCheck";
 import ContractorNotifications from "./pages/contractor.pages/contractornotifications";
 import UserProfile from "./pages/user.pages/Userprofile";
 import InterestSentHistory from "./pages/user.pages/Interesthistory";
@@ -42,17 +43,22 @@ import { useSelector } from "react-redux";
 import { Loader } from "lucide-react";
 
 function App() {
-  const { loading } = useAuthCheckcontractor();
-  const { loadingstore } = useAuthCheckstore();
-  const { loadinguser } = useAuthCheckuser();
+  // const { loading } = useAuthCheckcontractor();
+  // const { loadingstore } = useAuthCheckstore();
+  // const { loadinguser } = useAuthCheckuser();
+  const { loading } = useAuthCheck();
   const { user } = useSelector((state) => state.user);
   const { contractor } = useSelector((state) => state.contractor);
   const { store } = useSelector((state) => state.store);
 
-  if (loading || loadingstore || loadinguser) {
+  // if (loading || loadingstore || loadinguser) {
+  //   return <div className="flex items-center justify-center h-screen"><Loader className="animate-spin" /></div>;
+  // }
+
+
+  if(loading){
     return <div className="flex items-center justify-center h-screen"><Loader className="animate-spin" /></div>;
   }
-
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
