@@ -119,9 +119,84 @@ const logout = async (req, res) => {
   }
 };
 
+const  forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // Generate 6-digit OTP
+const otp = generateOTP();
+console.log(otp)
+
+    // Save OTP to database
+    await OTP.deleteOne({ email }); // Delete existing OTP
+    const otpRecord = new OTP({ email, otp });
+    await otpRecord.save();
+
+    // Send OTP via email
+    await sendEmail(email, "Password Reset OTP", `Your OTP is: ${otp}`);
+
+    res.json({ msg: "OTP sent to email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
+
+
+  const resetPassword= async (req, res) => {
+  try {
+    const { email,  newPassword } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ msg: "Contractor not found" });
+    }
+
+ 
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.json({ msg: "Password reset successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
+
+
+  const verifyOTPforget = async (req, res) => {
+ try {
+    const { email, otp } = req.body;
+    const user = await OTP.findOne({ email, otp });
+
+    if (!user) {
+      return res.status(400).json({ msg: "Invalid OTP d" });
+    }
+
+    res.json({ msg: "OTP verified" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
+
 module.exports = {
   login,
   register,
   verifyOTP,
-  logout
+  logout,
+  forgotPassword,
+  verifyOTPforget,
+  resetPassword
 };

@@ -45,7 +45,6 @@ const verifyOtp = async (req, res) => {
 
 const registerStore = async (req, res) => {
   try {
-
     if (!req.files || !req.files.gstDocument || !req.files.storeLicense) {
       return res
         .status(400)
@@ -336,6 +335,74 @@ const logout = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const store = await Store.findOne({ email });
+
+    if (!store) {
+      return res.status(404).json({ msg: "store not found" });
+    }
+
+    // Generate 6-digit OTP
+    const otp = generateOTP();
+    console.log(otp , "otp");
+
+    // Save OTP to database
+    await Otp.deleteOne({ email }); // Delete existing OTP
+    const otpRecord = new Otp({ email, otp });
+    await otpRecord.save();
+
+    // Send OTP via email
+    await sendEmail(email, "Password Reset OTP", `Your OTP is: ${otp}`);
+
+    res.json({ msg: "OTP sent to email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    const store = await Store.findOne({ email });
+
+    if (!store) {
+      return res.status(404).json({ msg: "Contractor not found" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    store.password = hashedPassword;
+
+    await store.save();
+
+    res.json({ msg: "Password reset successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+const verifyOTPforget = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const store = await Otp.findOne({ email, otp });
+
+    if (!store) {
+      return res.status(400).json({ msg: "Invalid OTP d" });
+    }
+
+    res.json({ msg: "OTP verified" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 module.exports = {
   sendOtp,
   verifyOtp,
@@ -349,4 +416,7 @@ module.exports = {
   updateProfilePicture,
   updateDescription,
   logout,
+  forgotPassword,
+  resetPassword,
+  verifyOTPforget,
 };

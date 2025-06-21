@@ -12,7 +12,10 @@ const {
   checkUser,
   uploadProfilePicture,
   fetchAllInterests,
-  updateShippingInfo
+  updateShippingInfo,
+  forgotPassword,
+  verifyOTPforget,
+  resetPassword
 } = require("../controllers/user/index.js");
 const { protectRouteuser } = require("../middleware/authmiddleware");
 const {upload }= require("../middleware/Multermiddleware");
@@ -22,7 +25,9 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/verify-otp", verifyOTP);
 router.post("/logout", logout);
-
+ router.post ("/forgot-password", forgotPassword); 
+ router.post ("/verify-otpforget", verifyOTPforget);
+ router.post ("/reset-password", resetPassword);
 // ==================== User Profile Routes ====================
 router.get("/check", protectRouteuser, checkUser);
 router.put(

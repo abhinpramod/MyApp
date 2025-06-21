@@ -6,8 +6,11 @@ import { useDispatch } from "react-redux";
 import { loginuser } from "../../redux/userslice";
 import { logoutcontractor } from "../../redux/contractorslice";
 import LoginFormUI from "@/components/LoginFormUI";
+import ForgotPassword from "../../components/forgotpassword";
 
 const UserLoginPage = () => {
+      const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -80,6 +83,12 @@ const UserLoginPage = () => {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
+         {showForgotPassword ? (
+        <ForgotPassword 
+          userType="user" // or "user" or "store" based on your page
+          onBackToLogin={() => setShowForgotPassword(false)}
+        />
+      ) : (
       <LoginFormUI
         formData={formData}
         errors={errors}
@@ -90,7 +99,8 @@ const UserLoginPage = () => {
         welcomeMessage="Login to find skilled labors and stores near you."
          currentUserType="user"
          welcomehead = "User Login"
-      />
+         onForgotPassword={() => setShowForgotPassword(true)}
+      />)}
       <div className="relative hidden bg-muted lg:block">
         <img
           src="../../public/cover.jpeg"

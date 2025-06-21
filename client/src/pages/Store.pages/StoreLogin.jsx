@@ -6,9 +6,11 @@ import { useDispatch } from "react-redux";
 import { loginstore } from "../../redux/storeslice";
 import LoginFormUI from "@/components/LoginFormUI"; 
 import { Loader } from "lucide-react";
-// import { s } from "framer-motion/dist/types.d-6pKw1mTI";
+import ForgotPassword from "../../components/forgotpassword";
 
 const storeLoginPage = () => {
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -103,6 +105,12 @@ const storeLoginPage = () => {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
+         {showForgotPassword ? (
+        <ForgotPassword 
+          userType="store" // or "user" or "store" based on your page
+          onBackToLogin={() => setShowForgotPassword(false)}
+        />
+      ) : (
       <LoginFormUI
         formData={formData}
         errors={errors}
@@ -113,7 +121,8 @@ const storeLoginPage = () => {
         welcomeMessage="Login to LocalFinder and sell your products"
          currentUserType="store"
          welcomehead="Store Login"
-      />
+         onForgotPassword={() => setShowForgotPassword(true)}
+      />)}
       <div className="relative hidden bg-muted lg:block">
         <img
           src="../../../public/cover.jpeg"
