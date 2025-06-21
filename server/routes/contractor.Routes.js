@@ -5,7 +5,10 @@ const {
   registerstep1,
   verifyOTP,
   logoutcontractor,
-  checkAuth
+  checkAuth,
+  forgotPassword,
+  verifyOTPforget,
+  resetPassword
 } = require("../controllers/contractor/Auth.Controller.js");
 const { contractorprofile, uploadProfilePic } = require("../controllers/contractor/Profile.Controller");
 const { 
@@ -43,7 +46,9 @@ router.post(
 router.post("/verify-otp", verifyOTP);
 router.post("/login", login);
 router.post("/logout", logoutcontractor);
-
+router.post ("/forgot-password", forgotPassword); 
+router.post ("/verify-otpforget", verifyOTPforget);
+router.post ("/reset-password", resetPassword);
 // Profile Routes
 router.get("/profile", protectRoutecontractor, contractorprofile);
 router.put(

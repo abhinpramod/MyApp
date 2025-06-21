@@ -12,10 +12,11 @@ const LoginFormUI = ({
   onSubmit,
   onChange,
   onNavigateRegister,
-  logoText  ,
-  welcomeMessage  ,
-  currentUserType , // 'user', 'contractor', or 'store'
-  welcomehead
+  logoText,
+  welcomeMessage,
+  currentUserType, // 'user', 'contractor', or 'store'
+  welcomehead,
+  onForgotPassword // Add this prop
 }) => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -127,8 +128,15 @@ const LoginFormUI = ({
                 )}
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
                 <Input
                   id="password"

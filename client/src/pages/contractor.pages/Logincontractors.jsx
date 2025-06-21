@@ -5,8 +5,11 @@ import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { logincontractor } from "../../redux/contractorslice";
 import LoginFormUI from "@/components/LoginFormUI";
+import ForgotPassword from "../../components/forgotpassword";
 
 const ContractorLoginPage = () => {
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -88,7 +91,13 @@ const ContractorLoginPage = () => {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <LoginFormUI
+       {showForgotPassword ? (
+        <ForgotPassword 
+          userType="contractor" // or "user" or "store" based on your page
+          onBackToLogin={() => setShowForgotPassword(false)}
+        />
+      ) :
+     ( <LoginFormUI
         formData={formData}
         errors={errors}
         onSubmit={handleSubmit}
@@ -98,7 +107,9 @@ const ContractorLoginPage = () => {
         welcomeMessage="Login to manage your contractor account."
          currentUserType="contractor"
          welcomehead="Contractor Login"
-      />
+                   onForgotPassword={() => setShowForgotPassword(true)}
+
+      />)}
       <div className="relative hidden bg-muted lg:block">
         <img
           src="../../public/cover.jpeg"

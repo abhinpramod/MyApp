@@ -30,6 +30,35 @@ const login = async (req, res) => {
   }
 };
 
+const  forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const contractor = await Contractor.findOne({ email });
+    
+    if (!contractor) {
+      return res.status(404).json({ msg: "Contractor not found" });
+    }
+
+    // Generate 6-digit OTP
+const otp = generateOTP();
+console.log(otp)
+
+    // Save OTP to database
+    await OTP.deleteOne({ email }); // Delete existing OTP
+    const otpRecord = new OTP({ email, otp });
+    await otpRecord.save();
+
+    // Send OTP via email
+    await sendEmail(email, "Password Reset OTP", `Your OTP is: ${otp}`);
+
+    res.json({ msg: "OTP sent to email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
+
+
 const registerstep1 = async (req, res) => {
  
   const {
@@ -142,6 +171,22 @@ const verifyOTP = async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
     }
   };
+
+  const verifyOTPforget = async (req, res) => {
+ try {
+    const { email, otp } = req.body;
+    const contractor = await OTP.findOne({ email, otp });
+
+    if (!contractor) {
+      return res.status(400).json({ msg: "Invalid OTP d" });
+    }
+
+    res.json({ msg: "OTP verified" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
  
 
 const logoutcontractor = (req, res) => {
@@ -230,6 +275,32 @@ const checkAuth = (req, res) => {
   };
   
 
+  const resetPassword= async (req, res) => {
+  try {
+    const { email,  newPassword } = req.body;
+    const contractor = await Contractor.findOne({ email });
+    
+    if (!contractor) {
+      return res.status(404).json({ msg: "Contractor not found" });
+    }
+
+ 
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    contractor.password = hashedPassword;
+
+    await contractor.save();
+
+    res.json({ msg: "Password reset successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+}
+
   
 
 
@@ -239,5 +310,8 @@ module.exports = {
   verifyOTP,
   logoutcontractor,
   checkAuth,
-  registerstep2
+  registerstep2,
+  forgotPassword,
+  verifyOTPforget,
+  resetPassword
 };
