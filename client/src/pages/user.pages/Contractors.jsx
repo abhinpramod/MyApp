@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
@@ -26,6 +26,7 @@ const Contractors = () => {
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
+  const {JobType:paramjobType} = useParams();
 
   // Debounce function to delay search
   const debounce = (func, delay) => {
@@ -38,6 +39,9 @@ const Contractors = () => {
 
   // Fetch contractors with filters
   const fetchContractors = useCallback(async (reset = false) => {
+  if(paramjobType){
+    setSelectedJobTypes([paramjobType]);
+  }
     try {
       const currentPage = reset ? 1 : page;
       const params = {

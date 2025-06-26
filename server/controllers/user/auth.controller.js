@@ -11,19 +11,19 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const contractor = await Contractor.findOne({ email });
-    if (!contractor) return res.status(400).json({ msg: "Invalid Email" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ msg: "Invalid Email" });
 
-    if (contractor.isBlocked)
+    if (user.isBlocked)
       return res
         .status(403)
         .json({ msg: "your account  is blocked connect with admin." });
 
-    const isMatch = await bcrypt.compare(password, contractor.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    generateTokencontractor(contractor._id, res);
-    res.status(200).json(contractor);
+    generateTokenuser(user._id, res);
+    res.status(200).json(user);
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ msg: "Internal server error" });

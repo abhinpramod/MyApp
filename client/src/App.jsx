@@ -84,7 +84,7 @@ function App() {
             element={user ? <Navigate to="/" /> : <Registeruser />}
           />
           <Route path="/contractors" element={<Contractors />} />
-          <Route path="/contractors/:JOBTYPE" element={<Contractors />} />
+          <Route path="/contractors/:JobType" element={<Contractors />} />
           <Route
             path="/contractor/contractorprofileforuser/:contractorId"
             element={user ? <ContractorProfile /> : <Loginuser />}
