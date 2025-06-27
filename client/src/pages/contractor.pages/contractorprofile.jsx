@@ -584,7 +584,7 @@ const handleConfirmAvailability = async () => {
             {contractor.phone && <DetailItem label="Phone" value={contractor.phone} />}
             <DetailItem 
               label="Address" 
-              value={`${contractor.address}, ${contractor.city}, ${contractor.state}, ${contractor.country}`} 
+              value={` ${contractor.city}, ${contractor.state}, ${contractor.country}`} 
             />
             {jobTypes.length > 0 && (
               <DetailItem label="Job Types" value={jobTypes.join(", ")} />

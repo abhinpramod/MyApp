@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate,useParams } from "react-router-dom";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Card from "@/components/ui/card";
 import CardContent from "@/components/ui/card-content";
@@ -26,38 +26,45 @@ const Contractors = () => {
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
-  const {JobType:paramjobType} = useParams();
+  const { JobType: paramJobType } = useParams();
+  const searchTimeoutRef = useRef(null);
 
-  // Debounce function to delay search
-  const debounce = (func, delay) => {
-    let timer;
-    return function (...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => func.apply(this, args), delay);
-    };
-  };
+  // Initialize with URL param if present
+  useEffect(() => {
+    if (paramJobType) {
+      setSelectedJobTypes([paramJobType]);
+    }
+  }, [paramJobType]);
 
-  // Fetch contractors with filters
   const fetchContractors = useCallback(async (reset = false) => {
-  if(paramjobType){
-    setSelectedJobTypes([paramjobType]);
-  }
     try {
+      setLoading(true);
       const currentPage = reset ? 1 : page;
-      const params = {
-        search: searchQuery,
-        employeeRange,
-        availability,
-        jobTypes: selectedJobTypes,
+      
+      const params = new URLSearchParams({
         page: currentPage,
-        limit: 5
-      };
+        limit: 5,
+        availability: availability,
+      });
 
-      const response = await axiosInstance.get("/user/contractors", { params });
+      if (searchQuery.trim() !== '') {
+        params.append('search', searchQuery);
+      }
+
+      if (employeeRange !== '') {
+        params.append('employeeRange', employeeRange);
+      }
+
+      // Add each job type as separate parameter (jobTypes[]=type1&jobTypes[]=type2)
+      selectedJobTypes.forEach(type => {
+        params.append('jobTypes', type);
+      });
+
+      const response = await axiosInstance.get(`/user/contractors?${params.toString()}`);
       
       if (reset) {
         setContractors(response.data.contractors);
-        setPage(2); // Next page will be 2
+        setPage(2);
       } else {
         setContractors(prev => [...prev, ...response.data.contractors]);
         setPage(prev => prev + 1);
@@ -66,63 +73,72 @@ const Contractors = () => {
       setTotal(response.data.total);
       setHasMore(response.data.hasMore);
     } catch (error) {
-      
       console.error("Error fetching contractors:", error);
     } finally {
       setLoading(false);
     }
   }, [page, searchQuery, employeeRange, availability, selectedJobTypes]);
 
-  // Initial load and when filters change
-  useEffect(() => {
-    setLoading(true);
-    const debouncedFetch = debounce(() => fetchContractors(true), 500);
-    debouncedFetch();
-    return () => debouncedFetch.cancel && debouncedFetch.cancel();
-  }, [searchQuery, employeeRange, availability, selectedJobTypes]);
-
-  // Handle search query change
+  // Debounced search
   const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchContractors(true);
+    }, 500);
   };
 
-  // Handle employee range change
+  // Immediate filter changes
   const handleEmployeeRangeChange = (e) => {
     setEmployeeRange(e.target.value);
+    fetchContractors(true);
   };
 
-  // Handle availability change
   const handleAvailabilityChange = (value) => {
     setAvailability(value);
+    fetchContractors(true);
   };
 
-  // Handle job type selection
   const handleJobTypeClick = (jobType) => {
-    setSelectedJobTypes((prev) =>
-      prev.includes(jobType)
-        ? prev.filter((type) => type !== jobType)
-        : [...prev, jobType]
-    );
+    setSelectedJobTypes(prev => {
+      const newTypes = prev.includes(jobType)
+        ? prev.filter(type => type !== jobType)
+        : [...prev, jobType];
+      return newTypes;
+    });
+    
+    // Use timeout to ensure state is updated before fetch
+    setTimeout(() => fetchContractors(true), 0);
   };
 
-  // Handle card click to navigate to contractor profile
+  // Initial load and when dependencies change
+  useEffect(() => {
+    fetchContractors(true);
+  }, [availability, employeeRange, selectedJobTypes]);
+
   const handleCardClick = (contractorId) => {
     navigate(`/contractor/contractorprofileforuser/${contractorId}`);
   };
 
-  // Unique job types from all contractors
-  const allJobTypes = [
-    ...new Set(contractors.flatMap((contractor) => contractor.jobTypes || [])),
-  ];
+  // Get unique job types from current contractors
+  const allJobTypes = useMemo(() => {
+    const types = new Set();
+    contractors.forEach(contractor => {
+      (contractor.jobTypes || []).forEach(type => types.add(type));
+    });
+    return Array.from(types);
+  }, [contractors]);
 
-  // Loading skeleton
-  const renderSkeletons = () => {
-    return Array(4)
-      .fill(0)
-      .map((_, index) => (
-        <Skeleton key={index} className="h-64 rounded-lg" />
-      ));
-  };
+  const renderSkeletons = useCallback(() => {
+    return Array(4).fill(0).map((_, index) => (
+      <Skeleton key={index} className="h-64 rounded-lg" />
+    ));
+  }, []);
 
   return (
     <div className="mt-20">
@@ -164,6 +180,11 @@ const Contractors = () => {
               className="w-full px-4 py-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <LucideSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            {loading && searchQuery && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <LucideLoader2 className="w-4 h-4 animate-spin text-gray-500" />
+              </div>
+            )}
           </div>
 
           {/* Availability Filter */}
@@ -195,6 +216,30 @@ const Contractors = () => {
           </div>
         </div>
 
+        {/* Job Types Filter */}
+        {allJobTypes.length > 0 && (
+          <div className="mb-6">
+            <label className="text-sm font-medium text-gray-700 block mb-2">Job Types:</label>
+            <div className="flex flex-wrap gap-2">
+              {allJobTypes.map((jobType) => (
+                <div
+                  key={jobType}
+                  variant={selectedJobTypes.includes(jobType) ? "default" : "secondary"}
+                  className={`cursor-pointer text-xs px-3 py-1 ${
+                    selectedJobTypes.includes(jobType) ? 'bg-primary text-white' : ''
+                  }`}
+                  onClick={() => handleJobTypeClick(jobType)}
+                >
+                  {jobType}
+                  {selectedJobTypes.includes(jobType) && (
+                    <span className="ml-1">✓</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Infinite Scroll Container */}
         <InfiniteScroll
           dataLength={contractors.length}
@@ -221,7 +266,6 @@ const Contractors = () => {
                 className="hover:shadow-lg transition-shadow rounded-lg overflow-hidden border border-gray-200 cursor-pointer"
                 onClick={() => handleCardClick(contractor._id)}
               >
-                {/* Image Section */}
                 <div className="w-full h-48 overflow-hidden">
                   <img
                     src={contractor.profilePicture || "../../../public/avatar.png"}
@@ -231,7 +275,6 @@ const Contractors = () => {
                 </div>
 
                 <CardContent className="p-4 space-y-4">
-                  {/* Header Section */}
                   <div className="flex items-center space-x-4">
                     <div>
                       <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
@@ -246,7 +289,6 @@ const Contractors = () => {
                     </div>
                   </div>
 
-                  {/* Location Section */}
                   <div className="flex items-center text-sm text-gray-600">
                     <LucideMapPin className="w-4 h-4 mr-1 text-primary" />
                     {contractor.country || "Unknown Country"},{" "}
@@ -254,7 +296,6 @@ const Contractors = () => {
                     {contractor.city || "Unknown City"}
                   </div>
 
-                  {/* Job Types Section */}
                   <div className="flex flex-wrap gap-2">
                     {contractor.jobTypes?.map((job, idx) => (
                       <Badge

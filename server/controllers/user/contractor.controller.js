@@ -16,79 +16,83 @@ const fetchJobTypes = async (req, res) => {
 };
 
 // Fetch All Contractors Controller
-// In your backend route file (e.g., contractors.js)
 const fetchAllContractors = async (req, res) => {
-    try {
-      const { 
-        search = '',
-        employeeRange = '',
-        availability = 'all',
-        jobTypes = [],
-        page = 1,
-        limit = 5
-      } = req.query;
-  
-      // Convert page and limit to numbers
-      const pageNum = parseInt(page);
-      const limitNum = parseInt(limit);
-      const skip = (pageNum - 1) * limitNum;
-  
-      // Build the query
-      const query = { verified: true, isBlocked: false };
-  
-      // Search query
-      if (search) {
-        const searchRegex = new RegExp(search, 'i');
-        query.$or = [
-          { contractorName: searchRegex },
-          { companyName: searchRegex },
-          { country: searchRegex },
-          { state: searchRegex },
-          { city: searchRegex },
-          { 'jobTypes': searchRegex }
-        ];
-      }
-  
-      // Employee range filter
-      if (employeeRange) {
-        const [min, max] = employeeRange.split('-').map(Number);
-        query.numberOfEmployees = { $gte: min };
-        if (max !== Infinity) {
-          query.numberOfEmployees.$lte = max;
-        }
-      }
-  
-      // Availability filter
-      if (availability !== 'all') {
-        query.availability = availability === 'available';
-      }
-  
-      // Job types filter
-      if (jobTypes.length > 0) {
-        query.jobTypes = { $in: jobTypes };
-      }
-  
-      // Get total count for pagination
-      const total = await Contractor.countDocuments(query);
-  
-      // Get paginated results
-      const contractors = await Contractor.find(query)
-        .skip(skip)
-        .limit(limitNum)
-        .sort({ createdAt: -1 });
-  
-      res.status(200).json({
-        contractors,
-        total,
-        page: pageNum,
-        pages: Math.ceil(total / limitNum),
-        hasMore: pageNum * limitNum < total
-      });
-    } catch (error) {
-      console.error("fetchAllContractors error:", error);
-      res.status(500).json({ msg: "Internal server error" });
+  try {
+    const { 
+      search = '',
+      employeeRange = '',
+      availability = 'all',
+      jobTypes = [],
+      page = 1,
+      limit = 5
+    } = req.query;
+
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build the base query
+    const query = { 
+      verified: true, 
+      isBlocked: false 
+    };
+
+    // Search filter (only if search parameter exists and is not empty)
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { contractorName: searchRegex },
+        { companyName: searchRegex },
+        { country: searchRegex },
+        { state: searchRegex },
+        { city: searchRegex },
+        { jobTypes: searchRegex }
+      ];
     }
-  };
+
+    // Employee range filter
+    if (employeeRange && employeeRange.trim() !== '') {
+      const [min, max] = employeeRange.split('-').map(Number);
+      query.numberOfEmployees = { $gte: min };
+      if (!isNaN(max)) {
+        query.numberOfEmployees.$lte = max;
+      }
+    }
+
+    // Availability filter
+    if (availability && availability !== 'all') {
+      query.availability = availability === 'available';
+    }
+
+    // Job types filter
+    if (jobTypes && jobTypes.length > 0) {
+      // Handle both string (single job type) and array cases
+      const typesArray = Array.isArray(jobTypes) ? jobTypes : [jobTypes];
+      query.jobTypes = { $in: typesArray };
+    }
+
+    // Get total count for pagination
+    const total = await Contractor.countDocuments(query);
+
+    // Get paginated results
+    const contractors = await Contractor.find(query)
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      contractors,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      hasMore: pageNum * limitNum < total
+    });
+  } catch (error) {
+    console.error("fetchAllContractors error:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
 
 // Fetch Contractor by ID Controller
 const fetchContractorById = async (req, res) => {
