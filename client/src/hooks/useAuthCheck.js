@@ -2,11 +2,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import axiosInstance from "../lib/axios";
-// import { 
-//   loginuser, logoutuser,
-//   logincontractor, logoutcontractor,
-//   loginstore, logoutstore
-// } from "../redux/userslice"; // adjust paths as needed
+
 import { loginuser, logoutuser } from "../redux/userslice";
 import { logincontractor, logoutcontractor } from "../redux/contractorslice";
 import { loginstore, logoutstore } from "../redux/storeslice";
