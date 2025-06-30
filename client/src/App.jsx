@@ -31,7 +31,7 @@ import InterestSentHistory from "./pages/user.pages/Interesthistory";
 import StoreRegistration from "./pages/Store.pages/Storeregistration";
 import OrderConfirmation from "./pages/user.pages/orderconfirmation";
 import StoreLoginPage from "./pages/Store.pages/StoreLogin";
-import StoreLayout from "./pages/Store.pages/StoreLayout";
+import StoreLayout from "./pages/Store.pages/StoreLayou";
 import StoreDashboard from "./pages/Store.pages/Storedashboard";
 import AddProduct from "./pages/Store.pages/Addproduct";
 import StoreProfile from "./pages/Store.pages/Storeprofile";
