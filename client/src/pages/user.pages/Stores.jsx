@@ -35,7 +35,7 @@ import axiosInstance from "../../lib/axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-hot-toast";
 import { Skeleton } from "../../components/ui/skeleton";
-// import qs from 'qs';
+
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
