@@ -3,8 +3,9 @@ const cloudinary = require("../../lib/cloudinary");
 
 const contractorprofile = async (req, res) => {
   try {
-    const contractor = await Contractor.findById(req.contractor._id)
-      .select("-password -__v");
+    const contractor = await Contractor.findById(req.contractor._id).select(
+      "-password -__v"
+    );
     if (!contractor) {
       return res.status(404).json({ msg: "Contractor not found" });
     }
@@ -47,13 +48,15 @@ const uploadProfilePic = async (req, res) => {
     contractor.profilePicturePublicId = result.public_id;
     await contractor.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Profile picture updated successfully",
-      profilePicture: result.secure_url 
+      profilePicture: result.secure_url,
     });
   } catch (error) {
     console.error("Profile picture upload error:", error);
-    res.status(500).json({ message: "Failed to upload profile picture", error });
+    res
+      .status(500)
+      .json({ message: "Failed to upload profile picture", error });
   }
 };
 
