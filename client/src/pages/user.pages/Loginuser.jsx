@@ -52,9 +52,9 @@ const UserLoginPage = () => {
         const res = await axiosInstance.post("/user/login", formData);
         if (res.status === 200) {
           toast.success("Login successful!");
-          console.log(res.data);
+          console.log( "before dispatch", res.data);
           dispatch(loginuser(res.data));
-          console.log(res.data);
+          console.log(res.data , "after dispatch");
           navigate("/userprofile");
         }
       } catch (error) {
