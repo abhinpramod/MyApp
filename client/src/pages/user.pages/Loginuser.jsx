@@ -53,7 +53,6 @@ const UserLoginPage = () => {
         if (res.status === 200) {
           toast.success("Login successful!");
           dispatch(loginuser(res.data));
-          dispatch(logoutcontractor());
           navigate("/userprofile");
         }
       } catch (error) {
