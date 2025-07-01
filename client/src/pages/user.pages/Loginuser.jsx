@@ -9,8 +9,8 @@ import LoginFormUI from "@/components/LoginFormUI";
 import ForgotPassword from "../../components/forgotpassword";
 
 const UserLoginPage = () => {
-      const [showForgotPassword, setShowForgotPassword] = useState(false);
-  
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -21,7 +21,7 @@ const UserLoginPage = () => {
   const [errors, setErrors] = useState({});
   const validate = () => {
     let tempErrors = {};
-  
+
     // Email validation
     const trimmedEmail = formData.email.trim(); // Trim the email input
     if (!trimmedEmail) {
@@ -31,7 +31,7 @@ const UserLoginPage = () => {
     } else {
       tempErrors.email = ""; // No error if email is valid
     }
-  
+
     // Password validation
     if (!formData.password) {
       tempErrors.password = "Password is required"; // Show this error if password is empty
@@ -40,7 +40,7 @@ const UserLoginPage = () => {
     } else {
       tempErrors.password = ""; // No error if password is valid
     }
-  
+
     setErrors(tempErrors);
     return Object.values(tempErrors).every((x) => x === ""); // Return true if there are no errors
   };
@@ -50,11 +50,12 @@ const UserLoginPage = () => {
     if (validate()) {
       try {
         const res = await axiosInstance.post("/user/login", formData);
+        
         if (res.status === 200) {
           toast.success("Login successful!");
-          console.log( "before dispatch", res.data);
+          console.log("before dispatch", res.data);
           dispatch(loginuser(res.data));
-          console.log(res.data , "after dispatch");
+          console.log(res.data, "after dispatch");
           navigate("/userprofile");
         }
       } catch (error) {
@@ -84,24 +85,25 @@ const UserLoginPage = () => {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-         {showForgotPassword ? (
-        <ForgotPassword 
+      {showForgotPassword ? (
+        <ForgotPassword
           userType="user" // or "user" or "store" based on your page
           onBackToLogin={() => setShowForgotPassword(false)}
         />
       ) : (
-      <LoginFormUI
-        formData={formData}
-        errors={errors}
-        onSubmit={handleSubmit}
-        onChange={handleChange}
-        onNavigateRegister={handleNavigateRegister}
-        logoText="LocalFinder"
-        welcomeMessage="Login to find skilled labors and stores near you."
-         currentUserType="user"
-         welcomehead = "User Login"
-         onForgotPassword={() => setShowForgotPassword(true)}
-      />)}
+        <LoginFormUI
+          formData={formData}
+          errors={errors}
+          onSubmit={handleSubmit}
+          onChange={handleChange}
+          onNavigateRegister={handleNavigateRegister}
+          logoText="LocalFinder"
+          welcomeMessage="Login to find skilled labors and stores near you."
+          currentUserType="user"
+          welcomehead="User Login"
+          onForgotPassword={() => setShowForgotPassword(true)}
+        />
+      )}
       <div className="relative hidden bg-muted lg:block">
         <img
           src="../../public/cover.jpeg"
