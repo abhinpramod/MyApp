@@ -83,7 +83,7 @@ export default function LandingPage() {
             className="text-center mb-8 flex flex-col md:flex-row items-center md:items-start"
           >
             <motion.img
-              src="../../public/coverpic.user.jpeg"
+              src="/coverpic.user.jpeg"
               alt="Construction"
               className="w-full md:w-1/3 max-w-sm mx-auto md:mx-0 shadow-lg "
               whileHover={{ scale: 1.05 }}
