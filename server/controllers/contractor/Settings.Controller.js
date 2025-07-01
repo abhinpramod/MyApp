@@ -2,7 +2,6 @@
 const Contractor = require("../../model/contractors.model.js");
 
 const updateAvailability = async (req, res) => {
-
   try {
     const { availability } = req.body;
 
@@ -31,12 +30,10 @@ const updateemployeesnumber = async (req, res) => {
       { new: true }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Number of employees updated successfully",
-        contractor,
-      });
+    res.status(200).json({
+      message: "Number of employees updated successfully",
+      contractor,
+    });
   } catch (error) {
     console.error("Error updating number of employees:", error);
     res
