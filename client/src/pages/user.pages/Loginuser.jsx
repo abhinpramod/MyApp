@@ -53,6 +53,7 @@ const UserLoginPage = () => {
         if (res.status === 200) {
           toast.success("Login successful!");
           dispatch(loginuser(res.data));
+          console.log(res.data);
           navigate("/userprofile");
         }
       } catch (error) {
