@@ -6,7 +6,8 @@ const store = require("../model/store.model");
 const protectRoutecontractor = async (req, res, next) => {
 
   try {
-    const token = req.cookies?.jwt; // Ensure token is read properly
+    const token = req.cookies?.jwt; 
+    console.log(token);
     if (!token) {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
     }
