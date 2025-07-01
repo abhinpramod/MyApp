@@ -19,18 +19,17 @@ const testimonialsRoutes = require("./routes/testimonials.routes");
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser())
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/contractor", contractorRoutes);
-app.use("/api/store", storeRoutes);
-app.use ("/api/products",productRoutes )
-app.use ("/api/cart",cartRoutes) 
-app.use("/api/testimonials", testimonialsRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use("/api/reviews", reviewRoutes);
+app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
+app.use("/contractor", contractorRoutes);
+app.use("/store", storeRoutes);
+app.use ("/products",productRoutes )
+app.use ("/cart",cartRoutes) 
+app.use("/testimonials", testimonialsRoutes);
+app.use('/orders', orderRoutes);
+app.use('/payments', paymentRoutes);
+app.use("/reviews", reviewRoutes);
 
-// app.use('/api/webhook', webhookRoute);
 
 connectDB()
   .then(() => {
