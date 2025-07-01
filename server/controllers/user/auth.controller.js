@@ -1,6 +1,6 @@
 // auth.controller.js
 const User = require("../../model/user.model.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { generateTokenuser } = require("../../lib/utils.js");
 const OTP = require("../../model/otp.model.js");
 const{ generateOTP }= require("../../lib/otpgenarator.js");

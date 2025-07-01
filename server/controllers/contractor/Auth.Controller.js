@@ -1,5 +1,5 @@
 // controllers/authController.js
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { generateTokencontractor } = require("../../lib/utils.js");
 const Contractor = require("../../model/contractors.model.js");
 const OTP = require("../../model/otp.model.js");
