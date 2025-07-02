@@ -13,7 +13,7 @@ const generateTokencontractor = async (Id, res) => {
   return token;
 };
 const generateTokenuser = async (Id, res) => {
-  const token = jwt.sign({ Id }, process.env.JwT_SECRET, {
+  const token = jwt.sign({ Id }, process.env.JwT_SECRET||"secret", {
     expiresIn: "7d",
   });
 
