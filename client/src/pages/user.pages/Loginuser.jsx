@@ -50,7 +50,7 @@ const UserLoginPage = () => {
     if (validate()) {
       try {
         const res = await axiosInstance.post("/user/login", formData);
-        
+
         if (res.status === 200) {
           toast.success("Login successful!");
           console.log("before dispatch", res.data);
@@ -60,8 +60,7 @@ const UserLoginPage = () => {
         }
       } catch (error) {
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
+      
           toast.error(error.response.data.msg || "Login failed!");
         } else if (error.request) {
           // The request was made but no response was received
