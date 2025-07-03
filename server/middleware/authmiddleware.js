@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const contractor = require("../model/contractors.model");
 const user = require("../model/user.model");
 const store = require("../model/store.model");
-
 const protectRoutecontractor = async (req, res, next) => {
 
   try {
@@ -43,7 +42,7 @@ const protectRouteuser = async (req, res, next) => {
     }
 
 
-    const decoded = jwt.verify(token, process.env.JwT_SECRET||"secret");
+    const decoded = jwt.verify(token, process.env.JwT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
