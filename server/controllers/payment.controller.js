@@ -1,5 +1,7 @@
 // controllers/paymentController.js
 const Stripe = require('stripe');
+const dotenv = require("dotenv");
+dotenv.config();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const Order = require('../model/Orders.model');
 // const Order = require('../model/order.model');

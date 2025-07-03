@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const contractor = require("../model/contractors.model");
 const user = require("../model/user.model");
 const store = require("../model/store.model");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const protectRoute = async (req, res, next) => {
   try {
