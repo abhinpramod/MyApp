@@ -55,7 +55,7 @@ exports.createCheckoutSession = async (req, res) => {
 
   } catch (error) {
     console.error('Stripe error:', error);
-    res.status(500).json({ message: 'Stripe payment failed' });
+    res.status(500).json({ message: 'Stripe payment failed',error: error.message });
   }
 };
 
