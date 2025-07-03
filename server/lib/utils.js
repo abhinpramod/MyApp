@@ -8,6 +8,8 @@ const generateTokencontractor = async (Id, res) => {
   res.cookie("jwt", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "none",                                 // ✅ VERY IMPORTANT for cross-site cookies
+
     secure: process.env.NODE_ENV !== "development",
   });
 
@@ -21,6 +23,8 @@ const generateTokenuser = async (Id, res) => {
   res.cookie("jwt", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "none",                                 // ✅ VERY IMPORTANT for cross-site cookies
+
     secure: process.env.NODE_ENV !== "development",
   });
 
@@ -33,6 +37,8 @@ const generateTokenstore = async (Id, res) => {
   res.cookie("jwt", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "none",                                 // ✅ VERY IMPORTANT for cross-site cookies
+
     secure: process.env.NODE_ENV !== "development",
   });
 
