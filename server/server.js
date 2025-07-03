@@ -16,7 +16,7 @@ const reviewRoutes = require("./routes/review.Routes");
 const authRoutes = require("./routes/auth.Routes"); 
 const testimonialsRoutes = require("./routes/testimonials.routes");
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));  
 app.use(express.json());
 app.use(cookieParser())
 app.use("/api/auth", authRoutes);

@@ -43,7 +43,7 @@ const protectRouteuser = async (req, res, next) => {
     }
 
 
-    const decoded = jwt.verify(token, process.env.JwT_SECRET);
+    const decoded = jwt.verify(token, process.env.JwT_SECRET||"secret");
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
