@@ -15,7 +15,7 @@ const generateTokencontractor = async (Id, res) => {
 
 const generateTokenuser = async (Id, res) => {
   console.log(process.env.JwT_SECRET);
-  const token = jwt.sign({ Id }, process.env.JwT_SECRET||"secret", {
+  const token = jwt.sign({ Id }, process.env.JwT_SECRET, {
     expiresIn: "7d",
   });
 
