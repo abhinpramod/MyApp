@@ -14,7 +14,7 @@ const protectRoutecontractor = async (req, res, next) => {
     }
 
 
-    const decoded = jwt.verify(token, process.env.JwT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
@@ -44,7 +44,7 @@ const protectRouteuser = async (req, res, next) => {
     }
 
 
-    const decoded = jwt.verify(token, process.env.JwT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
@@ -74,7 +74,7 @@ const protectRoutestore = async (req, res, next) => {
     }
 
 
-    const decoded = jwt.verify(token, process.env.JwT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({ msg: "Unauthorized: Invalid token" });
     }
