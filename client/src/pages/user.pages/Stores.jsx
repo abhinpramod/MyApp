@@ -150,7 +150,7 @@ const ProductsPage = () => {
 
     } catch (error) {
       console.error("Failed to add product to cart", error);
-      toast.error(error.response?.data?.message || "Failed to add product to cart");
+      toast.error(error.response?.message || "Failed to add product to cart");
     } finally {
       // setIsAddingToCart(false);
     }
