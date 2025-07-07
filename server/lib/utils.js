@@ -17,7 +17,6 @@ const generateTokencontractor = async (Id, res) => {
 };
 
 const generateTokenuser = async (Id, res) => {
-  console.log("JWT_SECRET:", process.env.JWT_SECRET);  // Optional debug
   const token = jwt.sign({ Id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
   res.cookie("jwt", token, {

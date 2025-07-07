@@ -108,7 +108,7 @@ const UserProfile = () => {
       await axiosInstance.post("/user/logout");
       dispatch(logoutuser());
       navigate("/");
-      toast.success("Logged out successfully");
+      // toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
       toast.error("Failed to log out");
