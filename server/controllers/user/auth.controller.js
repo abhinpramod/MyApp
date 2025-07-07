@@ -5,6 +5,8 @@ const { generateTokenuser } = require("../../lib/utils.js");
 const OTP = require("../../model/otp.model.js");
 const{ generateOTP }= require("../../lib/otpgenarator.js");
 const sendEmail = require("../../lib/nodemailer.js");
+const env = require("dotenv");  
+env.config();
 
 // Login Controller
 const login = async (req, res) => {
