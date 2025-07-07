@@ -112,12 +112,19 @@ const verifyOTP = async (req, res) => {
 // Logout Controller
 const logout = async (req, res) => {
   try {
-    res.clearCookie("jwt");
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',  // true in production
+      sameSite: "strict",
+      path: "/",  // IMPORTANT: should match cookie path when it was set
+    });
+
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
     res.status(500).json({ msg: "Internal server error" });
   }
 };
+
 
 const  forgotPassword = async (req, res) => {
   try {
