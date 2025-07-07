@@ -1,22 +1,82 @@
 import React, { useState } from "react";
-import {
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Paper,
-  Box,
-  Grid,
-  Modal,
-  Backdrop,
-  Fade,
-  IconButton,
-} from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../lib/axios";
 import toast from "react-hot-toast";
 import { v4 as uuid } from "uuid";
-import { HomeIcon } from "lucide-react";
+import { 
+  Modal, 
+  Backdrop, 
+  Fade, 
+  Typography, 
+  Box, 
+  Button, 
+  TextField 
+} from "@mui/material";
+
+const OTPModal = ({ 
+  showOtpModal, 
+  setShowOtpModal, 
+  otp, 
+  handleOtpChange, 
+  handleOtpKeyDown, 
+  verifyOtp 
+}) => {
+  return (
+    <Modal
+      open={showOtpModal}
+      onClose={() => setShowOtpModal(false)}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{ timeout: 500 }}
+      role="dialog"
+      aria-labelledby="modal-title"
+    >
+      <Fade in={showOtpModal}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" align="center" gutterBottom id="modal-title">
+            Enter OTP
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+            {otp.map((digit, index) => (
+              <TextField
+                key={index}
+                id={`otp-input-${index}`}
+                type="text"
+                inputProps={{ maxLength: 1 }}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                sx={{ width: "40px", textAlign: "center" }}
+                aria-label={`OTP digit ${index + 1}`}
+              />
+            ))}
+          </Box>
+          <Box textAlign="center" marginTop={2}>
+            <Button 
+              variant="contained" 
+              sx={{backgroundColor: "black", opacity: 0.9}}  
+              onClick={verifyOtp}
+            >
+              Verify OTP
+            </Button>
+          </Box>
+        </Box>
+      </Fade>
+    </Modal>
+  );
+};
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -26,22 +86,20 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
-  const [otp, setOtp] = useState(new Array(6).fill("")); // OTP input state
-  const [showOtpModal, setShowOtpModal] = useState(false); // Controls OTP modal visibility
-  const [registrationData, setRegistrationData] = useState(null); // Stores registration data for OTP verification
+  const [otp, setOtp] = useState(new Array(6).fill(""));
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [registrationData, setRegistrationData] = useState(null);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  // Validate form inputs
   const validate = () => {
     let tempErrors = {};
     tempErrors.name = formData.name ? "" : "Name is required";
     tempErrors.email = /.+@.+\..+/.test(formData.email) ? "" : "Invalid email format";
     if (!formData.phone) {
       tempErrors.phone = "Phone number is required";
-    }else{
-    tempErrors.phone = /^[0-9]{10,15}$/.test(formData.phone) ? "" : "Invalid phone number (10-15 digits)";
-
+    } else {
+      tempErrors.phone = /^[0-9]{10,15}$/.test(formData.phone) ? "" : "Invalid phone number (10-15 digits)";
     }
     tempErrors.password = formData.password.length >= 6 ? "" : "Password must be at least 6 characters";
     tempErrors.confirmPassword = formData.confirmPassword === formData.password ? "" : "Passwords must match";
@@ -49,14 +107,13 @@ export default function Register() {
     return Object.values(tempErrors).every((x) => x === "");
   };
 
-  // Handle registration
   const register = async (data) => {
     try {
       const res = await axiosInstance.post("/user/register", data);
       if (res.status === 200) {
         toast.success(res.data.msg || "OTP sent to your email");
-        setRegistrationData(data); // Save registration data for OTP verification
-        setShowOtpModal(true); // Show OTP modal
+        setRegistrationData(data);
+        setShowOtpModal(true);
       }
     } catch (error) {
       console.error("Error during registration:", error);
@@ -64,7 +121,6 @@ export default function Register() {
     }
   };
 
-  // Handle OTP verification
   const verifyOtp = async () => {
     const otpValue = otp.join("");
     try {
@@ -82,7 +138,6 @@ export default function Register() {
     }
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
@@ -92,225 +147,162 @@ export default function Register() {
     }
   };
 
-  // Handle OTP input change
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus to the next input
     if (value && index < otp.length - 1) {
       document.getElementById(`otp-input-${index + 1}`).focus();
     }
   };
 
-  // Handle backspace in OTP input
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       document.getElementById(`otp-input-${index - 1}`).focus();
     }
   };
 
-  // Handle home button click
-  const handleHomeClick = () => {
-    navigate("/"); // Navigate to the home page
+  const handleNavigateLogin = () => {
+    navigate("/loginuser");
   };
 
   return (
-    <Container maxWidth="lg">
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 10,
-          marginTop: 2,
-          position: "relative", // Add relative positioning to the Paper
-        }}
-      >
-        {/* Home Icon Button inside Paper */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 16, // Adjust top position
-            right: 16, // Adjust right position
-          }}
-        >
-          <IconButton onClick={handleHomeClick} color="primary">
-            <HomeIcon fontSize="large" />
-          </IconButton>
-        </Box>
-
-        <Grid container spacing={2}>
-          {/* Left Side Image with Text Overlay */}
-          <Grid
-            item
-            xs={12}
-            md={6}
-            sx={{
-              position: "relative",
-              display: { xs: "none", md: "flex" },
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              height: "500px", // Adjust height as needed
-            }}
-          >
-            <img
-              src="../../../public/coverpic register.jpeg" // Replace with your image path
-              alt="image"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                color: "white",
-                backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-                padding: "20px",
-                borderRadius: "10px",
-              }}
-            >
-              <Typography variant="h4" gutterBottom>
-                Welcome!
-              </Typography>
-              <Typography variant="body1">
-                Join now to hire experts, find trusted stores, and build with confidence
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* Right Side Form */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="h4" align="center" gutterBottom>
-              Create an Account
-            </Typography>
-            <form onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                label="Name"
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
+            <h1 className="text-3xl font-bold">Create an Account</h1>
+            <p className="text-balance text-muted-foreground">
+              Join now to hire experts, find trusted stores, and build with confidence
+            </p>
+          </div>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Name
+              </label>
+              <input
+                id="name"
                 name="name"
+                type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                error={!!errors.name}
-                helperText={errors.name}
-                margin="normal"
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 p-2"
+                required
               />
-              <TextField
-                fullWidth
-                label="Email"
+              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <input
+                id="email"
                 name="email"
+                type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                error={!!errors.email}
-                helperText={errors.email}
-                margin="normal"
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 p-2"
+                required
               />
-              <TextField
-                fullWidth
-                label="Phone Number"
+              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="phone" className="text-sm font-medium">
+                Phone Number
+              </label>
+              <input
+                id="phone"
                 name="phone"
+                type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                margin="normal"
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 p-2"
                 placeholder="Enter 10-15 digit phone number"
-                inputProps={{
-                  maxLength: 15,
-                  pattern: "[0-9]{10,15}",
-                }}
+                maxLength={15}
+                required
               />
-              <TextField
-                fullWidth
-                label="Password"
+              {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              <input
+                id="password"
                 name="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                error={!!errors.password}
-                helperText={errors.password}
-                margin="normal"
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 p-2"
+                required
               />
-              <TextField
-                fullWidth
-                label="Confirm Password"
+              {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword}
-                margin="normal"
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 p-2"
+                required
               />
-              <Box textAlign="center" marginTop={2}>
-                <Button type="submit" variant="contained" color="primary" fullWidth>
-                  Create an Account
-                </Button>
-              </Box>
-              <Box textAlign="center" marginTop={2}>
-                <Typography variant="body2">
-                  Already have an account? <Link to="/loginuser">Sign in</Link>
-                </Typography>
-              </Box>
-            </form>
-          </Grid>
-        </Grid>
-      </Paper>
+              {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
+            </div>
+            <button 
+              type="submit" 
+              className="w-full rounded-md bg-black p-2 text-white hover:bg-gray-800"
+            >
+              Create an Account
+            </button>
+          </form>
+          <div className="mt-4 text-center text-sm">
+            Already have an account?{" "}
+            <button 
+              onClick={handleNavigateLogin} 
+              className="text-black underline hover:text-gray-700"
+            >
+              Sign in
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="relative hidden bg-muted lg:block">
+        <img
+          src="../../public/coverpic register.jpeg"
+          alt="Image"
+          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="text-center text-white">
+            <h2 className="text-4xl font-bold">Welcome!</h2>
+            <p className="mt-4 text-xl">
+              Join now to hire experts, find trusted stores, and build with confidence
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* OTP Verification Modal */}
-      <Modal
-        open={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{ timeout: 500 }}
-      >
-        <Fade in={showOtpModal}>
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 400,
-              bgcolor: "background.paper",
-              boxShadow: 24,
-              p: 4,
-              borderRadius: 2,
-            }}
-          >
-            <Typography variant="h6" align="center" gutterBottom>
-              Enter OTP
-            </Typography>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-              {otp.map((digit, index) => (
-                <TextField
-                  key={index}
-                  id={`otp-input-${index}`}
-                  type="text"
-                  inputProps={{ maxLength: 1 }}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  sx={{ width: "40px", textAlign: "center" }}
-                />
-              ))}
-            </Box>
-            <Box textAlign="center" marginTop={2}>
-              <Button variant="contained" color="primary" onClick={verifyOtp}>
-                Verify OTP
-              </Button>
-            </Box>
-          </Box>
-        </Fade>
-      </Modal>
-    </Container>
+      <OTPModal
+        showOtpModal={showOtpModal}
+        setShowOtpModal={setShowOtpModal}
+        otp={otp}
+        handleOtpChange={handleOtpChange}
+        handleOtpKeyDown={handleOtpKeyDown}
+        verifyOtp={verifyOtp}
+      />
+      
+    </div>
   );
 }
