@@ -1,4 +1,9 @@
+
+.env
+
+
 # Logs
+
 logs
 *.log
 npm-debug.log*
@@ -28,5 +33,3 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 bun.lockb
-
-.env
