@@ -221,7 +221,12 @@ const verifyOTP = async (req, res) => {
 
 const logoutcontractor = (req, res) => {
   try {
-    res.clearCookie("jwt");
+   res.clearCookie("jwt", {
+  httpOnly: true,
+  sameSite: "none",  
+  secure: process.env.NODE_ENV !== "development",
+  path: "/",         
+});
     res.status(200).json({ msg: "Logout successful" });
   } catch (error) {
     res.status(500).json({ msg: "Internal server error" });
