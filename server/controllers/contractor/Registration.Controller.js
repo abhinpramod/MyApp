@@ -57,10 +57,14 @@ const registerstep2 = async (req, res) => {
     contractor.verified = false; // Mark as pending verification
 
     await contractor.save();
+const contractorData = contractor.toObject();
+delete contractorData.password;
 
-    res
-      .status(200)
-      .json({ message: "Step 2 registration completed wait for admin approval", contractor });
+res.status(200).json({
+  message: "Step 2 registration completed, wait for admin approval",
+  contractor: contractorData
+});
+
   } catch (error) {
     console.error("error from registerstep2", error);
     res.status(500).json({ message: "Server error", error });

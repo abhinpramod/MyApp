@@ -27,18 +27,15 @@ const fetchAllContractors = async (req, res) => {
       limit = 5
     } = req.query;
 
-    // Convert page and limit to numbers
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Build the base query
     const query = { 
       verified: true, 
       isBlocked: false 
     };
 
-    // Search filter (only if search parameter exists and is not empty)
     if (search && search.trim() !== '') {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
@@ -51,7 +48,6 @@ const fetchAllContractors = async (req, res) => {
       ];
     }
 
-    // Employee range filter
     if (employeeRange && employeeRange.trim() !== '') {
       const [min, max] = employeeRange.split('-').map(Number);
       query.numberOfEmployees = { $gte: min };
@@ -60,23 +56,19 @@ const fetchAllContractors = async (req, res) => {
       }
     }
 
-    // Availability filter
     if (availability && availability !== 'all') {
       query.availability = availability === 'available';
     }
 
-    // Job types filter
     if (jobTypes && jobTypes.length > 0) {
-      // Handle both string (single job type) and array cases
       const typesArray = Array.isArray(jobTypes) ? jobTypes : [jobTypes];
       query.jobTypes = { $in: typesArray };
     }
 
-    // Get total count for pagination
     const total = await Contractor.countDocuments(query);
 
-    // Get paginated results
     const contractors = await Contractor.find(query)
+      .select('-password') 
       .skip(skip)
       .limit(limitNum)
       .sort({ createdAt: -1 });
@@ -94,12 +86,13 @@ const fetchAllContractors = async (req, res) => {
   }
 };
 
+
 // Fetch Contractor by ID Controller
 const fetchContractorById = async (req, res) => {
   const _id = req.params.id;
 
   try {
-    const data = await Contractor.findOne({ _id });
+const data = await Contractor.findOne({ _id }).select('-password');
     res.status(200).json(data);
   } catch (error) {
     console.error("fectchcontractors error:", error);

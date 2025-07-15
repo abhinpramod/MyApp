@@ -11,10 +11,14 @@ const updateAvailability = async (req, res) => {
       { availability },
       { new: true }
     );
+const contractorData = contractor.toObject();
+delete contractorData.password;
 
-    res
-      .status(200)
-      .json({ message: "Availability updated successfully", contractor });
+res.status(200).json({
+  message: "availability updated successfully",
+  contractor: contractorData
+});
+
   } catch (error) {
     console.error("Error updating availability:", error);
     res.status(500).json({ message: "Failed to update availability", error });
@@ -29,11 +33,14 @@ const updateemployeesnumber = async (req, res) => {
       { numberOfEmployees },
       { new: true }
     );
+const contractorData = contractor.toObject();
+delete contractorData.password;
 
-    res.status(200).json({
-      message: "Number of employees updated successfully",
-      contractor,
-    });
+res.status(200).json({
+  message: "employees number updated successfully",
+  contractor: contractorData
+});
+
   } catch (error) {
     console.error("Error updating number of employees:", error);
     res
@@ -51,9 +58,14 @@ const updateDescription = async (req, res) => {
       { new: true }
     );
 
-    res
-      .status(200)
-      .json({ message: "Description updated successfully", contractor });
+  const contractorData = contractor.toObject();
+delete contractorData.password;
+
+res.status(200).json({
+  message: "description updated successfully",
+  contractor: contractorData
+});
+
   } catch (error) {
     console.error("Error updating description:", error);
     res.status(500).json({ message: "Failed to update description", error });

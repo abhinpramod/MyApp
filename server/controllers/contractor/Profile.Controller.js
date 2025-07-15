@@ -4,7 +4,7 @@ const cloudinary = require("../../lib/cloudinary");
 const contractorprofile = async (req, res) => {
   try {
     const contractor = await Contractor.findById(req.contractor._id).select(
-      "-password -__v"
+      "-password "
     );
     if (!contractor) {
       return res.status(404).json({ msg: "Contractor not found" });

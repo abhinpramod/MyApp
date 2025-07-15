@@ -6,7 +6,7 @@ const cloudinary = require("../../lib/cloudinary");
 const checkUser = async (req, res) => {
   const { _id } = req.user;
   try {
-    const user = await User.findOne({ _id });
+    const user = await User.findOne({ _id }).select('-password');
     res.status(200).json(user);
   } catch (error) {
     console.error("User check error:", error);
@@ -24,7 +24,7 @@ const uploadProfilePicture = async (req, res) => {
       return res.status(400).json({ msg: "No file uploaded" });
     }
 
-    const user = await User.findById(_id);
+    const user = await User.findById(_id).select('-password');
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }

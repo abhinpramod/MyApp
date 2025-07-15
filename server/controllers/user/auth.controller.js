@@ -25,7 +25,10 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
     generateTokenuser(user._id, res);
-    res.status(200).json(user);
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.status(200).json(userData);
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ msg: "Internal server error" });
@@ -102,9 +105,11 @@ const verifyOTP = async (req, res) => {
 
     // Clear temporary data
     await OTP.deleteOne({ email });
+    const userdata=newUser.toObject();
+    delete userdata.password;
+    res.status(200).json({msg:"Registration successful",user:userdata});
 
 
-    res.status(200).json({ msg: "Registration successful" ,user:newUser});
   } catch (error) {
     console.error("Error verifying OTP:", error.message);
     res.status(500).json({ msg: "Internal server error" });

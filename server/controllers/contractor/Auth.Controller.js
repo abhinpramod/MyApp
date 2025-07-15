@@ -17,18 +17,23 @@ const login = async (req, res) => {
     if (contractor.isBlocked)
       return res
         .status(403)
-        .json({ msg: "your account  is blocked connect with admin." });
+        .json({ msg: "Your account is blocked. Contact admin." });
 
     const isMatch = await bcrypt.compare(password, contractor.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
     generateTokencontractor(contractor._id, res);
-    res.status(200).json(contractor);
+
+    const contractorData = contractor.toObject();
+    delete contractorData.password;
+
+    res.status(200).json({ msg: "Login successful", contractor: contractorData });
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
+
 
 const  forgotPassword = async (req, res) => {
   try {
@@ -206,10 +211,13 @@ const verifyOTP = async (req, res) => {
       // Clear temporary data
       await OTP.deleteOne({ email });
   
-      res.status(200).json({
-        message: "Contractor registered successfully, wait for admin approval",
-        contractor,
-      });
+   const contractorData = contractor.toObject();
+delete contractorData.password;
+
+res.status(200).json({
+  message: "Contractor registered successfully, wait for admin approval",
+  contractor: contractorData,
+});
     } catch (error) {
       console.error("Error verifying OTP:", error.message);
       res.status(500).json({ message: "Internal server error" });
@@ -233,17 +241,19 @@ const logoutcontractor = (req, res) => {
   }
 };
 
-// controllers/authMiddleware.js
+
 const checkAuth = (req, res) => {
-    try {
-      res.status(200).json(req.contractor);
-    } catch (error) {
-      res.status(500).json({ msg: error.message });
-    }
-  };
+  try {
+    const contractor = { ...req.contractor._doc }; // or req.contractor.toObject()
+    delete contractor.password;
+    res.status(200).json(contractor);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
 
 
-  // controllers/registrationController.js
+
  
   
   const registerstep2 = async (req, res) => {
@@ -300,9 +310,14 @@ const checkAuth = (req, res) => {
   
       await contractor.save();
   
-      res
-        .status(200)
-        .json({ message: "Step 2 registration completed", contractor });
+ const contractorData = contractor.toObject();
+delete contractorData.password;
+
+res.status(200).json({ 
+  message: "Step 2 registration completed", 
+  contractor: contractorData 
+});
+
     } catch (error) {
       console.error("error from registerstep2", error);
       res.status(500).json({ message: "Server error", error });

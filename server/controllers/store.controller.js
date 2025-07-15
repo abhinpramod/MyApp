@@ -136,14 +136,10 @@ const login = async (req, res) => {
 
   try {
     const store = await Store.findOne({ email });
-    if (!store) {
-      return res.status(400).json({ msg: "Store not registered" });
-    }
+    if (!store) return res.status(400).json({ msg: "Store not registered" });
 
     const isMatch = await bcrypt.compare(password, store.password);
-    if (!isMatch) {
-      return res.status(400).json({ msg: "Invalid password" });
-    }
+    if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
     if (store.approvelstatus === "Pending") {
       return res
@@ -152,35 +148,41 @@ const login = async (req, res) => {
     }
 
     if (store.approvelstatus === "Rejected") {
-      return res
-        .status(403)
-        .json({ msg: "Your store registration is rejected" });
+      return res.status(403).json({ msg: "Your store registration is rejected" });
     }
 
     if (store.isBlocked) {
-      return res.status(403).json({ msg: "your account is blocked" });
+      return res.status(403).json({ msg: "Your account is blocked" });
     }
 
     generateTokenstore(store._id, res);
 
-    res.status(200).json({ msg: "Login successful" });
+    const storeData = store.toObject();
+    delete storeData.password;
+
+    res.status(200).json({ msg: "Login successful", store: storeData });
   } catch (error) {
     console.error("Login failed:", error);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
 
+
 const checkstore = (req, res) => {
   try {
-    res.status(200).json(req.store);
+    const storeData = { ...req.store._doc };
+    delete storeData.password;
+
+    res.status(200).json(storeData);
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
 };
 
+
 const getStoreProfile = async (req, res) => {
   try {
-    const store = await Store.findById(req.store._id);
+    const store = await Store.findById(req.store._id).select('-password');
     if (!store) {
       return res.status(404).json({ error: "Store not found" });
     }
@@ -191,9 +193,10 @@ const getStoreProfile = async (req, res) => {
   }
 };
 
+
 const getStoreById = async (req, res) => {
   try {
-    const store = await Store.findById(req.params.storeId);
+    const store = await Store.findById(req.params.storeId).select('-password');
     if (!store) {
       return res.status(404).json({ error: "Store not found" });
     }
@@ -203,6 +206,7 @@ const getStoreById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch store" });
   }
 };
+
 
 const updateProfilePicture = async (req, res) => {
   try {
