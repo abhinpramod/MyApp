@@ -1,5 +1,5 @@
 const Contractor = require("../../model/contractors.model.js");
-const cloudinary = require("../../lib/cloudinary");
+const cloudinary = require("../../lib/cloudinary.js");
 
 const contractorprofile = async (req, res) => {
   try {

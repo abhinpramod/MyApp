@@ -3,9 +3,9 @@ const bcrypt = require("bcryptjs");
 const { generateTokencontractor } = require("../../lib/utils.js");
 const Contractor = require("../../model/contractors.model.js");
 const OTP = require("../../model/otp.model.js");
-const { generateOTP } = require("../../lib/otpgenarator");
-const  sendEmail  = require("../../lib/nodemailer");
-const cloudinary = require("../../lib/cloudinary");
+const { generateOTP } = require("../../lib/otpgenarator.js");
+const  sendEmail  = require("../../lib/nodemailer.js");
+const cloudinary = require("../../lib/cloudinary.js");
 
 const login = async (req, res) => {
   const { email, password } = req.body;

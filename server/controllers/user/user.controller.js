@@ -1,6 +1,6 @@
 // user.controller.js
 const User = require("../../model/user.model.js");
-const cloudinary = require("../../lib/cloudinary");
+const cloudinary = require("../../lib/cloudinary.js");
 
 // Check User Controller
 const checkUser = async (req, res) => {

@@ -10,27 +10,27 @@ const {
   verifyOTPforget,
   resetPassword
 } = require("../controllers/contractor/Auth.Controller.js");
-const { contractorprofile, uploadProfilePic } = require("../controllers/contractor/Profile.Controller");
+const { contractorprofile, uploadProfilePic } = require("../controllers/contractor/Profile.Controller.js");
 const { 
   addProject, 
   deleteProject,
   getProjects,
   uploadProjectMedia 
-} = require("../controllers/contractor/Project.Controller");
-const { registerstep2 } = require("../controllers/contractor/Registration.Controller");
+} = require("../controllers/contractor/Project.Controller.js");
+const { registerstep2 } = require("../controllers/contractor/Registration.Controller.js");
 const {
   fectchjobtypes,
   fectchintrestes,
   markseen,
   numberofnotification
-} = require("../controllers/contractor/Utility.Controller");
+} = require("../controllers/contractor/Utility.Controller.js");
 const {
   updateAvailability,
   updateemployeesnumber,
   updateDescription
-} = require("../controllers/contractor/Settings.Controller");
-const { protectRoutecontractor } = require("../middleware/authmiddleware");
-const { upload, handleMulterErrors } = require("../middleware/Multermiddleware");
+} = require("../controllers/contractor/Settings.Controller.js");
+const { protectRoutecontractor } = require("../middleware/authmiddleware.js");
+const { upload, handleMulterErrors } = require("../middleware/Multermiddleware.js");
 
 // Auth Routes
 router.post("/register1ststep", registerstep1);

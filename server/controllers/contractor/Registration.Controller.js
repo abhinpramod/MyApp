@@ -1,6 +1,6 @@
 // controllers/registrationController.js
 const Contractor = require("../../model/contractors.model.js");
-const cloudinary = require("../../lib/cloudinary");
+const cloudinary = require("../../lib/cloudinary.js");
 
 const registerstep2 = async (req, res) => {
 

@@ -17,8 +17,8 @@ const {
   verifyOTPforget,
   resetPassword
 } = require("../controllers/user/index.js");
-const { protectRouteuser } = require("../middleware/authmiddleware");
-const {upload }= require("../middleware/Multermiddleware");
+const { protectRouteuser } = require("../middleware/authmiddleware.js");
+const {upload }= require("../middleware/Multermiddleware.js");
 
 // ==================== Authentication Routes ====================
 router.post("/register", register);
