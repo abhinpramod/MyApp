@@ -19,7 +19,7 @@ const authRoutes = require("./routes/auth.Routes");
 const testimonialsRoutes = require("./routes/testimonials.routes");
 
 app.use(cors({
-  origin: process.env.CLIENT_URL, 
+  origin: process.env.CLIENT_URL||process.env.CLIENT_URL2, 
   credentials: true
 }));
 

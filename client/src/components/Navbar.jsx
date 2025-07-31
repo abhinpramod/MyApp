@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User, ChevronDown } from "lucide-react";
 import React from "react";
 import { useSelector } from "react-redux";
+import axiosInstance from "../lib/axios"
 
 const Navbar = ({ isOwnerView }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,9 +20,13 @@ const Navbar = ({ isOwnerView }) => {
     { name: "Stores", path: "/stores" },
     { name: "About", path: "/about" },
   ];
+ 
 
   // Determine if any account is logged in
   const isLoggedIn = user || contractor || store;
+   const logout=()=>{
+axiosInstance.post(`/${isLoggedIn}/logout`)
+  }
 
   // Determine profile picture if logged in
   const profilePicture =
@@ -110,18 +115,18 @@ const Navbar = ({ isOwnerView }) => {
                     >
                       My Profile
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/settings"
                       className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
                       onClick={() => setProfileOpen(false)}
                     >
                       Settings
-                    </Link>
+                    </Link> */}
                     <hr className="my-2 border-gray-100" />
                     <Link
                       to="/logout"
                       className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
-                      onClick={() => setProfileOpen(false)}
+                      onClick={() => logout()}
                     >
                       Logout
                     </Link>

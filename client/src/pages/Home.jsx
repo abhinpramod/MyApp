@@ -71,7 +71,7 @@ export default function LandingPage() {
     <>
       <style>{customStyles}</style>
       <Navbar />
-      <div className="min-h-screen w-full flex flex-col mt-20">
+      <div className="min-h-screen w-full flex flex-col mt-16">
         {/* Header Section with Gradient Background */}
         <div className="relative bg-gradient-to-r from-blue-50 to-indigo-100 py-16 md:py-24">
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
