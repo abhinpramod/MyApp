@@ -1,8 +1,9 @@
 // authController.js
 const checkAuth = (req, res) => {
   try {
-    const user = { ...req.user };
-    delete user.password;
+   const user = req.user.toObject();
+delete user.password;
+
 
     res.status(200).json({
       user,

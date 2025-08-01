@@ -24,9 +24,23 @@ const Navbar = ({ isOwnerView }) => {
 
   // Determine if any account is logged in
   const isLoggedIn = user || contractor || store;
-   const logout=()=>{
-axiosInstance.post(`/${isLoggedIn}/logout`)
+ let role;
+if (isLoggedIn==user) role = 'user';
+else if (isLoggedIn==contractor) role = 'contractor';
+else if (isLoggedIn==store) role = 'store';
+
+const logout = () => {
+  if (role) {
+    axiosInstance.post(`/${role}/logout`)
+      .then(() => {
+        console.log('Logged out successfully');
+      })
+      .catch((err) => {
+        console.error('Logout failed:', err);
+      });
   }
+};
+
 
   // Determine profile picture if logged in
   const profilePicture =
