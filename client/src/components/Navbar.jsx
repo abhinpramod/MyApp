@@ -4,8 +4,11 @@ import { Menu, X, User, ChevronDown } from "lucide-react";
 import React from "react";
 import { useSelector } from "react-redux";
 import axiosInstance from "../lib/axios"
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 
 const Navbar = ({ isOwnerView }) => {
+  dispatch=useDispatch()
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
