@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 
 const Navbar = ({ isOwnerView }) => {
-  dispatch=useDispatch()
+ const dispatch=useDispatch()
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
