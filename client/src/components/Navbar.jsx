@@ -24,22 +24,33 @@ const Navbar = ({ isOwnerView }) => {
 
   // Determine if any account is logged in
   const isLoggedIn = user || contractor || store;
- let role;
-if (isLoggedIn==user) role = 'user';
-else if (isLoggedIn==contractor) role = 'contractor';
-else if (isLoggedIn==store) role = 'store';
 
-const logout = () => {
-  if (role) {
-    axiosInstance.post(`/${role}/logout`)
-      .then(() => {
-        console.log('Logged out successfully');
-      })
-      .catch((err) => {
-        console.error('Logout failed:', err);
-      });
+
+let role = null;
+if (user) role = 'user';
+else if (contractor) role = 'contractor';
+else if (store) role = 'store';
+
+const logout = async () => {
+  if (!role) return;
+
+  try {
+    await axiosInstance.post(`/${role}/logout`);
+    console.log("Logged out successfully");
+
+    // Dispatch correct logout
+    if (role === "user") dispatch(logoutuser());
+    else if (role === "contractor") dispatch(logoutcontractor());
+    else if (role === "store") dispatch(logoutstore());
+
+    toast.success("Logout successful");
+    navigate("/");
+  } catch (err) {
+    console.error("Logout failed:", err);
+    toast.error("Failed to log out");
   }
 };
+
 
 
   // Determine profile picture if logged in
