@@ -14,7 +14,7 @@ const RightSection = () => {
     >
       {/* Background Image */}
       <img
-        src="../../../public/coverpic register.jpeg"
+        src="/coverpic register.jpeg"
         alt="Cover"
         style={{
           width: "100%",
