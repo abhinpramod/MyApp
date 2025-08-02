@@ -147,14 +147,14 @@ const logout = async () => {
                     >
                       My Profile
                     </Link>
-                    {/* <Link
-                      to="/settings"
+                    <hr className="my-2 border-gray-100" />
+                    <Link
+                      to="/Cart"
                       className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
                       onClick={() => setProfileOpen(false)}
                     >
-                      Settings
-                    </Link> */}
-                    <hr className="my-2 border-gray-100" />
+                      Cart
+                    </Link>
                     <Link
                       to="/logout"
                       className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
