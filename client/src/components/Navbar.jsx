@@ -6,6 +6,9 @@ import { useSelector } from "react-redux";
 import axiosInstance from "../lib/axios"
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import { logoutuser } from "../redux/userslice";
+
+
 
 const Navbar = ({ isOwnerView }) => {
  const dispatch=useDispatch()

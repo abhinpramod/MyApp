@@ -27,7 +27,6 @@ import {
   Filter as FilterIcon,
   ChevronDown as KeyboardArrowDown,
   ChevronUp as KeyboardArrowUp,
-  // ShoppingCart,
   Search as SearchIcon,
   MapPin,
   ShoppingCart,
@@ -72,7 +71,6 @@ const ProductsPage = () => {
           page: currentPage,
           limit: 8,
         };
-
         // Clean up undefined/empty params
         Object.keys(params).forEach((key) => {
           if (
@@ -83,13 +81,11 @@ const ProductsPage = () => {
             delete params[key];
           }
         });
-
         const response = await axiosInstance.get("/products", {
           params,
           paramsSerializer: (params) =>
             qs.stringify(params, { arrayFormat: "repeat" }),
         });
-
         if (reset) {
           setProducts(response.data.products);
           setPage(2);
@@ -97,10 +93,8 @@ const ProductsPage = () => {
           setProducts((prev) => [...prev, ...response.data.products]);
           setPage((prev) => prev + 1);
         }
-
         setTotal(response.data.total);
         setHasMore(response.data.hasMore);
-
         if (reset && response.data.products.length > 0) {
           const categories = [
             ...new Set(response.data.products.flatMap((p) => p.category)),
@@ -149,25 +143,20 @@ const ProductsPage = () => {
   };
 
   const handleAddToCart = async (cartItem) => {
-    // Prevent triggering the card click event
     const { product, storeId, quantity } = cartItem;
     const productId = product._id;
     const productname = product.name;
-    // setIsAddingToCart(true);
     try {
       await axiosInstance.post("/cart/add-to-cart", {
         productId,
         storeId,
         quantity,
       });
-
       toast.success(`${quantity} ${productname} added to cart successfully`);
       setSelectedProduct(null);
     } catch (error) {
       console.error("Failed to add product to cart", error);
       toast.error(error.response?.message || "Failed to add product to cart");
-    } finally {
-      // setIsAddingToCart(false);
     }
   };
 
@@ -184,13 +173,26 @@ const ProductsPage = () => {
     return Array(8)
       .fill(0)
       .map((_, index) => (
-        <Card key={index} sx={{ height: 320 }}>
-          <Box sx={{ height: 140, bgcolor: "grey.300" }} />
+        <Card
+          key={index}
+          sx={{
+            height: 320,
+            borderRadius: 3,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            overflow: "hidden",
+          }}
+        >
+          <Skeleton
+            variant="rectangular"
+            height={180}
+            width="100%"
+            animation="wave"
+          />
           <CardContent>
             <Box sx={{ pt: 0.5 }}>
-              <Skeleton width="60%" />
-              <Skeleton width="40%" />
-              <Skeleton width="30%" />
+              <Skeleton width="60%" height={24} animation="wave" />
+              <Skeleton width="40%" height={20} animation="wave" />
+              <Skeleton width="30%" height={20} animation="wave" />
             </Box>
           </CardContent>
         </Card>
@@ -198,57 +200,95 @@ const ProductsPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#f8fafc",
+        backgroundImage: "linear-gradient(to bottom, #f8fafc, #f1f5f9)",
+      }}
+    >
       <Navbar />
 
-      <Box sx={{ maxWidth: "lg", mx: "auto", px: 3, py: 4 }}>
+      <Box
+        sx={{
+          maxWidth: "lg",
+          mx: "auto",
+          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 4, md: 6 },
+          mt:{xs:4,md:6}
+        }}
+      >
         {/* Header Section */}
-        <Box sx={{ mb: 4, textAlign: "center" }}>
+        <Box
+          sx={{
+            mb: { xs: 4, md: 6 },
+            textAlign: "center",
+            position: "relative",
+          }}
+        >
           <Typography
-            variant="h4"
+            variant="h3"
             component="h1"
             gutterBottom
-            sx={{ fontWeight: "bold" }}
+            sx={{
+              fontWeight: 700,
+              color: "#1e293b",
+              mb: 2,
+              fontSize: { xs: "1.75rem", md: "2.25rem" },
+            }}
           >
             Discover Our Products
           </Typography>
-          <div style={{ position: "relative", width: "100%" }}>
-            {/* Centered Subtitle */}
-            <Typography
-              variant="subtitle1"
-              color="text.secondary"
-              style={{ textAlign: "center" }}
-            >
-              Browse through our extensive collection of high-quality products
-            </Typography>
 
-            {/* Cart Button to the Right */}
-            <button
-              onClick={() => navigate("/cart")}
-              style={{
-                position: "absolute",
-                right: 0,
-                top: "50%",
-                transform: "translateY(-50%)",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "6px 12px",
-                border: "none",
-                backgroundColor: "#1976d2",
-                color: "white",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              <ShoppingCart size={18} />
-              Cart
-            </button>
-          </div>{" "}
+          <Typography
+            variant="subtitle1"
+            color="text.secondary"
+            sx={{
+              maxWidth: "600px",
+              mx: "auto",
+              mb: 4,
+              fontSize: "1rem",
+            }}
+          >
+            Browse through our extensive collection of high-quality products
+          </Typography>
+
+          <Button
+            onClick={() => navigate("/cart")}
+            variant="contained"
+            startIcon={<ShoppingCart size={18} />}
+            sx={{
+              position: { xs: "static", md: "absolute" },
+              top: 0,
+              right: 0,
+              mt: { xs: 2, md: 0 },
+              backgroundColor: "#3b82f6",
+              color: "white",
+              fontWeight: 600,
+              borderRadius: 2,
+              py: 1,
+              px: 3,
+              boxShadow: "0 4px 6px rgba(59, 130, 246, 0.3)",
+              "&:hover": {
+                backgroundColor: "#2563eb",
+                boxShadow: "0 6px 8px rgba(59, 130, 246, 0.4)",
+              },
+            }}
+          >
+            Cart
+          </Button>
         </Box>
 
         {/* Search and Filters Section */}
-        <Box sx={{ mb: 4 }}>
+        <Box
+          sx={{
+            mb: { xs: 4, md: 5 },
+            backgroundColor: "white",
+            borderRadius: 3,
+            p: 3,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+          }}
+        >
           <TextField
             fullWidth
             variant="outlined"
@@ -258,12 +298,17 @@ const ProductsPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon color="#94a3b8" />
                 </InputAdornment>
               ),
-              sx: { borderRadius: 2 },
+              sx: {
+                borderRadius: 2,
+                backgroundColor: "#f8fafc",
+                py: 1.5,
+                fontSize: "1rem",
+              },
             }}
-            sx={{ mb: 2 }}
+            sx={{ mb: 3 }}
           />
 
           <Box
@@ -274,24 +319,52 @@ const ProductsPage = () => {
               mb: 2,
             }}
           >
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontWeight: 500 }}
+            >
               Showing {products.length} of {total} products
             </Typography>
+
             <Button
               variant="outlined"
-              startIcon={<FilterIcon />}
+              startIcon={<FilterIcon size={18} />}
               endIcon={
-                showFilters ? <KeyboardArrowUp /> : <KeyboardArrowDown />
+                showFilters ? (
+                  <KeyboardArrowUp size={18} />
+                ) : (
+                  <KeyboardArrowDown size={18} />
+                )
               }
               onClick={() => setShowFilters(!showFilters)}
-              sx={{ textTransform: "none" }}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                fontWeight: 500,
+                borderColor: "#cbd5e1",
+                color: "#475569",
+                "&:hover": {
+                  borderColor: "#94a3b8",
+                  backgroundColor: "#f8fafc",
+                },
+              }}
             >
               Filters
             </Button>
           </Box>
 
           {showFilters && (
-            <Card sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
+            <Card
+              sx={{
+                p: 3,
+                mb: 3,
+                bgcolor: "white",
+                borderRadius: 3,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
               <Box
                 sx={{
                   display: "grid",
@@ -300,11 +373,27 @@ const ProductsPage = () => {
                 }}
               >
                 <FormControl fullWidth>
-                  <InputLabel>Price Range</InputLabel>
+                  <InputLabel
+                    sx={{
+                      fontWeight: 500,
+                      color: "#64748b",
+                    }}
+                  >
+                    Price Range
+                  </InputLabel>
                   <Select
                     value={priceRange}
                     onChange={handlePriceRangeChange}
                     label="Price Range"
+                    sx={{
+                      borderRadius: 2,
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#cbd5e1",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#94a3b8",
+                      },
+                    }}
                   >
                     {priceRanges.map((range) => (
                       <MenuItem key={range.value} value={range.value}>
@@ -315,11 +404,27 @@ const ProductsPage = () => {
                 </FormControl>
 
                 <FormControl fullWidth>
-                  <InputLabel>Availability</InputLabel>
+                  <InputLabel
+                    sx={{
+                      fontWeight: 500,
+                      color: "#64748b",
+                    }}
+                  >
+                    Availability
+                  </InputLabel>
                   <Select
                     value={availability}
                     onChange={handleAvailabilityChange}
                     label="Availability"
+                    sx={{
+                      borderRadius: 2,
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#cbd5e1",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#94a3b8",
+                      },
+                    }}
                   >
                     <MenuItem value="all">All</MenuItem>
                     <MenuItem value="available">
@@ -351,17 +456,32 @@ const ProductsPage = () => {
                     setPage(1);
                   }}
                   fullWidth
-                  sx={{ height: "56px" }}
+                  sx={{
+                    height: "56px",
+                    borderRadius: 2,
+                    fontWeight: 500,
+                    borderColor: "#cbd5e1",
+                    color: "#475569",
+                    "&:hover": {
+                      borderColor: "#94a3b8",
+                      backgroundColor: "#f8fafc",
+                    },
+                  }}
                 >
                   Reset Filters
                 </Button>
               </Box>
 
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="subtitle2" gutterBottom>
+              <Box sx={{ mt: 4 }}>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ fontWeight: 600, color: "#334155" }}
+                >
                   Categories
                 </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
                   {allCategories.map((category) => (
                     <Chip
                       key={category}
@@ -373,6 +493,19 @@ const ProductsPage = () => {
                           : "default"
                       }
                       onClick={() => handleCategoryClick(category)}
+                      sx={{
+                        borderRadius: 2,
+                        fontWeight: 500,
+                        "&.MuiChip-colorPrimary": {
+                          backgroundColor: "#dbeafe",
+                          color: "#1d4ed8",
+                        },
+                        "&.MuiChip-clickable:hover": {
+                          backgroundColor: selectedCategories.includes(category)
+                            ? "#bfdbfe"
+                            : "#f1f5f9",
+                        },
+                      }}
                     />
                   ))}
                 </Box>
@@ -388,7 +521,7 @@ const ProductsPage = () => {
           hasMore={hasMore}
           loader={
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-              <CircularProgress />
+              <CircularProgress sx={{ color: "#3b82f6" }} />
             </Box>
           }
           endMessage={
@@ -396,7 +529,11 @@ const ProductsPage = () => {
               variant="body2"
               color="text.secondary"
               align="center"
-              sx={{ py: 4 }}
+              sx={{
+                py: 6,
+                fontWeight: 500,
+                color: "#64748b",
+              }}
             >
               {products.length > 0
                 ? "You've reached the end of products"
@@ -414,7 +551,7 @@ const ProductsPage = () => {
                 md: "repeat(3, 1fr)",
                 lg: "repeat(4, 1fr)",
               },
-              gap: 3,
+              gap: { xs: 3, md: 4 },
             }}
           >
             {loading && products.length === 0
