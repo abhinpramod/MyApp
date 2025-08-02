@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation,useNavigate } from "react-router-dom";
 import { Menu, X, User, ChevronDown } from "lucide-react";
 import React from "react";
 import { useSelector } from "react-redux";
@@ -12,6 +12,7 @@ import { logoutuser } from "../redux/userslice";
 
 const Navbar = ({ isOwnerView }) => {
  const dispatch=useDispatch()
+ const navigate=useNavigate()
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
