@@ -52,7 +52,6 @@ const useAuthCheck = () => {
       dispatch(logoutuser());
       dispatch(logoutcontractor());
       dispatch(loginstore());
-      axiosInstance.post("/auth/logout"); // create a unified logout endpoint
     };
 
     checkAuth();

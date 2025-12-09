@@ -1,7 +1,7 @@
 // auth.controller.js
 const User = require("../../model/user.model.js");
 const bcrypt = require("bcryptjs");
-const { generateTokenuser } = require("../../lib/utils.js");
+const { generateToken } = require("../../lib/utils.js");
 const OTP = require("../../model/otp.model.js");
 const{ generateOTP }= require("../../lib/otpgenarator.js");
 const sendEmail = require("../../lib/nodemailer.js");
@@ -24,7 +24,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    generateTokenuser(user._id, res);
+    generateToken(user._id, res);
     const userData = user.toObject();
     delete userData.password;
 

@@ -3,7 +3,7 @@ const Otp = require("../model/otp.model");
 const sendEmail = require("../lib/nodemailer");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
-const { generateTokenstore } = require("../lib/utils");
+const { generateToken } = require("../lib/utils");
 const Product = require("../model/products.model");
 const { generateOTP } = require("../lib/otpgenarator");
 
@@ -155,7 +155,7 @@ const login = async (req, res) => {
       return res.status(403).json({ msg: "Your account is blocked" });
     }
 
-    generateTokenstore(store._id, res);
+    generateToken(store._id, res);
 
     const storeData = store.toObject();
     delete storeData.password;

@@ -29,6 +29,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dailog";
 import ProductDetailDialog from '@/components/products/ProductDetailDialog';
+import Navbar from '../../components/Navbar';
 
 const ShoppingCartUI = () => {
   const navigate = useNavigate();
@@ -370,6 +371,8 @@ const ShoppingCartUI = () => {
 
   if (!cart) {
     return (
+      <>
+      <Navbar />
       <div className="container mx-auto p-4 max-w-6xl">
         <Card>
           <CardContent className="p-8 text-center">
@@ -381,11 +384,14 @@ const ShoppingCartUI = () => {
           </CardContent>
         </Card>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
+    <>
+    <Navbar />
+    <div className="container mx-auto mt-16 p-4 max-w-6xl">
       <div className="flex items-center mb-6">
         <Button 
           variant="ghost" 
@@ -875,6 +881,7 @@ const ShoppingCartUI = () => {
         />
       )}
     </div>
+    </>
   );
 };
 

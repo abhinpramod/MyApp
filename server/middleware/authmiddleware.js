@@ -38,9 +38,10 @@ const protectRoutecontractor = async (req, res, next) => {
 const protectRouteuser = async (req, res, next) => {
 
   try {
-    const token = req.cookies?.jwt; // Ensure token is read properly
+    const token = req.cookies?.jwt; 
     if (!token) {
       return res.status(401).json({ msg: "Unauthorized: No token found" });
+
     }
 
 

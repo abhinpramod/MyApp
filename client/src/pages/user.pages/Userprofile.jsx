@@ -11,16 +11,18 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { Camera, Mail, User, Info } from "lucide-react";
+import { Camera, Mail, User, Info, LogOut, ShoppingCart, ListChecks } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../lib/axios";
 import Card from "../../components/ui/card";
 import CardContent from "../../components/ui/card-content";
 import Navbar from "../../components/Navbar";
-import { logoutuser } from "../../redux/userslice";
+import { logoutuser, loginuser } from "../../redux/userslice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginuser } from "../../redux/userslice";
+
+// Default avatar image URL (assuming this path is correct relative to the component's output)
+const DEFAULT_AVATAR = "/avatar.png"; 
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -32,42 +34,45 @@ const UserProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // --- Handlers for Menu and Dialog ---
+  const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  const handleOpenDialog = () => setOpenDialog(true);
+  const handleCloseDialog = () => setOpenDialog(false);
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
-
+  // --- Fetch User Data ---
   const fetchUser = async () => {
     try {
-      const response = await axiosInstance.get("user/check");
-      setUser(response.data);
-      setLoading(false);
-      dispatch(loginuser(response.data));
+      setLoading(true); // Ensure loading is true before fetch
+      const response = await axiosInstance.get("/user/check");
+      const userData = response.data;
+      
+      // Update state with fetched data
+      setUser(userData);
+      
+      // Dispatch Redux action
+      dispatch(loginuser(userData));
     } catch (error) {
-      if (error.response.status === 403) {
-        return toast.error(error.response.data.msg);
-      }
       console.error("Error fetching user:", error);
-      toast.error("Failed to fetch user data");
+      const errorMessage = error.response?.data?.msg || "Failed to fetch user data";
+      toast.error(errorMessage);
+      
+      // Log out user if token is invalid or unauthorized (e.g., status 403)
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        dispatch(logoutuser());
+        navigate("/login"); // Redirect to login page
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array ensures it runs only once on mount
 
+  // --- Image Upload Handler ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -85,50 +90,56 @@ const UserProfile = () => {
         }
       );
 
+      // Optimistically update the user state with the new profile picture URL
       setUser((prev) => ({
         ...prev,
         profilePicture: response.data.profilePicture,
       }));
       toast.success("Profile picture updated successfully!");
-      fetchUser();
+      
+      // Re-fetch user to ensure Redux state is also updated with the new profile image URL
+      fetchUser(); 
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Failed to update profile picture");
-
-      if (error.response.status === 403) {
-        toast.error(error.response.data.msg);
-      }
+      const errorMessage = error.response?.data?.msg || "Failed to update profile picture";
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
   };
 
+  // --- Logout Handler ---
   const handleLogout = async () => {
     try {
-      navigate("/")
       const response = await axiosInstance.post("/user/logout");
       dispatch(logoutuser());
-      toast.success(response.msg);
+      toast.success(response.data?.msg || "Logged out successfully!");
+      navigate("/"); // Navigate to home or login page after successful logout
     } catch (error) {
       console.error("Logout failed:", error);
-      toast.error("Failed to log out");
+      toast.error(error.response?.data?.msg || "Failed to log out");
     } finally {
       handleCloseDialog();
     }
   };
 
+  // --- Navigation Handlers ---
   const handleAccountInfo = () => {
-    navigate("/InterestSentHistory");
+    navigate("/InterestSentHistory"); // Assuming this is for history/account details
+    handleMenuClose();
   };
 
   const handleshowcart = () => {
     navigate("/Cart");
+    handleMenuClose();
   };
 
   const handleshoworders = () => {
     navigate("/orders");
+    handleMenuClose();
   };
 
+  // --- Loading State Render ---
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -137,6 +148,29 @@ const UserProfile = () => {
     );
   }
 
+  // Handle case where user data might be null after loading completes (e.g., failed to fetch and not redirected)
+  if (!user) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50 p-4 text-center">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Profile Not Found</h2>
+        <p className="text-gray-600 mb-6">We couldn't load your profile data. Please try logging in again.</p>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate("/login")}
+          sx={{
+            backgroundColor: 'rgb(79, 70, 229)',
+            '&:hover': {
+                backgroundColor: 'rgb(67, 56, 202)',
+            }
+          }}
+        >
+          Go to Login
+        </Button>
+      </div>
+    );
+  }
+
+  // --- Main Component Render ---
   return (
     <>
       <Navbar />
@@ -146,15 +180,20 @@ const UserProfile = () => {
             <CardContent className="p-6 space-y-8">
               {/* Header with Info Button */}
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                <h1 className="text-2xl font-bold text-gray-800">My Profile 👋</h1>
                 <div className="relative">
                   <IconButton
                     onClick={handleMenuClick}
                     className="text-gray-600 hover:text-indigo-600 transition-colors"
+                    aria-label="More account options"
+                    aria-controls={open ? 'account-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? 'true' : undefined}
                   >
                     <Info className="w-5 h-5" />
                   </IconButton>
                   <Menu
+                    id="account-menu"
                     anchorEl={anchorEl}
                     open={open}
                     onClose={handleMenuClose}
@@ -164,8 +203,8 @@ const UserProfile = () => {
                       style: {
                         boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.12)",
                         borderRadius: "12px",
-                        minWidth: "120px",
-                        padding: "8px 0",
+                        minWidth: "180px", // Increased minWidth for better readability
+                        padding: "4px 0", // Reduced padding
                         border: "1px solid rgba(0, 0, 0, 0.05)",
                       },
                     }}
@@ -185,31 +224,12 @@ const UserProfile = () => {
                           backgroundColor: "rgba(99, 102, 241, 0.08)",
                           color: "rgb(99, 102, 241)",
                         },
-                        "&:active": {
-                          backgroundColor: "rgba(99, 102, 241, 0.12)",
-                        },
                         transition: "all 0.2s ease",
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <line x1="16" y1="13" x2="8" y2="13"></line>
-                          <line x1="16" y1="17" x2="8" y2="17"></line>
-                          <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        History
+                        <ListChecks className="w-4 h-4" /> {/* Changed SVG to Lucide icon for consistency */}
+                        History/Account Details
                       </div>
                     </MenuItem>
 
@@ -223,28 +243,11 @@ const UserProfile = () => {
                           backgroundColor: "rgba(99, 102, 241, 0.08)",
                           color: "rgb(99, 102, 241)",
                         },
-                        "&:active": {
-                          backgroundColor: "rgba(99, 102, 241, 0.12)",
-                        },
                         transition: "all 0.2s ease",
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="9" cy="21" r="1"></circle>
-                          <circle cx="20" cy="21" r="1"></circle>
-                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                        </svg>
+                        <ShoppingCart className="w-4 h-4" /> {/* Changed SVG to Lucide icon for consistency */}
                         Cart
                       </div>
                     </MenuItem>
@@ -259,27 +262,25 @@ const UserProfile = () => {
                           backgroundColor: "rgba(99, 102, 241, 0.08)",
                           color: "rgb(99, 102, 241)",
                         },
-                        "&:active": {
-                          backgroundColor: "rgba(99, 102, 241, 0.12)",
-                        },
                         transition: "all 0.2s ease",
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="lucide lucide-package"
                         >
-                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                          <line x1="3" y1="6" x2="21" y2="6"></line>
-                          <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                         Orders
                       </div>
@@ -296,28 +297,11 @@ const UserProfile = () => {
                         "&:hover": {
                           backgroundColor: "rgba(239, 68, 68, 0.08)",
                         },
-                        "&:active": {
-                          backgroundColor: "rgba(239, 68, 68, 0.12)",
-                        },
                         transition: "all 0.2s ease",
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16 17 21 12 16 7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
+                        <LogOut className="w-4 h-4" /> {/* Changed SVG to Lucide icon for consistency */}
                         Logout
                       </div>
                     </MenuItem>
@@ -328,11 +312,15 @@ const UserProfile = () => {
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
-                  <div className="relative rounded-full overflow-hidden border-4 border-white shadow-lg">
+                  <div className="relative rounded-full overflow-hidden w-32 h-32 border-4 border-white shadow-lg bg-gray-200">
                     <img
-                      src={user?.profileImage || "../../../public/avatar.png"}
-                      alt="Profile"
-                      className="w-32 h-32 object-cover"
+                      src={user.profileImage || DEFAULT_AVATAR} // Using user.profilePicture and fallback
+                      alt={`${user.name}'s Profile`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { 
+                         e.target.onerror = null; 
+                         e.target.src = DEFAULT_AVATAR; // Fallback on error
+                      }}
                     />
                     {uploading && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -342,7 +330,7 @@ const UserProfile = () => {
                   </div>
                   <label
                     htmlFor="upload-image"
-                    className={`absolute -bottom-2 -right-2 bg-indigo-600 hover:bg-indigo-700 p-2 rounded-full cursor-pointer transition-all duration-200 shadow-md ${
+                    className={`absolute -bottom-2 -right-2 bg-indigo-600 hover:bg-indigo-700 p-2 rounded-full cursor-pointer transition-all duration-200 shadow-lg ${
                       uploading
                         ? "animate-pulse pointer-events-none opacity-75"
                         : "group-hover:scale-110"
@@ -373,8 +361,8 @@ const UserProfile = () => {
                     <User className="w-4 h-4" />
                     <span className="text-sm font-medium">Full Name</span>
                   </div>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
-                    {user?.name}
+                  <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 font-semibold">
+                    {user.name}
                   </div>
                 </div>
 
@@ -383,8 +371,8 @@ const UserProfile = () => {
                     <Mail className="w-4 h-4" />
                     <span className="text-sm font-medium">Email Address</span>
                   </div>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
-                    {user?.email}
+                  <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 font-semibold">
+                    {user.email}
                   </div>
                 </div>
               </div>
@@ -392,13 +380,19 @@ const UserProfile = () => {
               {/* Account Information Section */}
               <div className="mt-6 bg-indigo-50 rounded-xl p-5 border border-indigo-100">
                 <h2 className="text-lg font-semibold text-indigo-800 mb-4">
-                  Account Information
+                  Account Overview
                 </h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between py-3 border-b border-indigo-100">
+                    <span className="text-gray-600">User ID</span>
+                    <span className="font-mono text-gray-800 text-xs truncate max-w-[50%]">
+                      {user._id} {/* Assuming _id is the User ID */}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-3">
                     <span className="text-gray-600">Member Since</span>
                     <span className="font-medium text-gray-800">
-                      {new Date(user?.createdAt).toLocaleDateString("en-US", {
+                      {new Date(user.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -416,6 +410,8 @@ const UserProfile = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
+        aria-labelledby="logout-dialog-title"
+        aria-describedby="logout-dialog-description"
         PaperProps={{
           style: {
             borderRadius: "12px",
@@ -423,10 +419,10 @@ const UserProfile = () => {
           },
         }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
+        <DialogTitle id="logout-dialog-title" className="text-lg font-bold text-gray-800">
           Confirm Logout
         </DialogTitle>
-        <DialogContent>
+        <DialogContent id="logout-dialog-description">
           <p className="text-gray-600">
             Are you sure you want to log out of your account?
           </p>
@@ -440,7 +436,14 @@ const UserProfile = () => {
           </Button>
           <Button
             onClick={handleLogout}
-            className="px-4 py-2 hover:text-white  text-white hover:bg-red-600 rounded-lg"
+            variant="contained" // Use MUI variant for better styling consistency
+            sx={{
+              backgroundColor: 'rgb(239, 68, 68)', // Tailwind red-500/600 equivalent
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgb(220, 38, 38)', // Darker red on hover
+              },
+            }}
             autoFocus
           >
             Logout

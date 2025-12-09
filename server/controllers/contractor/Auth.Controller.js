@@ -1,6 +1,6 @@
 // controllers/authController.js
 const bcrypt = require("bcryptjs");
-const { generateTokencontractor } = require("../../lib/utils.js");
+const { generateToken} = require("../../lib/utils.js");
 const Contractor = require("../../model/contractors.model.js");
 const OTP = require("../../model/otp.model.js");
 const { generateOTP } = require("../../lib/otpgenarator.js");
@@ -22,7 +22,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, contractor.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    generateTokencontractor(contractor._id, res);
+    generateToken(contractor._id, res);
 
     const contractorData = contractor.toObject();
     delete contractorData.password;
